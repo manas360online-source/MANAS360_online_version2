@@ -279,6 +279,7 @@ export function useTherapistSocket(opts: { url?: string; token: string | null; s
     getLatest: () => responses[responses.length - 1] || null,
     isLeader,
     tabId: tabIdRef.current,
+    isStale: () => isStale.current,
   };
 }
 
