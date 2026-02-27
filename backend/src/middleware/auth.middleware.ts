@@ -1,0 +1,51 @@
+import type { NextFunction, Request, Response } from 'express';
+import { env } from '../config/env';
+import { AppError } from './error.middleware';
+import { verifyAccessToken } from '../utils/jwt';
+
+const getBearerToken = (authorizationHeader?: string): string | null => {
+	if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+		return null;
+	}
+
+	return authorizationHeader.slice(7);
+};
+
+export const requireAuth = (req: Request, _res: Response, next: NextFunction): void => {
+	const bearerToken = getBearerToken(req.headers.authorization);
+	const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.access_token;
+	const accessToken = bearerToken ?? cookieToken;
+
+	if (!accessToken) {
+		next(new AppError('Authentication required', 401));
+		return;
+	}
+
+	try {
+		const payload = verifyAccessToken(accessToken);
+
+		req.auth = {
+			userId: payload.sub,
+			sessionId: payload.sessionId,
+			jti: payload.jti,
+		};
+
+		next();
+	} catch {
+		next(new AppError('Invalid or expired access token', 401));
+	}
+};
+
+export const requireCsrf = (req: Request, _res: Response, next: NextFunction): void => {
+	const csrfFromHeader = req.headers['x-csrf-token'];
+	const csrfToken = typeof csrfFromHeader === 'string' ? csrfFromHeader : undefined;
+	const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.[env.csrfCookieName];
+
+	if (!csrfToken || !cookieToken || csrfToken !== cookieToken) {
+		next(new AppError('Invalid CSRF token', 403));
+		return;
+	}
+
+	next();
+};
+

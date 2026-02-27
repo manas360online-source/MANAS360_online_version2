@@ -1,0 +1,235 @@
+/* Import fonts - Therapeutic typography */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap');
+
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root variables for Therapeutic Color Psychology */
+@layer base {
+  :root {
+    /* Colors */
+    --calm-sage: #A8B5A0;
+    --soft-lavender: #C4B5D9;
+    --warm-terracotta: #D4A89E;
+    --gentle-blue: #9DADBE;
+    --cream: #F5F3EE;
+    --charcoal: #2C3333;
+    --accent-coral: #E88B7A;
+
+    /* Typography */
+    --serif: 'Crimson Pro', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-charcoal bg-gradient-full overflow-x-hidden antialiased;
+    background-attachment: fixed;
+    line-height: 1.6;
+  }
+
+  /* Safe area insets for mobile notches */
+  body {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Custom animations */
+@layer utilities {
+  /* Breathing animation - subtle, calming */
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.5;
+    }
+  }
+
+  /* Floating particles - like thoughts settling */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-50px) translateX(30px);
+    }
+    50% {
+      transform: translateY(-100px) translateX(-20px);
+    }
+    75% {
+      transform: translateY(-50px) translateX(40px);
+    }
+  }
+
+  /* Fade animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Utility classes */
+  .animate-breathe {
+    @apply relative;
+    animation: breathe 6s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 20s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 1s ease-out;
+  }
+
+  .animate-fade-in-down {
+    animation: fadeInDown 1s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 1s ease-out;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/50 backdrop-blur-md rounded-3xl border border-white/20;
+  }
+
+  .glass-light {
+    @apply bg-white/30 backdrop-blur-20 rounded-3xl border border-white/20;
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-gradient bg-clip-text text-transparent;
+  }
+
+  /* Safe padding for notched devices */
+  .safe-pb {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .transition-smooth-lg {
+    @apply transition-all duration-500 ease-in-out;
+  }
+
+  /* Accessible focus styles */
+  .focus-ring {
+    @apply outline-none ring-2 ring-offset-2 ring-gentle-blue;
+  }
+
+  .focus-ring:focus {
+    @apply ring-2 ring-offset-2 ring-gentle-blue;
+  }
+
+  /* Reduced motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      @apply !animate-none !transition-none;
+    }
+  }
+}
+
+/* Responsive utilities */
+@layer components {
+  .container-safe {
+    @apply container mx-auto px-4 md:px-6 lg:px-8;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(196, 181, 217, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(168, 181, 160, 0.4);
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 181, 160, 0.6);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-color: rgba(168, 181, 160, 0.4) rgba(196, 181, 217, 0.1);
+    scrollbar-width: thin;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+
+  body {
+    @apply bg-white;
+  }
+
+  a {
+    @apply underline;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --charcoal: #000;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  body {
+    @apply bg-gradient-to-br from-charcoal via-soft-lavender/20 to-gentle-blue/20;
+  }
+}

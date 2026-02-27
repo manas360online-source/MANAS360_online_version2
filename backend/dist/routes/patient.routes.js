@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const patient_controller_1 = require("../controllers/patient.controller");
+const session_controller_1 = require("../controllers/session.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const rbac_middleware_1 = require("../middleware/rbac.middleware");
+const validate_middleware_1 = require("../middleware/validate.middleware");
+const router = (0, express_1.Router)();
+router.post('/profile', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validateCreatePatientProfileRequest, (0, validate_middleware_1.asyncHandler)(patient_controller_1.createPatientProfileController));
+router.get('/me/profile', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, (0, validate_middleware_1.asyncHandler)(patient_controller_1.getMyPatientProfileController));
+router.post('/me/assessments', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validateCreatePatientAssessmentRequest, (0, validate_middleware_1.asyncHandler)(patient_controller_1.createPatientAssessmentController));
+router.get('/me/assessments', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validatePatientAssessmentHistoryQuery, (0, validate_middleware_1.asyncHandler)(patient_controller_1.getMyPatientAssessmentHistoryController));
+router.get('/me/mood-history', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validatePatientMoodHistoryQuery, (0, validate_middleware_1.asyncHandler)(patient_controller_1.getMyMoodHistoryController));
+router.get('/me/therapist-matches', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validateTherapistMatchQuery, (0, validate_middleware_1.asyncHandler)(patient_controller_1.getMyTherapistMatchesController));
+router.post('/me/sessions/book', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validateBookSessionRequest, (0, validate_middleware_1.asyncHandler)(session_controller_1.bookMySessionController));
+router.get('/me/sessions', auth_middleware_1.requireAuth, rbac_middleware_1.requirePatientRole, ...validate_middleware_1.validatePatientSessionHistoryQuery, (0, validate_middleware_1.asyncHandler)(session_controller_1.getMySessionHistoryController));
+exports.default = router;
