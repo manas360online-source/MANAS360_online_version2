@@ -73,7 +73,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="font-sans text-[#1A1A1A] bg-[#FDFCF8] selection:bg-blue-100 selection:text-[#0A3A78] overflow-x-hidden">
+    <div className="font-sans text-wellness-text bg-wellness-bg selection:bg-calm-sage/20 selection:text-calm-sage overflow-x-hidden">
       
       {/* LOGIN MODAL */}
       {isLoginOpen && (
