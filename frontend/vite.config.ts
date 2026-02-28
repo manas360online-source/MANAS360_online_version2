@@ -8,6 +8,7 @@ export default defineConfig({
     host: '0.0.0.0', // CRITICAL: Bind to all interfaces for container/remote access
     port: 3000,
     strictPort: true, // Fail if port is already in use
+    allowedHosts: 'all', // CRITICAL: Allow preview domain access
     open: false, // Don't try to open browser in container
     cors: true,
   },
