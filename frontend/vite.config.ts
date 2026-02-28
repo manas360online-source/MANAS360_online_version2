@@ -5,12 +5,17 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0', // CRITICAL: Bind to all interfaces for container/remote access
+    host: '0.0.0.0',
     port: 3000,
-    strictPort: true, // Fail if port is already in use
-    allowedHosts: 'all', // CRITICAL: Allow preview domain access
-    open: false, // Don't try to open browser in container
+    strictPort: true,
+    open: false,
     cors: true,
+    hmr: {
+      host: 'therapy-connect-87.cluster-0.preview.emergentcf.cloud',
+      protocol: 'wss',
+      clientPort: 443,
+    },
+    proxy: {},
   },
   build: {
     outDir: 'dist',
@@ -27,9 +32,9 @@ export default defineConfig({
     },
   },
   preview: {
-    host: '0.0.0.0', // CRITICAL: Same for preview mode
+    host: '0.0.0.0',
     port: 3000,
     strictPort: true,
-    allowedHosts: 'all', // CRITICAL: Allow preview domain access
+    cors: true,
   },
 })
