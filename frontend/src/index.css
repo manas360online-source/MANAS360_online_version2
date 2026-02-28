@@ -76,71 +76,10 @@
   }
 }
 
-/* Custom animations */
+/* Enhanced animations and utilities */
 @layer utilities {
-  /* Breathing animation - subtle, calming */
-  @keyframes breathe {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.3;
-    }
-    50% {
-      transform: scale(1.05);
-      opacity: 0.5;
-    }
-  }
-
-  /* Floating particles - like thoughts settling */
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) translateX(0);
-    }
-    25% {
-      transform: translateY(-50px) translateX(30px);
-    }
-    50% {
-      transform: translateY(-100px) translateX(-20px);
-    }
-    75% {
-      transform: translateY(-50px) translateX(40px);
-    }
-  }
-
-  /* Fade animations */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   /* Utility classes */
   .animate-breathe {
-    @apply relative;
     animation: breathe 6s ease-in-out infinite;
   }
 
@@ -160,18 +99,26 @@
     animation: fadeInUp 1s ease-out;
   }
 
-  /* Glass morphism effect */
+  /* Enhanced glass morphism effects */
   .glass {
-    @apply bg-white/50 backdrop-blur-md rounded-3xl border border-white/20;
+    @apply bg-white/60 backdrop-blur-lg rounded-3xl border border-white/30 shadow-soft-sm;
   }
 
   .glass-light {
-    @apply bg-white/30 backdrop-blur-20 rounded-3xl border border-white/20;
+    @apply bg-white/40 backdrop-blur-md rounded-3xl border border-white/20;
   }
 
-  /* Text gradient */
+  .glass-strong {
+    @apply bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-soft-md;
+  }
+
+  /* Soft text gradients */
   .text-gradient {
-    @apply bg-gradient-gradient bg-clip-text text-transparent;
+    @apply bg-gradient-peaceful bg-clip-text text-transparent;
+  }
+
+  .text-gradient-calm {
+    @apply bg-gradient-calm bg-clip-text text-transparent;
   }
 
   /* Safe padding for notched devices */
@@ -179,22 +126,35 @@
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
-  /* Smooth transitions */
+  /* Calmer transitions - slower, gentler */
+  .transition-calm {
+    @apply transition-all duration-400 ease-in-out;
+  }
+
   .transition-smooth {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-300 ease-out;
   }
 
   .transition-smooth-lg {
-    @apply transition-all duration-500 ease-in-out;
+    @apply transition-all duration-500 ease-out;
   }
 
-  /* Accessible focus styles */
+  /* Softer, more accessible focus styles */
   .focus-ring {
-    @apply outline-none ring-2 ring-offset-2 ring-gentle-blue;
+    @apply outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-sage/50;
   }
 
-  .focus-ring:focus {
-    @apply ring-2 ring-offset-2 ring-gentle-blue;
+  .focus-ring-lavender {
+    @apply outline-none focus:ring-2 focus:ring-offset-2 focus:ring-soft-lavender/50;
+  }
+
+  /* Hover lift effect - gentle */
+  .hover-lift {
+    @apply transition-smooth hover:-translate-y-1 hover:shadow-soft-md;
+  }
+
+  .hover-lift-lg {
+    @apply transition-smooth-lg hover:-translate-y-2 hover:shadow-soft-lg;
   }
 
   /* Reduced motion for accessibility */
