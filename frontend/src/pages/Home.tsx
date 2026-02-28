@@ -79,10 +79,10 @@ export const HomePage: React.FC = () => {
       {isLoginOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity duration-500" 
+            className="absolute inset-0 bg-wellness-text/50 backdrop-blur-lg transition-smooth" 
             onClick={handleCloseLogin}
           ></div>
-          <div className="relative bg-white w-full max-w-[440px] rounded-[32px] shadow-2xl overflow-hidden animate-fade-in-up transform transition-all border border-white/20">
+          <div className="relative bg-white w-full max-w-[440px] rounded-[40px] shadow-soft-2xl overflow-hidden animate-scaleIn transform transition-smooth border border-calm-sage/10">
             <div className="p-6 md:p-8">
               
               {loginStatus === 'idle' && (
