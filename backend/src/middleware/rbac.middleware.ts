@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
-import UserModel from '../models/user.model';
+import { prisma } from '../config/db';
 import { AppError } from './error.middleware';
+
+const db = prisma as any;
 
 /**
  * Role type definition
@@ -62,7 +64,10 @@ const getUserRole = async (userId: string): Promise<{ role: UserRole; isDeleted:
 	}
 
 	// Query database if not in cache
-	const user = await UserModel.findById(userId).select('_id role isDeleted').lean();
+	const user = await db.user.findUnique({
+		where: { id: userId },
+		select: { role: true },
+	});
 
 	if (!user) {
 		return null;
@@ -70,14 +75,14 @@ const getUserRole = async (userId: string): Promise<{ role: UserRole; isDeleted:
 
 	// Cache the result
 	roleCache.set(userId, {
-		role: user.role as UserRole,
+		role: String(user.role).toLowerCase() as UserRole,
 		timestamp: Date.now(),
-		isDeleted: user.isDeleted || false,
+		isDeleted: false,
 	});
 
 	return {
-		role: user.role as UserRole,
-		isDeleted: user.isDeleted || false,
+		role: String(user.role).toLowerCase() as UserRole,
+		isDeleted: false,
 	};
 };
 

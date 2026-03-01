@@ -40,7 +40,6 @@ export interface EnvConfig {
 	nodeEnv: NodeEnv;
 	port: number;
 	apiPrefix: string;
-	mongoUri: string;
 	databaseUrl?: string;
 	jwtAccessSecret: string;
 	jwtRefreshSecret: string;
@@ -66,13 +65,19 @@ export interface EnvConfig {
 	sessionNotesEncryptionKey: string;
 	redisUrl: string;
 	analyticsRollupIntervalSeconds?: number;
+	razorpayKeyId?: string;
+	razorpayKeySecret?: string;
+	razorpayWebhookSecret?: string;
+	paymentProviderSharePercent: number;
+	paymentPlatformSharePercent: number;
+	webhookIdempotencyTtlSeconds: number;
+	minPayoutMinor: number;
 }
 
 export const env: EnvConfig = Object.freeze({
 	nodeEnv: parseNodeEnv(process.env.NODE_ENV),
 	port: parsePort(process.env.PORT),
 	apiPrefix: process.env.API_PREFIX ?? '/api',
-	mongoUri: process.env.MONGO_URI ?? 'mongodb://127.0.0.1:27017/manas360',
 	databaseUrl: process.env.DATABASE_URL,
 	jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? 'change-access-secret',
 	jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'change-refresh-secret',
@@ -98,5 +103,12 @@ export const env: EnvConfig = Object.freeze({
 	sessionNotesEncryptionKey: process.env.SESSION_NOTES_ENCRYPTION_KEY ?? '',
 	redisUrl: process.env.REDIS_URL ?? 'redis://127.0.0.1:6379',
 	analyticsRollupIntervalSeconds: parseNumber(process.env.ANALYTICS_ROLLUP_INTERVAL_SECONDS, 3600),
+	razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+	razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+	razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+	paymentProviderSharePercent: parseNumber(process.env.PAYMENT_PROVIDER_SHARE_PERCENT, 60),
+	paymentPlatformSharePercent: parseNumber(process.env.PAYMENT_PLATFORM_SHARE_PERCENT, 40),
+	webhookIdempotencyTtlSeconds: parseNumber(process.env.WEBHOOK_IDEMPOTENCY_TTL_SECONDS, 3600),
+	minPayoutMinor: parseNumber(process.env.MIN_PAYOUT_MINOR, 10000),
 });
 
