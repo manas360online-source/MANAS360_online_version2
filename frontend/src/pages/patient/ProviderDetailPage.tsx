@@ -32,7 +32,7 @@ export default function ProviderDetailPage() {
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Link to={`/book/${provider.id}`} className="responsive-action-btn inline-flex justify-center rounded-xl bg-slate-900 text-white">Book Session</Link>
+        <Link to={`/patient/book/${provider.id}`} className="responsive-action-btn inline-flex justify-center rounded-xl bg-slate-900 text-white">Book Session</Link>
       </div>
       </div>
     </div>

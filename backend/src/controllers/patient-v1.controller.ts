@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import PDFDocument from 'pdfkit';
 import { AppError } from '../middleware/error.middleware';
 import { sendSuccess } from '../utils/response';
 import {
@@ -7,6 +8,8 @@ import {
 	getMoodHistory,
 	getPatientDashboard,
 	getProviderById,
+	getSessionDocumentPayload,
+	getSessionDetail,
 	getSessionHistory,
 	getUpcomingSessions,
 	initiateSessionBooking,
@@ -16,6 +19,17 @@ import {
 	submitAssessment,
 	verifySessionPaymentAndCreateSession,
 } from '../services/patient-v1.service';
+
+const renderPdfBuffer = async (write: (doc: any) => void): Promise<Buffer> =>
+	new Promise((resolve, reject) => {
+		const doc = new PDFDocument({ margin: 48 });
+		const chunks: Buffer[] = [];
+		doc.on('data', (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+		doc.on('end', () => resolve(Buffer.concat(chunks)));
+		doc.on('error', reject);
+		write(doc);
+		doc.end();
+	});
 
 const authUserId = (req: Request): string => {
 	const userId = req.auth?.userId;
@@ -84,6 +98,109 @@ export const upcomingSessionsController = async (req: Request, res: Response): P
 export const sessionHistoryController = async (req: Request, res: Response): Promise<void> => {
 	const data = await getSessionHistory(authUserId(req));
 	sendSuccess(res, data, 'Session history fetched');
+};
+
+export const sessionDetailController = async (req: Request, res: Response): Promise<void> => {
+	const sessionId = String(req.params.id || '').trim();
+	if (!sessionId) throw new AppError('session id is required', 422);
+	const data = await getSessionDetail(authUserId(req), sessionId);
+	sendSuccess(res, data, 'Session detail fetched');
+};
+
+export const sessionSummaryPdfController = async (req: Request, res: Response): Promise<void> => {
+	const sessionId = String(req.params.id || '').trim();
+	if (!sessionId) throw new AppError('session id is required', 422);
+
+	const payload = await getSessionDocumentPayload(authUserId(req), sessionId);
+	const pdf = await renderPdfBuffer((doc) => {
+		doc.fontSize(20).font('Helvetica-Bold').text('MANAS360 Session Summary', { align: 'center' });
+		doc.moveDown(0.6);
+		doc.fontSize(10).font('Helvetica').fillColor('#444').text(`Generated: ${new Date().toLocaleString()}`, { align: 'right' });
+		doc.fillColor('#000');
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Session Information');
+		doc.fontSize(10).font('Helvetica').text(`Booking Reference: ${payload.bookingReferenceId}`);
+		doc.text(`Session ID: ${payload.sessionId}`);
+		doc.text(`Date & Time: ${new Date(payload.scheduledAt).toLocaleString()}`);
+		doc.text(`Status: ${payload.status}`);
+		doc.text(`Duration: ${payload.durationMinutes} minutes`);
+		doc.text(`Payment Status: ${payload.paymentStatus}`);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Care Team');
+		doc.fontSize(10).font('Helvetica').text(`Patient: ${payload.patient.name}`);
+		if (payload.patient.email) doc.text(`Patient Email: ${payload.patient.email}`);
+		doc.text(`Provider: ${payload.therapist.name}`);
+		doc.text(`Provider Role: ${payload.therapist.role || 'therapist'}`);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Session Notes');
+		doc.fontSize(10).font('Helvetica');
+		if (payload.notes) {
+			doc.text(payload.notes, { width: 500 });
+			if (payload.noteUpdatedAt) {
+				doc.moveDown(0.5);
+				doc.fontSize(9).fillColor('#666').text(`Last updated: ${new Date(payload.noteUpdatedAt).toLocaleString()}`);
+				doc.fillColor('#000').fontSize(10);
+			}
+		} else {
+			doc.text('No therapist notes are available for this session yet.');
+		}
+	});
+
+	const fileName = `session-${payload.bookingReferenceId || payload.sessionId}.pdf`;
+	res.setHeader('Content-Type', 'application/pdf');
+	res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+	res.status(200).send(pdf);
+};
+
+export const sessionInvoicePdfController = async (req: Request, res: Response): Promise<void> => {
+	const sessionId = String(req.params.id || '').trim();
+	if (!sessionId) throw new AppError('session id is required', 422);
+
+	const payload = await getSessionDocumentPayload(authUserId(req), sessionId);
+	if (!['PAID', 'CAPTURED'].includes(payload.paymentStatus)) {
+		throw new AppError('Invoice is available only for paid sessions', 409);
+	}
+
+	const amount = (payload.sessionFeeMinor / 100).toFixed(2);
+	const taxRate = 0.18;
+	const subtotal = payload.sessionFeeMinor / 100;
+	const tax = subtotal * taxRate;
+	const total = subtotal + tax;
+
+	const pdf = await renderPdfBuffer((doc) => {
+		doc.fontSize(20).font('Helvetica-Bold').text('MANAS360 Invoice', { align: 'center' });
+		doc.moveDown(0.8);
+		doc.fontSize(10).font('Helvetica').text(`Invoice No: INV-${payload.bookingReferenceId}`);
+		doc.text(`Booking Reference: ${payload.bookingReferenceId}`);
+		doc.text(`Session Date: ${new Date(payload.scheduledAt).toLocaleString()}`);
+		doc.text(`Issued On: ${new Date().toLocaleDateString()}`);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Billed To');
+		doc.fontSize(10).font('Helvetica').text(payload.patient.name);
+		if (payload.patient.email) doc.text(payload.patient.email);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Service Details');
+		doc.fontSize(10).font('Helvetica').text(`Provider: ${payload.therapist.name}`);
+		doc.text(`Therapy Session (${payload.durationMinutes} mins)`);
+		doc.text(`Amount: INR ${amount}`);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Payment Breakdown');
+		doc.fontSize(10).font('Helvetica').text(`Subtotal: INR ${subtotal.toFixed(2)}`);
+		doc.text(`Tax (18%): INR ${tax.toFixed(2)}`);
+		doc.font('Helvetica-Bold').text(`Total: INR ${total.toFixed(2)}`);
+		doc.font('Helvetica').text(`Payment Status: ${payload.paymentStatus}`);
+	});
+
+	const fileName = `invoice-${payload.bookingReferenceId || payload.sessionId}.pdf`;
+	res.setHeader('Content-Type', 'application/pdf');
+	res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+	res.status(200).send(pdf);
 };
 
 export const submitAssessmentController = async (req: Request, res: Response): Promise<void> => {

@@ -11,6 +11,11 @@ export const patientApi = {
     (await http.post('/v1/payments/verify', payload)).data,
   getUpcomingSessions: async () => (await http.get('/v1/sessions/upcoming')).data,
   getSessionHistory: async () => (await http.get('/v1/sessions/history')).data,
+  getSessionDetail: async (id: string) => (await http.get(`/v1/sessions/${encodeURIComponent(id)}`)).data,
+  downloadSessionPdf: async (id: string) =>
+    (await http.get(`/v1/sessions/${encodeURIComponent(id)}/documents/session-pdf`, { responseType: 'blob' })).data,
+  downloadInvoicePdf: async (id: string) =>
+    (await http.get(`/v1/sessions/${encodeURIComponent(id)}/documents/invoice`, { responseType: 'blob' })).data,
   submitAssessment: async (payload: { type: string; score?: number; answers?: number[] }) =>
     (await http.post('/v1/assessments/submit', payload)).data,
   addMood: async (payload: { mood: number; note?: string }) => (await http.post('/v1/mood', payload)).data,

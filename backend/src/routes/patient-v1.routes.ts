@@ -12,7 +12,10 @@ import {
 	listProvidersController,
 	markNotificationReadController,
 	moodHistoryController,
+	sessionInvoicePdfController,
+	sessionDetailController,
 	sessionHistoryController,
+	sessionSummaryPdfController,
 	submitAssessmentController,
 	upcomingSessionsController,
 	verifyPaymentController,
@@ -28,6 +31,9 @@ router.get('/providers/:id', requireAuth, requireRole('patient'), asyncHandler(g
 router.post('/sessions/book', requireAuth, requireRole('patient'), asyncHandler(bookSessionController));
 router.get('/sessions/upcoming', requireAuth, requireRole('patient'), asyncHandler(upcomingSessionsController));
 router.get('/sessions/history', requireAuth, requireRole('patient'), asyncHandler(sessionHistoryController));
+router.get('/sessions/:id/documents/session-pdf', requireAuth, requireRole('patient'), asyncHandler(sessionSummaryPdfController));
+router.get('/sessions/:id/documents/invoice', requireAuth, requireRole('patient'), asyncHandler(sessionInvoicePdfController));
+router.get('/sessions/:id', requireAuth, requireRole('patient'), asyncHandler(sessionDetailController));
 
 router.post('/payments/verify', requireAuth, requireRole('patient'), asyncHandler(verifyPaymentController));
 

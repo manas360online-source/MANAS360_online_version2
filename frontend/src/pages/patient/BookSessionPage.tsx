@@ -70,7 +70,7 @@ export default function BookSessionPage() {
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
             await patientApi.verifyPayment(response);
-            navigate('/sessions');
+            navigate('/patient/sessions');
           } catch (verifyError: any) {
             setError(verifyError?.response?.data?.message || 'Payment captured but verification failed.');
           }

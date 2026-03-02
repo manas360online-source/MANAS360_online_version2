@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { prisma } from '../config/db';
 import { AppError } from '../middleware/error.middleware';
+import { decryptSessionNote } from '../utils/encryption';
 import { createSessionPayment } from './payment.service';
 import { verifyRazorpayPaymentSignature } from './razorpay.service';
 
@@ -414,6 +415,159 @@ export const getSessionHistory = async (userId: string) => {
 		payment_status: s.paymentStatus,
 		provider: { id: s.therapistProfile.id, name: String(s.therapistProfile.name || `${s.therapistProfile.firstName || ''} ${s.therapistProfile.lastName || ''}`.trim()) },
 	}));
+};
+
+export const getSessionDetail = async (userId: string, sessionId: string) => {
+	const patientProfile = await getPatientProfile(userId);
+	const session = await db.therapySession.findFirst({
+		where: { id: sessionId, patientProfileId: patientProfile.id },
+		select: {
+			id: true,
+			bookingReferenceId: true,
+			dateTime: true,
+			status: true,
+			durationMinutes: true,
+			sessionFeeMinor: true,
+			paymentStatus: true,
+			agoraChannel: true,
+			noteEncryptedContent: true,
+			noteIv: true,
+			noteAuthTag: true,
+			noteUpdatedAt: true,
+			therapistProfile: { select: { id: true, firstName: true, lastName: true, name: true, role: true } },
+		},
+	});
+
+	if (!session) throw new AppError('Session not found', 404);
+
+	let decryptedNotes: string | null = null;
+	if (session.noteEncryptedContent && session.noteIv && session.noteAuthTag) {
+		try {
+			decryptedNotes = decryptSessionNote({
+				encryptedContent: session.noteEncryptedContent,
+				iv: session.noteIv,
+				authTag: session.noteAuthTag,
+			});
+		} catch {
+			decryptedNotes = null;
+		}
+	}
+
+	const providerName = String(session.therapistProfile.name || `${session.therapistProfile.firstName || ''} ${session.therapistProfile.lastName || ''}`.trim() || 'Therapist');
+	const providerRole = String(session.therapistProfile.role || '').toLowerCase();
+	const hasPrescription = providerRole === 'psychiatrist';
+
+	return {
+		id: session.id,
+		booking_reference: session.bookingReferenceId,
+		scheduled_at: session.dateTime,
+		status: String(session.status).toLowerCase(),
+		duration_minutes: session.durationMinutes,
+		session_fee: Number(session.sessionFeeMinor),
+		payment_status: session.paymentStatus,
+		agora_channel: session.agoraChannel,
+		provider: {
+			id: session.therapistProfile.id,
+			name: providerName,
+			role: providerRole,
+		},
+		notes: {
+			content: decryptedNotes,
+			updated_at: session.noteUpdatedAt,
+			available: Boolean(decryptedNotes),
+		},
+		prescription: {
+			available: false,
+			requires_psychiatrist: hasPrescription,
+			message: hasPrescription
+				? 'Prescription is not shared yet.'
+				: 'Prescription applies to psychiatrist sessions only.',
+		},
+		documents: {
+			session_pdf_available: true,
+			invoice_available: ['PAID', 'CAPTURED'].includes(String(session.paymentStatus || '').toUpperCase()),
+			invoice_reference: session.bookingReferenceId,
+		},
+	};
+};
+
+export const getSessionDocumentPayload = async (userId: string, sessionId: string) => {
+	const patientProfile = await getPatientProfile(userId);
+	const session = await db.therapySession.findFirst({
+		where: { id: sessionId, patientProfileId: patientProfile.id },
+		select: {
+			id: true,
+			bookingReferenceId: true,
+			dateTime: true,
+			status: true,
+			durationMinutes: true,
+			sessionFeeMinor: true,
+			paymentStatus: true,
+			noteEncryptedContent: true,
+			noteIv: true,
+			noteAuthTag: true,
+			noteUpdatedAt: true,
+			createdAt: true,
+			updatedAt: true,
+			patientProfile: {
+				select: {
+					user: { select: { id: true, firstName: true, lastName: true, name: true, email: true } },
+				},
+			},
+			therapistProfile: { select: { id: true, firstName: true, lastName: true, name: true, email: true, role: true } },
+		},
+	});
+
+	if (!session) throw new AppError('Session not found', 404);
+
+	let notes: string | null = null;
+	if (session.noteEncryptedContent && session.noteIv && session.noteAuthTag) {
+		try {
+			notes = decryptSessionNote({
+				encryptedContent: session.noteEncryptedContent,
+				iv: session.noteIv,
+				authTag: session.noteAuthTag,
+			});
+		} catch {
+			notes = null;
+		}
+	}
+
+	const patientName = String(
+		session.patientProfile.user.name
+			|| `${session.patientProfile.user.firstName || ''} ${session.patientProfile.user.lastName || ''}`.trim()
+			|| 'Patient',
+	);
+	const therapistName = String(
+		session.therapistProfile.name
+			|| `${session.therapistProfile.firstName || ''} ${session.therapistProfile.lastName || ''}`.trim()
+			|| 'Therapist',
+	);
+
+	return {
+		sessionId: session.id,
+		bookingReferenceId: session.bookingReferenceId,
+		scheduledAt: session.dateTime,
+		status: String(session.status).toUpperCase(),
+		durationMinutes: session.durationMinutes,
+		sessionFeeMinor: Number(session.sessionFeeMinor),
+		paymentStatus: String(session.paymentStatus || 'UNPAID').toUpperCase(),
+		notes,
+		noteUpdatedAt: session.noteUpdatedAt,
+		createdAt: session.createdAt,
+		updatedAt: session.updatedAt,
+		patient: {
+			id: session.patientProfile.user.id,
+			name: patientName,
+			email: session.patientProfile.user.email || null,
+		},
+		therapist: {
+			id: session.therapistProfile.id,
+			name: therapistName,
+			email: session.therapistProfile.email || null,
+			role: String(session.therapistProfile.role || '').toLowerCase(),
+		},
+	};
 };
 
 export const submitAssessment = async (userId: string, input: { type: string; score?: number; answers?: number[] }) => {
