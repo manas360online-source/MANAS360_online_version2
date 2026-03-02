@@ -28,7 +28,16 @@ import BillingPage from './pages/patient/BillingPage'
 import DocumentsPage from './pages/patient/DocumentsPage'
 import SupportPage from './pages/patient/SupportPage'
 import NotificationsPage from './pages/patient/NotificationsPage'
+import CBTSessionPlayerPage from './pages/patient/CBTSessionPlayerPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminDashboardPage from './pages/admin/Dashboard'
+import AdminShellLayout from './components/admin/AdminShellLayout'
+import AdminUsersPage from './pages/admin/Users'
+import AdminTherapistsPage from './pages/admin/Therapists'
+import AdminVerificationPage from './pages/admin/Verification'
+import AdminSubscriptionsPage from './pages/admin/Subscriptions'
+import AdminRevenuePage from './pages/admin/Revenue'
+import AdminSettingsPage from './pages/admin/Settings'
 
 interface AssessmentData {
   symptoms: string[];
@@ -98,6 +107,24 @@ function App() {
         <Route path="/auth/login" element={<LoginWidget initialMode="login" />} />
         <Route path="/auth/signup" element={<LoginWidget initialMode="register" />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminShellLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="analytics" replace />} />
+          <Route path="analytics" element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="therapists" element={<AdminTherapistsPage />} />
+          <Route path="verification" element={<AdminVerificationPage />} />
+          <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
+          <Route path="revenue" element={<AdminRevenuePage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="dashboard" element={<Navigate to="/admin/analytics" replace />} />
+        </Route>
         <Route path="/login" element={<Navigate to="/auth/login" replace />} />
         <Route path="/register" element={<Navigate to="/auth/signup" replace />} />
 
@@ -116,6 +143,7 @@ function App() {
           <Route path="book/:providerId" element={<BookSessionPage />} />
           <Route path="sessions" element={<SessionsPage />} />
           <Route path="sessions/:id" element={<PatientSessionDetailPage />} />
+          <Route path="cbt/:sessionId" element={<CBTSessionPlayerPage />} />
           <Route path="sessions/:id/live" element={<LiveSessionPage />} />
           <Route path="messages" element={<AIChatPage />} />
           <Route path="profile" element={<ProfilePage />} />

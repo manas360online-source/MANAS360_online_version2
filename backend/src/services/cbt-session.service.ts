@@ -577,29 +577,72 @@ export class CBTSessionService {
     patientId: string,
     questionId: string,
     responseData: any,
-    timeSpentSeconds?: number
-  ): Promise<{ nextQuestionId: string | null; sessionComplete: boolean }> {
-    // Store response
-    const response = await prisma.patientSessionResponse.create({
-      data: {
-        sessionId,
-        patientId,
-        questionId,
-        responseData,
-        timeSpentSeconds,
-      },
-    });
-
-    // Evaluate branching logic using compiled template snapshot when available
-    let nextQuestionIdFromBranching: string | null = null;
-    let usedRuleId: string | null = null;
-
+    timeSpentSeconds?: number,
+    options?: { messageId?: string }
+  ): Promise<{ nextQuestionId: string | null; sessionComplete: boolean; replayed?: boolean }> {
     const session = await prisma.patientSession.findUnique({
       where: { id: sessionId },
       include: { template: { include: { questions: true } } },
     });
 
     if (!session) throw new Error('Session not found');
+    if (String(session.patientId) !== String(patientId)) throw new Error('Forbidden: session does not belong to patient');
+
+    const templateQuestions = session.template.questions || [];
+    const targetQuestion = templateQuestions.find((q: any) => String(q.id) === String(questionId));
+    if (!targetQuestion) throw new Error('Invalid question for this session version');
+
+    if (session.status === 'COMPLETED' || session.status === 'ABANDONED') {
+      throw new Error('Session is already finalized');
+    }
+
+    const messageId = options?.messageId?.trim();
+    if (messageId) {
+      const replay = await prisma.patientSessionResponse.findUnique({ where: { messageId } });
+      if (replay) {
+        const questions = templateQuestions.sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+        const nextQuestion = questions[session.currentQuestionIndex] || null;
+        return {
+          nextQuestionId: nextQuestion?.id || null,
+          sessionComplete: String(session.status) === 'COMPLETED',
+          replayed: true,
+        };
+      }
+    }
+
+    const existingForQuestion = await prisma.patientSessionResponse.findUnique({
+      where: { sessionId_questionId: { sessionId, questionId } },
+      select: { id: true, messageId: true },
+    });
+
+    if (existingForQuestion) {
+      if (messageId && existingForQuestion.messageId === messageId) {
+        const questions = templateQuestions.sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+        const nextQuestion = questions[session.currentQuestionIndex] || null;
+        return {
+          nextQuestionId: nextQuestion?.id || null,
+          sessionComplete: String(session.status) === 'COMPLETED',
+          replayed: true,
+        };
+      }
+      throw new Error('Duplicate response for this question');
+    }
+
+    // Store response
+    await prisma.patientSessionResponse.create({
+      data: {
+        sessionId,
+        patientId,
+        questionId,
+        responseData,
+        timeSpentSeconds,
+        messageId: messageId || undefined,
+      },
+    });
+
+    // Evaluate branching logic using compiled template snapshot when available
+    let nextQuestionIdFromBranching: string | null = null;
+    let usedRuleId: string | null = null;
 
     const snapshot = (session as any).templateSnapshot;
     if (snapshot) {

@@ -344,15 +344,18 @@ export class CBTSessionController {
   async respondToQuestion(req: Request, res: Response) {
     try {
       const id = String(req.params.id);
-      const { questionId, responseData, timeSpentSeconds } = req.body;
+      const { questionId, responseData, timeSpentSeconds, idempotencyKey } = req.body;
       const patientId = String(req.user?.id);
+      const keyFromHeader = typeof req.get('x-idempotency-key') === 'string' ? String(req.get('x-idempotency-key')) : '';
+      const messageId = String(idempotencyKey || keyFromHeader || '').trim();
 
       const result = await cbtSessionService.recordResponse(
         id,
         patientId,
         questionId,
         responseData,
-        timeSpentSeconds
+        timeSpentSeconds,
+        { messageId: messageId || undefined }
       );
 
       let nextQuestion = null;

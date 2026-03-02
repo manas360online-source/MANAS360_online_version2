@@ -9,6 +9,16 @@ import {
 	asyncHandler,
 } from '../middleware/validate.middleware';
 import { listUsersController, getUserController, verifyTherapistController, getMetricsController, listSubscriptionsController } from '../controllers/admin.controller';
+import {
+	getAdminAnalyticsSummaryController,
+	getAdminMostUsedTemplatesController,
+	getAdminTherapistUtilizationController,
+	exportAdminAnalyticsReportController,
+	enqueueAdminAnalyticsExportController,
+	getAdminAnalyticsExportStatusController,
+	downloadAdminAnalyticsExportController,
+} from '../controllers/admin-analytics.controller';
+import { adminAnalyticsExportRateLimiter } from '../middleware/rateLimiter.middleware';
 
 const router = Router();
 
@@ -72,5 +82,69 @@ router.get('/metrics', requireAuth, requireRole('admin'), asyncHandler(getMetric
  * Response: Paginated list of subscriptions with user and plan details
  */
 router.get('/subscriptions', requireAuth, requireRole('admin'), ...validateAdminListSubscriptionsQuery, asyncHandler(listSubscriptionsController));
+
+/**
+ * GET /api/v1/admin/analytics/summary
+ * Query params:
+ *   - from: ISO date/time string (required)
+ *   - to: ISO date/time string (required)
+ *   - organizationKey: bigint (required)
+ *   - therapistId: string (optional)
+ */
+router.get('/analytics/summary', requireAuth, requireRole('admin'), asyncHandler(getAdminAnalyticsSummaryController));
+
+/**
+ * GET /api/v1/admin/analytics/templates
+ * Query params:
+ *   - from: ISO date string (required)
+ *   - to: ISO date string (required)
+ *   - organizationKey: bigint (required)
+ *   - limit: number (optional, default 25, max 100)
+ *   - lastSessionsCount: bigint (optional, keyset cursor)
+ *   - lastTemplateKey: bigint (optional, keyset cursor)
+ */
+router.get('/analytics/templates', requireAuth, requireRole('admin'), asyncHandler(getAdminMostUsedTemplatesController));
+
+/**
+ * GET /api/v1/admin/analytics/utilization
+ * Query params:
+ *   - from: ISO date string (required)
+ *   - to: ISO date string (required)
+ *   - organizationKey: bigint (required)
+ *   - limit: number (optional, default 25, max 100)
+ *   - lastWeekStartDate: YYYY-MM-DD (optional, keyset cursor)
+ *   - lastTherapistKey: bigint (optional, keyset cursor)
+ */
+router.get('/analytics/utilization', requireAuth, requireRole('admin'), asyncHandler(getAdminTherapistUtilizationController));
+
+/**
+ * POST /api/v1/admin/analytics/export
+ * Body:
+ *   - format: 'csv' | 'pdf'
+ *   - from: ISO date/time (required)
+ *   - to: ISO date/time (required)
+ *   - organizationKey: number (required)
+ *   - includeChartsSnapshot?: boolean
+ *   - chartSnapshots?: string[] (data URL images; optional)
+ */
+router.post('/analytics/export', requireAuth, requireRole('admin'), adminAnalyticsExportRateLimiter, asyncHandler(exportAdminAnalyticsReportController));
+
+/**
+ * POST /api/v1/admin/analytics/export/async
+ * Queue heavy export job for async processing.
+ */
+router.post('/analytics/export/async', requireAuth, requireRole('admin'), adminAnalyticsExportRateLimiter, asyncHandler(enqueueAdminAnalyticsExportController));
+
+/**
+ * GET /api/v1/admin/analytics/export/:exportJobKey/status
+ * Poll async export status.
+ */
+router.get('/analytics/export/:exportJobKey/status', requireAuth, requireRole('admin'), asyncHandler(getAdminAnalyticsExportStatusController));
+
+/**
+ * GET /api/v1/admin/analytics/export/:exportJobKey/download
+ * Download completed async export output.
+ */
+router.get('/analytics/export/:exportJobKey/download', requireAuth, requireRole('admin'), asyncHandler(downloadAdminAnalyticsExportController));
 
 export default router;
