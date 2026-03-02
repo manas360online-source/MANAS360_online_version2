@@ -86,6 +86,15 @@ export const MegaNav: React.FC<MegaNavProps> = ({ tone = 'dark' }) => {
     [activeTab]
   );
 
+  const desktopGridClass = useMemo(() => {
+    if (!activeTab) return 'grid-cols-4' as const;
+    if (activeTab === 'I Need Support') return 'grid-cols-6' as const;
+    if (activeTab === 'For Relationships') return 'grid-cols-4' as const;
+    if (activeTab === 'For Professionals') return 'grid-cols-5' as const;
+    if (activeTab === 'Learn & Grow') return 'grid-cols-5' as const;
+    return 'grid-cols-4' as const;
+  }, [activeTab]);
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (!rootRef.current) return;
@@ -198,13 +207,19 @@ export const MegaNav: React.FC<MegaNavProps> = ({ tone = 'dark' }) => {
             closeTimerRef.current = null;
           }
         }}
-        className={`absolute left-1/2 top-full z-40 hidden w-screen -translate-x-1/2 px-2 pt-1 transition-all duration-[250ms] ease-out md:block ${
+        className={`absolute left-1/2 top-full z-40 hidden w-screen -translate-x-1/2 px-0 pt-0 transition-all duration-[250ms] ease-out md:block ${
           activeTab ? 'pointer-events-auto opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
         }`}
       >
         {activeTab ? (
-          <div id={`panel-${activeTab}`} className="mx-auto w-full max-w-5xl">
-            <MegaPanel items={activeItems} onNavigate={() => setActiveTab(null)} tone={tone} />
+          <div id={`panel-${activeTab}`} className="w-full">
+            <MegaPanel
+              items={activeItems}
+              onNavigate={() => setActiveTab(null)}
+              tone={tone}
+              desktopGridClass={desktopGridClass}
+              fullBleedDesktop
+            />
           </div>
         ) : null}
       </div>

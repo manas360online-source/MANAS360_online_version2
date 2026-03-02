@@ -27,10 +27,10 @@ export const Hero: React.FC = () => {
             "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop')",
         }}
       />
-      <div aria-hidden="true" className="absolute inset-0 bg-charcoal/40" />
+      <div aria-hidden="true" className="absolute inset-0 bg-charcoal/18" />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/30 to-charcoal/55"
+        className="absolute inset-0 bg-gradient-to-b from-charcoal/45 via-charcoal/10 to-charcoal/35"
       />
 
       {/* Hero content */}

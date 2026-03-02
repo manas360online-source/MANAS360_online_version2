@@ -13,9 +13,18 @@ interface MegaPanelProps {
   onNavigate?: () => void;
   mobile?: boolean;
   tone?: 'dark' | 'light';
+  desktopGridClass?: 'grid-cols-3' | 'grid-cols-4' | 'grid-cols-5' | 'grid-cols-6';
+  fullBleedDesktop?: boolean;
 }
 
-export const MegaPanel: React.FC<MegaPanelProps> = ({ items, onNavigate, mobile = false, tone = 'dark' }) => {
+export const MegaPanel: React.FC<MegaPanelProps> = ({
+  items,
+  onNavigate,
+  mobile = false,
+  tone = 'dark',
+  desktopGridClass = 'grid-cols-4',
+  fullBleedDesktop = false,
+}) => {
   const isLight = tone === 'light';
 
   return (
@@ -23,12 +32,14 @@ export const MegaPanel: React.FC<MegaPanelProps> = ({ items, onNavigate, mobile 
       className={`w-full ${isLight ? 'bg-cream' : 'bg-charcoal/96'} ${
         mobile
           ? 'rounded-lg p-2 shadow-soft-sm'
-          : 'rounded-b-xl border-t-0 p-3 shadow-soft-sm'
+          : fullBleedDesktop
+            ? 'rounded-none border-y border-t-0 px-4 py-3 shadow-soft-sm md:px-6 lg:px-10'
+            : 'rounded-b-xl border-t-0 p-3 shadow-soft-sm'
       } ${
         isLight ? 'border border-calm-sage/25' : 'border border-calm-sage/30'
       }`}
     >
-      <ul className={`grid ${mobile ? 'grid-cols-1' : 'grid-cols-4'} gap-x-3 gap-y-1.5`}>
+      <ul className={`grid ${mobile ? 'grid-cols-1' : desktopGridClass} gap-x-3 gap-y-1.5`}>
         {items.map((item) => (
           <li key={item.route}>
             <Link
