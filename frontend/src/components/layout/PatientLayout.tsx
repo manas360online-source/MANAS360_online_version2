@@ -20,8 +20,8 @@ export const PatientLayout: React.FC<PatientLayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/patient/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/patient/sessions', label: 'Sessions', icon: '💬' },
-    { path: '/patient/find-therapist', label: 'Find Therapist', icon: '👨‍⚕️' },
-    { path: '/patient/assessment', label: 'Assessment', icon: '📋' },
+    { path: '/patient/providers', label: 'Find Therapist', icon: '👨‍⚕️' },
+    { path: '/assessment', label: 'Assessment', icon: '📋' },
     { path: '/patient/profile', label: 'Profile', icon: '👤' },
   ];
 
