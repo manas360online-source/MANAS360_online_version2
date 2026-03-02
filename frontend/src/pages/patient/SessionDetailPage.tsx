@@ -113,6 +113,14 @@ export default function SessionDetailPage() {
           <p><span className="text-charcoal/60">Booking Ref:</span> <span className="font-medium">{session.booking_reference || '—'}</span></p>
           <p><span className="text-charcoal/60">Payment:</span> <span className="font-medium">{session.payment_status || 'UNPAID'}</span></p>
         </div>
+        <div className="mt-4">
+          <Link
+            to={`/patient/cbt/${session.id}`}
+            className="inline-flex min-h-[40px] items-center rounded-full bg-charcoal px-4 text-sm font-medium text-cream"
+          >
+            Open CBT Session Player
+          </Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-calm-sage/15 bg-white/85 p-5 shadow-soft-sm">

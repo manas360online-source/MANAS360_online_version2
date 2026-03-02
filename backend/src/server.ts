@@ -4,6 +4,7 @@ import { connectDatabase, disconnectDatabase } from './config/db';
 import { env } from './config/env';
 import initSocket from './socket';
 import { startAnalyticsRollup } from './jobs/analyticsRollup.job';
+import './jobs/admin-analytics-export.worker';
 
 const startServer = async (): Promise<void> => {
 	await connectDatabase();

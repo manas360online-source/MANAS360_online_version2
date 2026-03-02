@@ -44,3 +44,15 @@ export const webhookRateLimiter = rateLimit({
 	},
 });
 
+export const adminAnalyticsExportRateLimiter = rateLimit({
+	windowMs: 10 * 60 * 1000,
+	max: 10,
+	standardHeaders: true,
+	legacyHeaders: false,
+	keyGenerator: (req) => String(req.auth?.userId || req.ip),
+	message: {
+		success: false,
+		message: 'Too many analytics export requests. Try again in a few minutes.',
+	},
+});
+
