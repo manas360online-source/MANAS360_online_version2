@@ -55,6 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return new RegExp(`(?:^|; )${csrfCookieName}=`).test(document.cookie);
   }, []);
 
+  const clearSessionHint = useCallback((): void => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const csrfCookieName = import.meta.env.VITE_CSRF_COOKIE_NAME || 'csrf_token';
+    document.cookie = `${csrfCookieName}=; Max-Age=0; path=/`;
+  }, []);
+
   const checkAuth = useCallback(async () => {
     if (!hasSessionHint()) {
       setUser(null);
@@ -67,10 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
     } catch {
       setUser(null);
+      clearSessionHint();
     } finally {
       setLoading(false);
     }
- 	}, [hasSessionHint]);
+	}, [hasSessionHint, clearSessionHint]);
 
   useEffect(() => {
     if (hasCheckedInitialAuthRef.current) {
@@ -98,8 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // keep frontend state consistent even if backend session already expired
     } finally {
       setUser(null);
+      clearSessionHint();
     }
-  }, []);
+  }, [clearSessionHint]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

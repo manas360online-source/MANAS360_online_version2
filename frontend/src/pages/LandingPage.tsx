@@ -6,6 +6,7 @@ import {
   TrustBar,
   HowItWorks,
   RoleSection,
+  LearnGrowCertificationSection,
   Testimonial,
   Footer,
   QuickAccessRail,
@@ -148,6 +149,13 @@ export const LandingPage: React.FC = () => {
           <section className="bg-cream px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="mx-auto max-w-6xl">
               <RoleSection />
+            </div>
+          </section>
+
+          {/* Learn & Grow — certification ecosystem */}
+          <section className="bg-cream px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+            <div className="mx-auto max-w-6xl">
+              <LearnGrowCertificationSection />
             </div>
           </section>
 

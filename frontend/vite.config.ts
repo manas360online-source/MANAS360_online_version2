@@ -17,13 +17,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    hmr: {
-      // Use plain WebSocket on localhost during local development
-      protocol: 'ws',
-      host: 'localhost',
-      port: 3000,
-      clientPort: 3000,
-    },
   },
   build: {
     outDir: 'dist',

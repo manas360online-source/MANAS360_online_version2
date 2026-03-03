@@ -5,7 +5,10 @@ const Sidebar: React.FC = () => {
   return (
     <nav className="w-60 bg-white border-r h-screen sticky top-0 p-4 hidden md:block">
       <div className="mb-6">
-        <div className="text-2xl font-semibold text-indigo-700">MANAS360</div>
+        <div className="flex items-center gap-2">
+          <img src="/Untitled.png" alt="MANAS360 logo" className="h-7 w-7 rounded-md object-cover" />
+          <div className="text-2xl font-semibold text-indigo-700">MANAS360</div>
+        </div>
         <div className="text-sm text-gray-500 mt-1">Therapist Console</div>
       </div>
 

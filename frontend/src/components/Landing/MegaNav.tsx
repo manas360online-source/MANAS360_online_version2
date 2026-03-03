@@ -66,7 +66,7 @@ const tabs: TabConfig[] = [
   {
     label: 'Learn & Grow',
     items: [
-      { icon: '📜', title: 'Certification Hub', description: 'Professional credential pathways', route: '/certifications' },
+      { icon: '📜', title: 'Certifications', description: 'Professional credential pathways', route: '/certifications' },
       { icon: '🧑‍⚕️', title: 'Join as Therapist', description: 'Become part of the MANAS360 network', route: '/join' },
       { icon: '📚', title: 'Psychoeducation', description: 'Learn practical wellbeing skills', route: '/learn' },
       { icon: '🏞️', title: 'Wellness Retreats', description: 'Restorative retreat experiences', route: '/retreats' },

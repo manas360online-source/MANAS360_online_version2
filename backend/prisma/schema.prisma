@@ -54,6 +54,12 @@ enum UserProvider {
   PHONE
 }
 
+enum CertificationLevel {
+  ENTRY
+  PROFESSIONAL
+  MASTERY
+}
+
 // ============ USERS ============
 
 model User {
@@ -1045,4 +1051,37 @@ model FinancialAuditLog {
   @@index([actorType, createdAt(sort: Desc)])
   @@index([traceId])
   @@map("financial_audit_logs")
+}
+
+model Certification {
+  id                 String             @id @default(uuid())
+  slug               String             @unique
+  code               String             @unique
+  title              String
+  shortTitle         String?
+  subtitle           String
+  level              CertificationLevel
+  levelBadge         String
+  journeyDescription String
+  durationLabel      String
+  investmentLabel    String
+  monthlyIncomeLabel String?
+  modulesCount       Int?
+  deliveryMode       String?
+  sessionRateLabel   String?
+  outcomeLabel       String?
+  prerequisitesLabel String
+  primaryCtaLabel    String
+  secondaryCtaLabel  String             @default("Learn More")
+  isInvitationOnly   Boolean            @default(false)
+  enrollmentOpen     Boolean            @default(true)
+  sortOrder          Int                @default(100)
+  isActive           Boolean            @default(true)
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([level, sortOrder])
+  @@index([isActive, sortOrder])
+  @@map("certifications")
 }

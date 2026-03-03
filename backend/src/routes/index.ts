@@ -12,6 +12,7 @@ import subscriptionRoutes from './subscription.routes';
 import webhookRoutes from './webhook.routes';
 import leadRoutes from './lead.routes';
 import patientV1Routes from './patient-v1.routes';
+import certificationRoutes from './certification.routes';
 
 const router = Router();
 
@@ -38,6 +39,8 @@ router.use('/v1/therapists/dashboard', dashboardRoutes);
 router.use('/v1/payments', paymentRoutes);
 router.use('/v1/subscriptions', subscriptionRoutes);
 router.use('/v1/leads', leadRoutes);
+router.use('/certifications', certificationRoutes);
+router.use('/v1/certifications', certificationRoutes);
 router.use('/webhooks', webhookRoutes);
 
 export default router;

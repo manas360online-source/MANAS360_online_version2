@@ -13,6 +13,10 @@ const mapRoleFilterToEnum = (role) => {
         return 'PATIENT';
     if (normalized === 'therapist')
         return 'THERAPIST';
+    if (normalized === 'psychiatrist')
+        return 'PSYCHIATRIST';
+    if (normalized === 'coach')
+        return 'COACH';
     if (normalized === 'admin')
         return 'ADMIN';
     throw new error_middleware_1.AppError('Invalid role filter', 400);

@@ -43,9 +43,10 @@ const mockOn = vi.fn();
 const mockEmit = vi.fn();
 const mockRemoveAll = vi.fn();
 const mockDisconnect = vi.fn();
+const mockConnect = vi.fn();
 
 vi.mock('socket.io-client', () => ({
-  io: () => ({ on: mockOn, emit: mockEmit, removeAllListeners: mockRemoveAll, disconnect: mockDisconnect }),
+  io: () => ({ on: mockOn, emit: mockEmit, connect: mockConnect, removeAllListeners: mockRemoveAll, disconnect: mockDisconnect }),
 }));
 
 import { useTherapistSocket } from '../useTherapistSocket';

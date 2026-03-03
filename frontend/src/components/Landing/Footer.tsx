@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Phone, Sparkles } from 'lucide-react';
+import { ArrowRight, Phone } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -70,7 +70,11 @@ export const Footer: React.FC = () => {
                 to="/"
                 className="inline-flex items-center gap-2 text-lg font-light text-charcoal"
               >
-                <Sparkles className="h-4 w-4 text-calm-sage" />
+                <img
+                  src="/Untitled.png"
+                  alt="MANAS360 logo"
+                  className="h-5 w-5 rounded object-cover"
+                />
                 <span className="font-serif">
                   MANAS<span className="font-semibold">360</span>
                 </span>

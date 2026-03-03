@@ -23,7 +23,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
 	if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userRole as any)) {
 		const fallback = userRole === 'admin'
-			? '/admin/login'
+			? '/admin-portal/login'
 			: userRole === 'therapist' || userRole === 'psychiatrist' || userRole === 'coach'
 				? '/therapist/analytics'
 				: '/patient/dashboard';
