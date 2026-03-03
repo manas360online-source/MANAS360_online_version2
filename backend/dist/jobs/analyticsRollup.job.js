@@ -37,6 +37,20 @@ END
 $$;`;
     await db_1.prisma.$executeRawUnsafe(createSql);
 }
+async function refreshAdminRollupsIfAvailable() {
+    try {
+        await db_1.prisma.$executeRawUnsafe(`DO $$
+		BEGIN
+			IF to_regprocedure('analytics.refresh_admin_rollups()') IS NOT NULL THEN
+				PERFORM analytics.refresh_admin_rollups();
+			END IF;
+		END
+		$$;`);
+    }
+    catch (e) {
+        console.warn('analytics: failed to refresh admin rollups', e);
+    }
+}
 async function refreshAnalyticsMaterializedViews() {
     try {
         await ensureMaterializedView();
@@ -48,6 +62,7 @@ async function refreshAnalyticsMaterializedViews() {
             // fallback to non-concurrent refresh if concurrent fails (e.g., lack of unique index or permission)
             await db_1.prisma.$executeRawUnsafe('REFRESH MATERIALIZED VIEW analytics_session_metrics;');
         }
+        await refreshAdminRollupsIfAvailable();
         console.log('analytics: refreshed materialized views');
     }
     catch (err) {

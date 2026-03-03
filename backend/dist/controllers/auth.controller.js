@@ -13,11 +13,23 @@ const getRequestMeta = (req) => ({
     userAgent: req.get('user-agent'),
     device: req.get('x-device-id') ?? undefined,
 });
+const resolveCookieDomain = () => {
+    const rawDomain = env_1.env.cookieDomain?.trim();
+    if (!rawDomain) {
+        return undefined;
+    }
+    const normalized = rawDomain.toLowerCase();
+    if (normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1') {
+        return undefined;
+    }
+    return rawDomain;
+};
+const cookieDomain = resolveCookieDomain();
 const tokenCookieOptions = {
     httpOnly: true,
     secure: env_1.env.cookieSecure,
     sameSite: 'strict',
-    domain: env_1.env.cookieDomain,
+    domain: cookieDomain,
     path: '/',
 };
 const setAuthCookies = (res, accessToken, refreshToken) => {
@@ -33,16 +45,21 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
         httpOnly: false,
         secure: env_1.env.cookieSecure,
         sameSite: 'strict',
-        domain: env_1.env.cookieDomain,
+        domain: cookieDomain,
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 };
 const registerController = async (req, res) => {
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (!name) {
+        throw new error_middleware_1.AppError('name is required', 400);
+    }
     const result = await (0, auth_service_1.registerWithEmail)({
         email: (0, auth_validator_1.validateEmail)(req.body.email),
         password: (0, auth_validator_1.validatePassword)(req.body.password),
-        name: typeof req.body.name === 'string' ? req.body.name.trim() || undefined : undefined,
+        name,
+        role: (0, auth_validator_1.validatePublicSignupRole)(req.body.role),
     }, getRequestMeta(req));
     (0, response_1.sendSuccess)(res, result, 'Registration successful', 201);
 };
@@ -82,9 +99,15 @@ const meController = async (req, res) => {
 };
 exports.meController = meController;
 const signupWithEmailController = async (req, res) => {
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (!name) {
+        throw new error_middleware_1.AppError('name is required', 400);
+    }
     const result = await (0, auth_service_1.registerWithEmail)({
         email: (0, auth_validator_1.validateEmail)(req.body.email),
         password: (0, auth_validator_1.validatePassword)(req.body.password),
+        name,
+        role: (0, auth_validator_1.validatePublicSignupRole)(req.body.role),
     }, getRequestMeta(req));
     (0, response_1.sendSuccess)(res, result, 'Registration successful', 201);
 };
@@ -193,7 +216,7 @@ const logoutController = async (req, res) => {
         httpOnly: false,
         secure: env_1.env.cookieSecure,
         sameSite: 'strict',
-        domain: env_1.env.cookieDomain,
+        domain: cookieDomain,
         path: '/',
     });
     (0, response_1.sendSuccess)(res, null, 'Logged out');

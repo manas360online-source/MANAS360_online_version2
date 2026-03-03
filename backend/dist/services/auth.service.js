@@ -13,6 +13,32 @@ const googleClient = new google_auth_library_1.OAuth2Client(env_1.env.googleClie
 const db = db_1.prisma;
 const nowPlusMinutes = (minutes) => new Date(Date.now() + minutes * 60 * 1000);
 const nowPlusDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+const toPrismaUserRole = (role) => {
+    if (role === 'patient')
+        return 'PATIENT';
+    if (role === 'therapist')
+        return 'THERAPIST';
+    if (role === 'psychiatrist')
+        return 'PSYCHIATRIST';
+    return 'COACH';
+};
+let supportedUserRolesCache = null;
+const getSupportedUserRoles = async () => {
+    if (supportedUserRolesCache) {
+        return supportedUserRolesCache;
+    }
+    try {
+        const rows = (await db.$queryRawUnsafe(`SELECT e.enumlabel
+			 FROM pg_type t
+			 JOIN pg_enum e ON t.oid = e.enumtypid
+			 WHERE t.typname = 'UserRole'`));
+        supportedUserRolesCache = new Set((rows ?? []).map((row) => String(row.enumlabel).toUpperCase()));
+    }
+    catch {
+        supportedUserRolesCache = new Set(['PATIENT', 'THERAPIST', 'ADMIN']);
+    }
+    return supportedUserRolesCache;
+};
 const audit = async (event, status, meta, context = {}) => {
     await db.authAuditLog.create({
         data: {
@@ -62,6 +88,11 @@ const registerWithEmail = async (input, meta) => {
     const passwordHash = await (0, hash_1.hashPassword)(input.password);
     const otp = (0, hash_1.generateNumericOtp)();
     const otpHash = await (0, hash_1.hashOtp)(otp);
+    const prismaRole = toPrismaUserRole(input.role);
+    const supportedRoles = await getSupportedUserRoles();
+    if (!supportedRoles.has(prismaRole)) {
+        throw new error_middleware_1.AppError(`Selected role '${input.role}' is not enabled yet. Role migration is pending.`, 400);
+    }
     const user = await db.user.create({
         data: {
             email: input.email.toLowerCase(),
@@ -69,13 +100,13 @@ const registerWithEmail = async (input, meta) => {
             emailVerificationOtpHash: otpHash,
             emailVerificationOtpExpiresAt: nowPlusMinutes(env_1.env.otpTtlMinutes),
             provider: 'LOCAL',
-            role: 'PATIENT',
-            name: input.name ?? null,
-            firstName: input.name?.trim() || '',
+            role: prismaRole,
+            name: input.name,
+            firstName: input.name.trim(),
             lastName: '',
         },
     });
-    await audit('REGISTER_SUCCESS', 'success', meta, { userId: user._id, email: user.email });
+    await audit('REGISTER_SUCCESS', 'success', meta, { userId: user.id, email: user.email });
     return {
         userId: String(user.id),
         email: user.email,
@@ -194,6 +225,10 @@ const loginWithPassword = async (input, meta) => {
         await audit('LOGIN_FAILED', 'failure', meta, { userId: user.id, email: user.email });
         throw new error_middleware_1.AppError('Invalid credentials', 401);
     }
+    if (user.email && !user.emailVerified) {
+        await audit('LOGIN_BLOCKED_EMAIL_UNVERIFIED', 'failure', meta, { userId: user.id, email: user.email });
+        throw new error_middleware_1.AppError('Email verification required before login', 403);
+    }
     if (user.mfaEnabled) {
         if (!input.mfaCode || !user.mfaSecret || !otplib_1.authenticator.check(input.mfaCode, user.mfaSecret)) {
             throw new error_middleware_1.AppError('Invalid MFA code', 401);
@@ -214,6 +249,7 @@ const loginWithPassword = async (input, meta) => {
             id: String(user.id),
             email: user.email,
             phone: user.phone,
+            role: user.role,
             emailVerified: user.emailVerified,
             phoneVerified: user.phoneVerified,
             mfaEnabled: user.mfaEnabled,
@@ -273,6 +309,7 @@ const loginWithGoogle = async (input, meta) => {
             id: String(user.id),
             email: user.email,
             phone: user.phone,
+            role: user.role,
             emailVerified: user.emailVerified,
             phoneVerified: user.phoneVerified,
             mfaEnabled: user.mfaEnabled,

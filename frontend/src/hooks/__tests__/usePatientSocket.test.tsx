@@ -6,7 +6,8 @@ const mockEmit = vi.fn();
 const mockOn = vi.fn();
 const mockRemoveAll = vi.fn();
 const mockDisconnect = vi.fn();
-vi.mock('socket.io-client', () => ({ io: () => ({ on: mockOn, emit: mockEmit, removeAllListeners: mockRemoveAll, disconnect: mockDisconnect, connected: true }) }));
+const mockConnect = vi.fn();
+vi.mock('socket.io-client', () => ({ io: () => ({ on: mockOn, emit: mockEmit, connect: mockConnect, removeAllListeners: mockRemoveAll, disconnect: mockDisconnect, connected: true }) }));
 
 import { usePatientSocket } from '../usePatientSocket';
 

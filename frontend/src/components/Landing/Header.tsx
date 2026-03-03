@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
 import { MegaNav } from './MegaNav';
 
 export const Header: React.FC = () => {
@@ -38,10 +37,10 @@ export const Header: React.FC = () => {
             }`}
             aria-label="MANAS360 home"
           >
-            <Sparkles
-              className={`h-5 w-5 transition-colors duration-300 ${
-                isAfterHero ? 'text-calm-sage' : 'text-calm-sage/80'
-              }`}
+            <img
+              src="/Untitled.png"
+              alt="MANAS360 logo"
+              className="h-6 w-6 rounded-md object-cover"
             />
             <span className="font-serif">
               MANAS<span className="font-semibold">360</span>

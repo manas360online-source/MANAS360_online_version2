@@ -31,6 +31,16 @@ export interface RegisterPayload {
 	role: 'patient' | 'therapist' | 'psychiatrist' | 'coach';
 }
 
+export interface PasswordResetRequestPayload {
+	identifier: string;
+}
+
+export interface PasswordResetPayload {
+	identifier: string;
+	otp: string;
+	newPassword: string;
+}
+
 export const getApiErrorMessage = (error: unknown, fallback = 'Request failed'): string => {
 	const axiosError = error as AxiosError<{ message?: string }>;
 	return axiosError.response?.data?.message ?? fallback;
@@ -38,7 +48,17 @@ export const getApiErrorMessage = (error: unknown, fallback = 'Request failed'):
 
 export const login = async (payload: LoginPayload): Promise<AuthUser> => {
 	const response = await http.post<ApiEnvelope<{ user: AuthUser; sessionId: string }>>('/auth/login', payload);
-	return response.data.data.user;
+	const loggedInUser = response.data.data.user;
+
+	if (!loggedInUser?.role) {
+		try {
+			return await me();
+		} catch {
+			return loggedInUser;
+		}
+	}
+
+	return loggedInUser;
 };
 
 export const register = async (payload: RegisterPayload): Promise<void> => {
@@ -57,6 +77,15 @@ export const signupWithPhone = async (phone: string): Promise<{ userId: string; 
 
 export const verifyPhoneSignupOtp = async (phone: string, otp: string): Promise<void> => {
 	await http.post('/auth/verify/phone-otp', { phone, otp });
+};
+
+export const requestPasswordReset = async (payload: PasswordResetRequestPayload): Promise<{ message: string; devOtp?: string }> => {
+	const response = await http.post<ApiEnvelope<{ message: string; devOtp?: string }>>('/auth/password/forgot', payload);
+	return response.data.data;
+};
+
+export const resetPassword = async (payload: PasswordResetPayload): Promise<void> => {
+	await http.post('/auth/password/reset', payload);
 };
 
 export const me = async (): Promise<AuthUser> => {

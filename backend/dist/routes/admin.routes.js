@@ -5,6 +5,8 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const rbac_middleware_1 = require("../middleware/rbac.middleware");
 const validate_middleware_1 = require("../middleware/validate.middleware");
 const admin_controller_1 = require("../controllers/admin.controller");
+const admin_analytics_controller_1 = require("../controllers/admin-analytics.controller");
+const rateLimiter_middleware_1 = require("../middleware/rateLimiter.middleware");
 const router = (0, express_1.Router)();
 /**
  * GET /api/v1/admin/users
@@ -56,4 +58,61 @@ router.get('/metrics', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requ
  * Response: Paginated list of subscriptions with user and plan details
  */
 router.get('/subscriptions', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), ...validate_middleware_1.validateAdminListSubscriptionsQuery, (0, validate_middleware_1.asyncHandler)(admin_controller_1.listSubscriptionsController));
+/**
+ * GET /api/v1/admin/analytics/summary
+ * Query params:
+ *   - from: ISO date/time string (required)
+ *   - to: ISO date/time string (required)
+ *   - organizationKey: bigint (required)
+ *   - therapistId: string (optional)
+ */
+router.get('/analytics/summary', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminAnalyticsSummaryController));
+/**
+ * GET /api/v1/admin/analytics/templates
+ * Query params:
+ *   - from: ISO date string (required)
+ *   - to: ISO date string (required)
+ *   - organizationKey: bigint (required)
+ *   - limit: number (optional, default 25, max 100)
+ *   - lastSessionsCount: bigint (optional, keyset cursor)
+ *   - lastTemplateKey: bigint (optional, keyset cursor)
+ */
+router.get('/analytics/templates', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminMostUsedTemplatesController));
+/**
+ * GET /api/v1/admin/analytics/utilization
+ * Query params:
+ *   - from: ISO date string (required)
+ *   - to: ISO date string (required)
+ *   - organizationKey: bigint (required)
+ *   - limit: number (optional, default 25, max 100)
+ *   - lastWeekStartDate: YYYY-MM-DD (optional, keyset cursor)
+ *   - lastTherapistKey: bigint (optional, keyset cursor)
+ */
+router.get('/analytics/utilization', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminTherapistUtilizationController));
+/**
+ * POST /api/v1/admin/analytics/export
+ * Body:
+ *   - format: 'csv' | 'pdf'
+ *   - from: ISO date/time (required)
+ *   - to: ISO date/time (required)
+ *   - organizationKey: number (required)
+ *   - includeChartsSnapshot?: boolean
+ *   - chartSnapshots?: string[] (data URL images; optional)
+ */
+router.post('/analytics/export', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), rateLimiter_middleware_1.adminAnalyticsExportRateLimiter, (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.exportAdminAnalyticsReportController));
+/**
+ * POST /api/v1/admin/analytics/export/async
+ * Queue heavy export job for async processing.
+ */
+router.post('/analytics/export/async', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), rateLimiter_middleware_1.adminAnalyticsExportRateLimiter, (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.enqueueAdminAnalyticsExportController));
+/**
+ * GET /api/v1/admin/analytics/export/:exportJobKey/status
+ * Poll async export status.
+ */
+router.get('/analytics/export/:exportJobKey/status', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminAnalyticsExportStatusController));
+/**
+ * GET /api/v1/admin/analytics/export/:exportJobKey/download
+ * Download completed async export output.
+ */
+router.get('/analytics/export/:exportJobKey/download', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.downloadAdminAnalyticsExportController));
 exports.default = router;

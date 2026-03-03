@@ -9,6 +9,7 @@ const db_1 = require("./config/db");
 const env_1 = require("./config/env");
 const socket_1 = __importDefault(require("./socket"));
 const analyticsRollup_job_1 = require("./jobs/analyticsRollup.job");
+require("./jobs/admin-analytics-export.worker");
 const startServer = async () => {
     await (0, db_1.connectDatabase)();
     const server = app_1.default.listen(env_1.env.port, () => {

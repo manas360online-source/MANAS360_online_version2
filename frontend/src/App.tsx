@@ -10,7 +10,10 @@ import { OnboardingEmail } from './pages/OnboardingEmail'
 import SessionSocketDemo from './components/SessionSocketDemo'
 import TherapistDashboard from './components/TherapistDashboard'
 import AnalyticsPage from './pages/therapist/AnalyticsPage'
-import LoginWidget from './components/LoginWidget'
+import LoginPage from './pages/auth/LoginPage'
+import SignupPage from './pages/auth/SignupPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import SessionDetailPage from './pages/therapist/SessionDetailPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PatientDashboardLayout from './components/layout/PatientDashboardLayout'
@@ -29,7 +32,7 @@ import DocumentsPage from './pages/patient/DocumentsPage'
 import SupportPage from './pages/patient/SupportPage'
 import NotificationsPage from './pages/patient/NotificationsPage'
 import CBTSessionPlayerPage from './pages/patient/CBTSessionPlayerPage'
-import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminPortalLoginPage from './pages/admin/AdminPortalLoginPage'
 import AdminDashboardPage from './pages/admin/Dashboard'
 import AdminShellLayout from './components/admin/AdminShellLayout'
 import AdminUsersPage from './pages/admin/Users'
@@ -38,6 +41,7 @@ import AdminVerificationPage from './pages/admin/Verification'
 import AdminSubscriptionsPage from './pages/admin/Subscriptions'
 import AdminRevenuePage from './pages/admin/Revenue'
 import AdminSettingsPage from './pages/admin/Settings'
+import CertificationsPage from './pages/CertificationsPage'
 
 interface AssessmentData {
   symptoms: string[];
@@ -68,6 +72,7 @@ function App() {
       <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/assessment" element={<Assessment onSubmit={handleAssessmentSubmit} />} />
+      <Route path="/certifications" element={<CertificationsPage />} />
       <Route path="/results" element={<ResultsPage data={assessmentData} />} />
       <Route path="/crisis" element={<CrisisPage />} />
       <Route path="/onboarding/name" element={<OnboardingName onNext={handleOnboardingName} />} />
@@ -104,9 +109,11 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/auth/login" element={<LoginWidget initialMode="login" />} />
-        <Route path="/auth/signup" element={<LoginWidget initialMode="register" />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/signup" element={<SignupPage />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/admin-portal/login" element={<AdminPortalLoginPage />} />
         <Route
           path="/admin"
           element={

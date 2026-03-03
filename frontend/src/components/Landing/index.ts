@@ -3,6 +3,7 @@ export { Hero } from './Hero';
 export { TrustBar } from './TrustBar';
 export { HowItWorks } from './HowItWorks';
 export { RoleSection } from './RoleSection';
+export { LearnGrowCertificationSection } from './LearnGrowCertificationSection';
 export { Testimonial } from './Testimonial';
 export { Footer } from './Footer';
 export { MegaNav } from './MegaNav';

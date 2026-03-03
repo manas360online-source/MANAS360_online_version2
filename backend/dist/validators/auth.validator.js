@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateOtp = exports.validatePassword = exports.validatePhone = exports.validateEmail = void 0;
+exports.validatePublicSignupRole = exports.validateOtp = exports.validatePassword = exports.validatePhone = exports.validateEmail = void 0;
 const error_middleware_1 = require("../middleware/error.middleware");
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^\+?[1-9]\d{9,14}$/;
@@ -42,3 +42,11 @@ const validateOtp = (value) => {
     return otp;
 };
 exports.validateOtp = validateOtp;
+const validatePublicSignupRole = (value) => {
+    const role = assertString(value, 'role').toLowerCase();
+    if (role === 'patient' || role === 'therapist' || role === 'psychiatrist' || role === 'coach') {
+        return role;
+    }
+    throw new error_middleware_1.AppError('Invalid role. Allowed roles: patient, therapist, psychiatrist, coach', 400);
+};
+exports.validatePublicSignupRole = validatePublicSignupRole;

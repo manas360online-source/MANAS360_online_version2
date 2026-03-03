@@ -24,7 +24,12 @@ export default function PatientDashboardLayout() {
     <div className="min-h-screen bg-cream text-charcoal">
       <div className="mx-auto flex w-full max-w-screen-2xl">
         <aside className="hidden min-h-screen w-64 shrink-0 border-r border-calm-sage/20 bg-white/70 px-4 py-6 lg:block">
-          <Link to="/patient/dashboard" className="mb-8 inline-flex items-center text-2xl font-serif font-light">
+          <Link to="/patient/dashboard" className="mb-8 inline-flex items-center gap-2 text-2xl font-serif font-light">
+            <img
+              src="/Untitled.png"
+              alt="MANAS360 logo"
+              className="h-7 w-7 rounded-md object-cover"
+            />
             MANAS<span className="font-semibold">360</span>
           </Link>
 
