@@ -1,14 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { therapistApi } from '../../api/therapist.api';
 import TherapistBadge from '../../components/therapist/dashboard/TherapistBadge';
 import TherapistCard from '../../components/therapist/dashboard/TherapistCard';
+import {
+  TherapistEmptyState,
+  TherapistErrorState,
+  TherapistLoadingState,
+} from '../../components/therapist/dashboard/TherapistDataState';
 import TherapistPageShell from '../../components/therapist/dashboard/TherapistPageShell';
 import TherapistTable from '../../components/therapist/dashboard/TherapistTable';
-import { todaySessions } from './dashboardData';
+
+type TherapistSessionRow = {
+  sessionId: string;
+  bookingReferenceId: string;
+  dateTime: string;
+  status: string;
+  timing: 'past' | 'upcoming';
+  patient?: {
+    initials?: string | null;
+  };
+};
+
+const formatDateTime = (value: string): string =>
+  new Date(value).toLocaleString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 export default function TherapistSessionsPage() {
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [rows, setRows] = useState<TherapistSessionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const rows = tab === 'upcoming' ? todaySessions.filter((row) => row.status !== 'Completed') : todaySessions.filter((row) => row.status === 'Completed');
+  const loadSessions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await therapistApi.getSessions({ page: 1, limit: 50 });
+      setRows((res?.items || []) as TherapistSessionRow[]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load sessions';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadSessions();
+  }, []);
+
+  const filteredRows = rows.filter((row) => row.timing === tab);
+  const statusLabel = (status: string) => {
+    if (status === 'completed') return 'Completed';
+    if (status === 'confirmed') return 'Confirmed';
+    if (status === 'pending') return 'Pending';
+    return status;
+  };
 
   return (
     <TherapistPageShell title="Sessions" subtitle="Track upcoming and past sessions in one place.">
@@ -18,8 +69,8 @@ export default function TherapistSessionsPage() {
             <p className="font-display text-sm font-bold text-ink-800">Calendar</p>
             <p className="mt-1 text-xs text-ink-500">Calendar view placeholder</p>
             <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs text-ink-500">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
-                <span key={day} className="rounded-md bg-surface-card px-1 py-2">{day}</span>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                <span key={`${day}-${index}`} className="rounded-md bg-surface-card px-1 py-2">{day}</span>
               ))}
             </div>
           </div>
@@ -39,22 +90,41 @@ export default function TherapistSessionsPage() {
               </button>
             </div>
 
-            <TherapistCard className="overflow-hidden">
-              <TherapistTable
-                columns={[
-                  { key: 'time', header: 'Time', render: (row) => row.time },
-                  { key: 'patient', header: 'Patient', render: (row) => <span className="font-semibold">{row.patient}</span> },
-                  { key: 'type', header: 'Type', render: (row) => row.type },
-                  {
-                    key: 'status',
-                    header: 'Status',
-                    render: (row) => <TherapistBadge label={row.status} variant={row.status === 'Completed' ? 'success' : row.status === 'In 30 min' ? 'warning' : 'sage'} />,
-                  },
-                ]}
-                rows={rows}
-                rowKey={(row) => row.id}
-              />
-            </TherapistCard>
+            {loading ? (
+              <TherapistLoadingState title="Loading sessions" description="Fetching your upcoming and past sessions." />
+            ) : error ? (
+              <TherapistErrorState title="Could not load sessions" description={error} onRetry={() => void loadSessions()} />
+            ) : filteredRows.length === 0 ? (
+              <TherapistEmptyState title="No sessions found" description={`No ${tab} sessions are available.`} />
+            ) : (
+              <TherapistCard className="overflow-hidden">
+                <TherapistTable
+                  columns={[
+                    { key: 'time', header: 'Time', render: (row) => formatDateTime(row.dateTime) },
+                    {
+                      key: 'patient',
+                      header: 'Patient',
+                      render: (row) => (
+                        <span className="font-semibold">{row.patient?.initials ? `Patient ${row.patient.initials}` : 'Patient'}</span>
+                      ),
+                    },
+                    { key: 'type', header: 'Type', render: () => 'Therapy Session' },
+                    {
+                      key: 'status',
+                      header: 'Status',
+                      render: (row) => (
+                        <TherapistBadge
+                          label={statusLabel(row.status)}
+                          variant={row.status === 'completed' ? 'success' : row.status === 'pending' ? 'warning' : 'sage'}
+                        />
+                      ),
+                    },
+                  ]}
+                  rows={filteredRows}
+                  rowKey={(row) => row.sessionId}
+                />
+              </TherapistCard>
+            )}
           </div>
         </div>
       </TherapistCard>

@@ -29,6 +29,10 @@ export const errorHandler = (
 	res: Response,
 	_next: NextFunction,
 ): void => {
+	if (process.env.NODE_ENV !== 'production') {
+		console.error('[errorHandler]', error);
+	}
+
 	if (error instanceof MulterError) {
 		res.status(400).json({
 			message: error.code === 'LIMIT_FILE_SIZE' ? 'File too large. Max size is 5MB' : error.message,

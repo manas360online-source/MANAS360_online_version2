@@ -45,6 +45,13 @@ import {
 	deleteMyTherapistResponseNoteController,
 } from '../controllers/session.controller';
 import { exportRateLimiter } from '../middleware/exportRateLimiter.middleware';
+import {
+	getMyTherapistDashboardController,
+	getMyTherapistMessagesController,
+	getMyTherapistPatientsController,
+	getMyTherapistPayoutHistoryController,
+	getMyTherapistSessionNotesController,
+} from '../controllers/therapist-dashboard.controller';
 
 const router = Router();
 
@@ -54,6 +61,11 @@ router.get('/me/leads', requireAuth, requireTherapistRole, ...validateTherapistL
 router.post('/me/leads/:id/purchase', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(purchaseMyTherapistLeadController));
 router.get('/me/earnings', requireAuth, requireTherapistRole, ...validateTherapistEarningsQuery, asyncHandler(getMyTherapistEarningsController));
 router.get('/me/sessions', requireAuth, requireTherapistRole, ...validateTherapistSessionHistoryQuery, asyncHandler(getMyTherapistSessionsController));
+router.get('/me/dashboard', requireAuth, requireTherapistRole, asyncHandler(getMyTherapistDashboardController));
+router.get('/me/patients', requireAuth, requireTherapistRole, asyncHandler(getMyTherapistPatientsController));
+router.get('/me/notes', requireAuth, requireTherapistRole, asyncHandler(getMyTherapistSessionNotesController));
+router.get('/me/messages', requireAuth, requireTherapistRole, asyncHandler(getMyTherapistMessagesController));
+router.get('/me/payout-history', requireAuth, requireTherapistRole, asyncHandler(getMyTherapistPayoutHistoryController));
 router.get('/me/sessions/:id', requireAuth, requireTherapistRole, ...validateSessionIdParam, requireSessionOwnership, asyncHandler(getMyTherapistSessionController));
 router.get('/me/sessions/:id/export', requireAuth, requireTherapistRole, ...validateSessionIdParam, requireSessionOwnership, exportRateLimiter, asyncHandler(exportMyTherapistSessionController));
 router.post('/me/sessions/:id/actions/reschedule', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(rescheduleSessionController));

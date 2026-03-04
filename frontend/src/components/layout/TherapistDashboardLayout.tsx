@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { therapistApi, type TherapistDashboardResponse } from '../../api/therapist.api';
 import { useAuth } from '../../context/AuthContext';
 
 type NavItem = {
@@ -33,14 +34,14 @@ type NavSection = {
   items: NavItem[];
 };
 
-const sections: NavSection[] = [
+const baseSections: NavSection[] = [
   {
     title: 'Main',
     items: [
       { to: '/therapist/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/therapist/patients', label: 'My Patients', icon: Users, badge: '24' },
-      { to: '/therapist/sessions', label: 'Sessions', icon: Calendar, badge: '3 today' },
-      { to: '/therapist/session-notes', label: 'Session Notes', icon: BookOpen, dot: true },
+      { to: '/therapist/patients', label: 'My Patients', icon: Users },
+      { to: '/therapist/sessions', label: 'Sessions', icon: Calendar },
+      { to: '/therapist/session-notes', label: 'Session Notes', icon: BookOpen },
     ],
   },
   {
@@ -53,7 +54,7 @@ const sections: NavSection[] = [
   {
     title: 'Communicate',
     items: [
-      { to: '/therapist/messages', label: 'Messages', icon: MessageSquare, badge: '5' },
+      { to: '/therapist/messages', label: 'Messages', icon: MessageSquare },
     ],
   },
   {
@@ -99,6 +100,7 @@ export default function TherapistDashboardLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [dashboardMeta, setDashboardMeta] = useState<TherapistDashboardResponse | null>(null);
 
   const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || user?.email || 'Therapist';
   const initials = initialsFromName(userName);
@@ -128,6 +130,19 @@ export default function TherapistDashboardLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    const loadSidebarMeta = async () => {
+      try {
+        const res = await therapistApi.getDashboard();
+        setDashboardMeta(res);
+      } catch {
+        setDashboardMeta(null);
+      }
+    };
+
+    void loadSidebarMeta();
+  }, []);
+
+  useEffect(() => {
     if (mobileSidebarOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -143,6 +158,32 @@ export default function TherapistDashboardLayout() {
     await logout();
     navigate('/auth/login', { replace: true });
   };
+
+  const sections = useMemo(() => {
+    const patientsCount = dashboardMeta?.stats.activePatients;
+    const todaySessions = dashboardMeta?.stats.todaysSessions;
+    const pendingNotes = dashboardMeta?.stats.pendingNotes;
+    const unreadMessages = dashboardMeta?.stats.unreadMessages;
+
+    return baseSections.map((section) => ({
+      ...section,
+      items: section.items.map((item) => {
+        if (item.to === '/therapist/patients') {
+          return { ...item, badge: typeof patientsCount === 'number' ? String(patientsCount) : undefined };
+        }
+        if (item.to === '/therapist/sessions') {
+          return { ...item, badge: typeof todaySessions === 'number' ? `${todaySessions} today` : undefined };
+        }
+        if (item.to === '/therapist/session-notes') {
+          return { ...item, dot: typeof pendingNotes === 'number' ? pendingNotes > 0 : false };
+        }
+        if (item.to === '/therapist/messages') {
+          return { ...item, badge: typeof unreadMessages === 'number' ? String(unreadMessages) : undefined };
+        }
+        return item;
+      }),
+    }));
+  }, [dashboardMeta]);
 
   return (
     <div className="min-h-screen bg-surface-bg text-ink-800">
