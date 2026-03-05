@@ -59,8 +59,7 @@ const tabs: TabConfig[] = [
       { icon: '🏢', title: 'Corporate Wellness', description: 'Employee mental wellness programs', route: '/corporate' },
       { icon: '🏫', title: 'Education Partner', description: 'Campus and school wellbeing solutions', route: '/education' },
       { icon: '🏥', title: 'Healthcare Partner', description: 'Clinical collaboration models', route: '/healthcare' },
-      { icon: '🛡️', title: 'Insurance Partner', description: 'Integrated care partnerships', route: '/insurance' },
-      { icon: '🏛️', title: 'Government Agency', description: 'Public mental health initiatives', route: '/gov' },
+      // Insurance Partner and Government Agency removed per request
     ],
   },
   {
