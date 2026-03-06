@@ -51,10 +51,54 @@ export type PsychiatristDashboard = {
 export type PsychiatristSelfMode = {
   mode: 'self' | string;
   totalPatients: number;
+  activePatients?: number;
   activePrescriptions: number;
+  medicationReviewsDue?: number;
+  adherenceAlerts?: number;
   consultationsThisWeek: number;
   incomeMinor: number;
+  ratings?: number | null;
+  prescriptionTrends?: Array<{ label: string; count: number }>;
+  patientOutcomes?: Array<{ label: string; score: number }>;
+  revenue?: Array<{ label: string; amountMinor: number }>;
 };
+
+export type PsychiatristMedicationLibraryItem = {
+  id: string;
+  drugName: string;
+  startingDose: string;
+  maxDose: string;
+  sideEffects: string;
+  notes: string;
+};
+
+export type PsychiatristAssessmentTemplateItem = {
+  id: string;
+  name: string;
+  checklist: string;
+  severityScale: string;
+  durationField: string;
+  notes: string;
+};
+
+export type PsychiatristAssessmentDraftPayload = {
+  chiefComplaint: string;
+  symptoms: Record<string, number>;
+  durationWeeks: number;
+  chronicConditions: string;
+  currentMedications: string;
+  allergies: string;
+  substanceUse: string;
+  familyPsychHistory: string;
+  cbc: string;
+  tsh: string;
+  vitaminD: string;
+  vitaminB12: string;
+  clinicalImpression: string;
+  severity: string;
+};
+
+export type PsychiatristSettingsPayload = Record<string, unknown>;
 
 export const psychiatristApi = {
   getDashboard: async (patientId?: string): Promise<PsychiatristDashboard> => {
@@ -104,5 +148,41 @@ export const psychiatristApi = {
   createFollowUp: async (payload: Record<string, unknown>): Promise<any> => {
     const res = await http.post('/v1/psychiatrist/me/follow-ups', payload);
     return unwrap<any>(res.data);
+  },
+  listMedicationLibrary: async (): Promise<{ items: PsychiatristMedicationLibraryItem[] }> => {
+    const res = await http.get('/v1/psychiatrist/me/medication-library');
+    return unwrap<{ items: PsychiatristMedicationLibraryItem[] }>(res.data);
+  },
+  createMedicationLibraryItem: async (payload: Record<string, unknown>): Promise<{ id: string }> => {
+    const res = await http.post('/v1/psychiatrist/me/medication-library', payload);
+    return unwrap<{ id: string }>(res.data);
+  },
+  listAssessmentTemplates: async (): Promise<{ items: PsychiatristAssessmentTemplateItem[] }> => {
+    const res = await http.get('/v1/psychiatrist/me/assessment-templates');
+    return unwrap<{ items: PsychiatristAssessmentTemplateItem[] }>(res.data);
+  },
+  createAssessmentTemplate: async (payload: Record<string, unknown>): Promise<{ id: string }> => {
+    const res = await http.post('/v1/psychiatrist/me/assessment-templates', payload);
+    return unwrap<{ id: string }>(res.data);
+  },
+  getAssessmentDraft: async (patientId: string): Promise<{ patientId: string; payload: PsychiatristAssessmentDraftPayload | null; updatedAt: string | null }> => {
+    const res = await http.get(`/v1/psychiatrist/me/assessment-drafts/${encodeURIComponent(patientId)}`);
+    return unwrap<{ patientId: string; payload: PsychiatristAssessmentDraftPayload | null; updatedAt: string | null }>(res.data);
+  },
+  saveAssessmentDraft: async (patientId: string, payload: PsychiatristAssessmentDraftPayload): Promise<{ patientId: string }> => {
+    const res = await http.put(`/v1/psychiatrist/me/assessment-drafts/${encodeURIComponent(patientId)}`, payload);
+    return unwrap<{ patientId: string }>(res.data);
+  },
+  clearAssessmentDraft: async (patientId: string): Promise<{ patientId: string }> => {
+    const res = await http.delete(`/v1/psychiatrist/me/assessment-drafts/${encodeURIComponent(patientId)}`);
+    return unwrap<{ patientId: string }>(res.data);
+  },
+  getSettings: async (): Promise<{ payload: PsychiatristSettingsPayload; updatedAt: string | null }> => {
+    const res = await http.get('/v1/psychiatrist/me/settings');
+    return unwrap<{ payload: PsychiatristSettingsPayload; updatedAt: string | null }>(res.data);
+  },
+  saveSettings: async (payload: PsychiatristSettingsPayload): Promise<{ ok: boolean }> => {
+    const res = await http.put('/v1/psychiatrist/me/settings', payload);
+    return unwrap<{ ok: boolean }>(res.data);
   },
 };

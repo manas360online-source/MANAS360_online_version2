@@ -1,8 +1,18 @@
+import TherapistCard from '../../components/therapist/dashboard/TherapistCard';
+import TherapistPageShell from '../../components/therapist/dashboard/TherapistPageShell';
+
 export default function PsychiatristCareTeamPage() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="mb-2 text-sm font-semibold">Care Team</h2>
-      <p className="text-sm text-slate-600">Psychiatrist, Therapist, and Coach collaboration view is available here. Therapist notes and wellness plans are read-only for psychiatrist.</p>
-    </div>
+    <TherapistPageShell
+      title="Care Team"
+      subtitle="Collaborative treatment context shared across psychiatrist, therapist, and coach roles."
+    >
+      <TherapistCard className="p-4">
+        <h3 className="font-display text-lg font-semibold text-ink-800">Care Coordination</h3>
+        <p className="mt-2 text-sm text-ink-600">
+          Psychiatrist, therapist, and coach collaboration view is available here. Therapist notes and wellness plans remain read-only for psychiatrist.
+        </p>
+      </TherapistCard>
+    </TherapistPageShell>
   );
 }

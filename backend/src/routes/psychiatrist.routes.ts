@@ -22,6 +22,15 @@ import {
   getMyMedicationHistoryController,
   getMyParameterTrackingController,
   postMyFollowUpController,
+  getMyPsychiatristMedicationLibraryController,
+  postMyPsychiatristMedicationLibraryController,
+  getMyPsychiatristAssessmentTemplatesController,
+  postMyPsychiatristAssessmentTemplateController,
+  getMyPsychiatristAssessmentDraftController,
+  putMyPsychiatristAssessmentDraftController,
+  deleteMyPsychiatristAssessmentDraftController,
+  getMyPsychiatristSettingsController,
+  putMyPsychiatristSettingsController,
 } from '../controllers/psychiatrist.controller';
 
 const router = Router();
@@ -43,5 +52,14 @@ router.get('/me/medication-history', requireAuth, requireRole('psychiatrist'), a
 
 router.get('/me/parameter-tracking/:patientId', requireAuth, requireRole('psychiatrist'), asyncHandler(getMyParameterTrackingController));
 router.post('/me/follow-ups', requireAuth, requireRole('psychiatrist'), ...validateCreatePsychiatristFollowUpRequest, asyncHandler(postMyFollowUpController));
+router.get('/me/medication-library', requireAuth, requireRole('psychiatrist'), asyncHandler(getMyPsychiatristMedicationLibraryController));
+router.post('/me/medication-library', requireAuth, requireRole('psychiatrist'), asyncHandler(postMyPsychiatristMedicationLibraryController));
+router.get('/me/assessment-templates', requireAuth, requireRole('psychiatrist'), asyncHandler(getMyPsychiatristAssessmentTemplatesController));
+router.post('/me/assessment-templates', requireAuth, requireRole('psychiatrist'), asyncHandler(postMyPsychiatristAssessmentTemplateController));
+router.get('/me/assessment-drafts/:patientId', requireAuth, requireRole('psychiatrist'), asyncHandler(getMyPsychiatristAssessmentDraftController));
+router.put('/me/assessment-drafts/:patientId', requireAuth, requireRole('psychiatrist'), asyncHandler(putMyPsychiatristAssessmentDraftController));
+router.delete('/me/assessment-drafts/:patientId', requireAuth, requireRole('psychiatrist'), asyncHandler(deleteMyPsychiatristAssessmentDraftController));
+router.get('/me/settings', requireAuth, requireRole('psychiatrist'), asyncHandler(getMyPsychiatristSettingsController));
+router.put('/me/settings', requireAuth, requireRole('psychiatrist'), asyncHandler(putMyPsychiatristSettingsController));
 
 export default router;

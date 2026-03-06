@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { psychiatristApi } from '../../api/psychiatrist.api';
 import { useProviderDashboardContext } from '../../context/ProviderDashboardContext';
+import TherapistButton from '../../components/therapist/dashboard/TherapistButton';
+import TherapistCard from '../../components/therapist/dashboard/TherapistCard';
+import TherapistPageShell from '../../components/therapist/dashboard/TherapistPageShell';
+import TherapistTable from '../../components/therapist/dashboard/TherapistTable';
 
 export default function PsychiatristMedicationHistoryPage() {
   const { selectedPatientId } = useProviderDashboardContext();
@@ -27,29 +31,28 @@ export default function PsychiatristMedicationHistoryPage() {
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Dosage Adjustment History</h2>
-        <button className="rounded bg-teal-600 px-3 py-1.5 text-sm text-white" disabled={!selectedPatientId} onClick={() => void addEntry()}>Add Entry</button>
-      </div>
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="text-left text-slate-500">
-            <th className="py-2">Medication</th><th>Old</th><th>New</th><th>Reason</th><th>Outcome</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id} className="border-t border-slate-100">
-              <td className="py-2">{item.medication}</td>
-              <td>{item.old_dose || '-'}</td>
-              <td>{item.new_dose || '-'}</td>
-              <td>{item.reason || '-'}</td>
-              <td>{item.outcome || '-'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <TherapistPageShell
+      title="Medication History"
+      subtitle="Track dosage changes, rationale, and outcomes across patient treatment cycles."
+    >
+      <TherapistCard>
+        <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3">
+          <h3 className="font-display text-lg font-semibold text-ink-800">Dosage Adjustment History</h3>
+          <TherapistButton disabled={!selectedPatientId} onClick={() => void addEntry()}>Add Entry</TherapistButton>
+        </div>
+        <TherapistTable
+          rows={items}
+          rowKey={(row) => row.id}
+          emptyText="No medication history entries yet."
+          columns={[
+            { key: 'medication', header: 'Medication', render: (row) => row.medication },
+            { key: 'old', header: 'Old', render: (row) => row.old_dose || '-' },
+            { key: 'new', header: 'New', render: (row) => row.new_dose || '-' },
+            { key: 'reason', header: 'Reason', render: (row) => row.reason || '-' },
+            { key: 'outcome', header: 'Outcome', render: (row) => row.outcome || '-' },
+          ]}
+        />
+      </TherapistCard>
+    </TherapistPageShell>
   );
 }
