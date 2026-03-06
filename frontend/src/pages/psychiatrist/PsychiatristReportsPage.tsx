@@ -1,8 +1,18 @@
+import TherapistCard from '../../components/therapist/dashboard/TherapistCard';
+import TherapistPageShell from '../../components/therapist/dashboard/TherapistPageShell';
+
 export default function PsychiatristReportsPage() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="mb-2 text-sm font-semibold">Reports</h2>
-      <p className="text-sm text-slate-600">Practice analytics, prescription trends, and patient outcome reporting.</p>
-    </div>
+    <TherapistPageShell
+      title="Reports"
+      subtitle="Practice analytics, prescription trends, and patient outcome reporting."
+    >
+      <TherapistCard className="p-4">
+        <h3 className="font-display text-lg font-semibold text-ink-800">Practice Reports</h3>
+        <p className="mt-2 text-sm text-ink-600">
+          Practice analytics, prescription trends, and patient outcome reporting.
+        </p>
+      </TherapistCard>
+    </TherapistPageShell>
   );
 }

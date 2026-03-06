@@ -73,6 +73,15 @@ import PsychiatristMedicationHistoryPage from './pages/psychiatrist/Psychiatrist
 import PsychiatristCareTeamPage from './pages/psychiatrist/PsychiatristCareTeamPage';
 import PsychiatristMessagesPage from './pages/psychiatrist/PsychiatristMessagesPage';
 import PsychiatristReportsPage from './pages/psychiatrist/PsychiatristReportsPage';
+import PsychiatristConsultationsPage from './pages/psychiatrist/PsychiatristConsultationsPage';
+import PsychiatristDrugInteractionsPage from './pages/psychiatrist/PsychiatristDrugInteractionsPage';
+import PsychiatristHelpSupportPage from './pages/psychiatrist/PsychiatristHelpSupportPage';
+import PsychiatristConsultationAnalyticsPage from './pages/psychiatrist/PsychiatristConsultationAnalyticsPage';
+import PsychiatristPrescriptionAnalyticsPage from './pages/psychiatrist/PsychiatristPrescriptionAnalyticsPage';
+import PsychiatristMedicationLibraryPage from './pages/psychiatrist/PsychiatristMedicationLibraryPage';
+import PsychiatristAssessmentTemplatesPage from './pages/psychiatrist/PsychiatristAssessmentTemplatesPage';
+import PsychiatristEarningsPage from './pages/psychiatrist/PsychiatristEarningsPage';
+import PsychiatristSettingsPage from './pages/psychiatrist/PsychiatristSettingsPage';
 
 interface AssessmentData {
   symptoms: string[];
@@ -255,13 +264,120 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PsychiatristDashboardPage />} />
           <Route path="patients" element={<PsychiatristPatientsPage />} />
-          <Route path="assessments" element={<PsychiatristAssessmentsPage />} />
-          <Route path="prescriptions" element={<PsychiatristPrescriptionsPage />} />
-          <Route path="parameter-tracking" element={<PsychiatristParameterTrackingPage />} />
-          <Route path="medication-history" element={<PsychiatristMedicationHistoryPage />} />
-          <Route path="care-team" element={<PsychiatristCareTeamPage />} />
+          <Route
+            path="consultations"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristConsultationsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="assessments"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristAssessmentsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="prescriptions"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristPrescriptionsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="drug-interactions"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristDrugInteractionsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="parameter-tracking"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristParameterTrackingPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="medication-history"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristMedicationHistoryPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="care-team"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristCareTeamPage />
+              </TherapistRouteModeGuard>
+            }
+          />
           <Route path="messages" element={<PsychiatristMessagesPage />} />
-          <Route path="reports" element={<PsychiatristReportsPage />} />
+          <Route
+            path="reports"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristReportsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="consultation-analytics"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristConsultationAnalyticsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="prescription-analytics"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristPrescriptionAnalyticsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="medication-library"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristMedicationLibraryPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="assessment-templates"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristAssessmentTemplatesPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="earnings"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristEarningsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychiatrist/dashboard">
+                <PsychiatristSettingsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route path="help-support" element={<PsychiatristHelpSupportPage />} />
         </Route>
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/signup" element={<SignupPage />} />

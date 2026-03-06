@@ -14,6 +14,15 @@ import {
   getParameterTracking,
   scheduleFollowUp,
   getSelfModeDashboard,
+  listPsychiatristMedicationLibrary,
+  createPsychiatristMedicationLibraryItem,
+  listPsychiatristAssessmentTemplates,
+  createPsychiatristAssessmentTemplate,
+  getPsychiatristAssessmentDraft,
+  upsertPsychiatristAssessmentDraft,
+  clearPsychiatristAssessmentDraft,
+  getPsychiatristSettings,
+  upsertPsychiatristSettings,
 } from '../services/psychiatrist.service';
 
 const authUserId = (req: Request): string => {
@@ -86,4 +95,55 @@ export const getMyParameterTrackingController = async (req: Request, res: Respon
 export const postMyFollowUpController = async (req: Request, res: Response): Promise<void> => {
   const data = await scheduleFollowUp(authUserId(req), req.body || {});
   sendSuccess(res, data, 'Follow-up scheduled', 201);
+};
+
+export const getMyPsychiatristMedicationLibraryController = async (req: Request, res: Response): Promise<void> => {
+  const data = await listPsychiatristMedicationLibrary(authUserId(req));
+  sendSuccess(res, data, 'Psychiatrist medication library fetched');
+};
+
+export const postMyPsychiatristMedicationLibraryController = async (req: Request, res: Response): Promise<void> => {
+  const data = await createPsychiatristMedicationLibraryItem(authUserId(req), req.body || {});
+  sendSuccess(res, data, 'Psychiatrist medication library item created', 201);
+};
+
+export const getMyPsychiatristAssessmentTemplatesController = async (req: Request, res: Response): Promise<void> => {
+  const data = await listPsychiatristAssessmentTemplates(authUserId(req));
+  sendSuccess(res, data, 'Psychiatrist assessment templates fetched');
+};
+
+export const postMyPsychiatristAssessmentTemplateController = async (req: Request, res: Response): Promise<void> => {
+  const data = await createPsychiatristAssessmentTemplate(authUserId(req), req.body || {});
+  sendSuccess(res, data, 'Psychiatrist assessment template created', 201);
+};
+
+export const getMyPsychiatristAssessmentDraftController = async (req: Request, res: Response): Promise<void> => {
+  const patientId = String(req.params.patientId || '').trim();
+  if (!patientId) throw new AppError('patientId is required', 400);
+  const data = await getPsychiatristAssessmentDraft(authUserId(req), patientId);
+  sendSuccess(res, data, 'Psychiatrist assessment draft fetched');
+};
+
+export const putMyPsychiatristAssessmentDraftController = async (req: Request, res: Response): Promise<void> => {
+  const patientId = String(req.params.patientId || '').trim();
+  if (!patientId) throw new AppError('patientId is required', 400);
+  const data = await upsertPsychiatristAssessmentDraft(authUserId(req), patientId, req.body || {});
+  sendSuccess(res, data, 'Psychiatrist assessment draft saved');
+};
+
+export const deleteMyPsychiatristAssessmentDraftController = async (req: Request, res: Response): Promise<void> => {
+  const patientId = String(req.params.patientId || '').trim();
+  if (!patientId) throw new AppError('patientId is required', 400);
+  const data = await clearPsychiatristAssessmentDraft(authUserId(req), patientId);
+  sendSuccess(res, data, 'Psychiatrist assessment draft cleared');
+};
+
+export const getMyPsychiatristSettingsController = async (req: Request, res: Response): Promise<void> => {
+  const data = await getPsychiatristSettings(authUserId(req));
+  sendSuccess(res, data, 'Psychiatrist settings fetched');
+};
+
+export const putMyPsychiatristSettingsController = async (req: Request, res: Response): Promise<void> => {
+  const data = await upsertPsychiatristSettings(authUserId(req), req.body || {});
+  sendSuccess(res, data, 'Psychiatrist settings saved');
 };
