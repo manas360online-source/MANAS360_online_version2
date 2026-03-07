@@ -70,8 +70,35 @@ jobs:
             git fetch --all
             git checkout "$BRANCH_NAME" || git checkout -b "$BRANCH_NAME" "origin/$BRANCH_NAME"
             git reset --hard "origin/$BRANCH_NAME"
+
+            ensure_writable_dir() {
+              local target_dir="$1"
+              if [ -z "$target_dir" ] || [ ! -d "$target_dir" ]; then
+                return 0
+              fi
+
+              # Fix ownership when previous deploys ran as root.
+              if ! touch "$target_dir/.perm-check" 2>/dev/null; then
+                sudo -n chown -R "$(id -un):$(id -gn)" "$target_dir" || true
+              fi
+              rm -f "$target_dir/.perm-check" 2>/dev/null || true
+            }
+
+            clean_node_modules() {
+              local project_dir="$1"
+              if [ ! -d "$project_dir" ]; then
+                return 0
+              fi
+
+              ensure_writable_dir "$project_dir"
+              if [ -d "$project_dir/node_modules" ]; then
+                rm -rf "$project_dir/node_modules" 2>/dev/null || sudo -n rm -rf "$project_dir/node_modules" || true
+              fi
+            }
+
             # Backend build & restart
             if [ -d backend ]; then
+              clean_node_modules "backend"
               cd backend
               npm ci
               npm run build
@@ -84,6 +111,7 @@ jobs:
             fi
             # Frontend build
             if [ -d frontend ]; then
+              clean_node_modules "frontend"
               cd frontend
               npm ci
               npm run build
