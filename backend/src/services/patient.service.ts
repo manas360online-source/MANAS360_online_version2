@@ -6,7 +6,8 @@ interface PatientProfileInput {
 	age: number;
 	gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
 	medicalHistory?: string;
-	emergencyContact: {
+	carrier?: string;
+	emergencyContact?: {
 		name: string;
 		relation: string;
 		phone: string;
@@ -76,6 +77,12 @@ const assertPatientUser = async (userId: string): Promise<void> => {
 export const createPatientProfile = async (userId: string, input: PatientProfileInput) => {
 	await assertPatientUser(userId);
 
+	const emergencyContactPayload: Record<string, string> = {};
+	if (input.emergencyContact?.name) emergencyContactPayload.name = input.emergencyContact.name;
+	if (input.emergencyContact?.relation) emergencyContactPayload.relation = input.emergencyContact.relation;
+	if (input.emergencyContact?.phone) emergencyContactPayload.phone = input.emergencyContact.phone;
+	if (input.carrier) emergencyContactPayload.carrier = input.carrier;
+
 	const existingProfile = await prisma.patientProfile.findUnique({ where: { userId } });
 	if (existingProfile) {
 		throw new AppError('Patient profile already exists', 409);
@@ -87,7 +94,7 @@ export const createPatientProfile = async (userId: string, input: PatientProfile
 			age: input.age,
 			gender: input.gender,
 			medicalHistory: input.medicalHistory ?? null,
-			emergencyContact: input.emergencyContact as any,
+			emergencyContact: emergencyContactPayload,
 		},
 	});
 

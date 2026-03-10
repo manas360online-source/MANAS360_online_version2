@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 type ProtectedRouteProps = {
 	children: ReactNode;
-	allowedRoles?: Array<'patient' | 'therapist' | 'psychiatrist' | 'coach' | 'admin'>;
+	allowedRoles?: Array<'patient' | 'therapist' | 'psychiatrist' | 'psychologist' | 'coach' | 'admin'>;
 };
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -24,6 +24,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 	if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userRole as any)) {
 		const fallback = userRole === 'admin'
 			? '/admin-portal/login'
+			: userRole === 'psychologist'
+				? '/psychologist/dashboard'
 			: userRole === 'psychiatrist'
 				? '/psychiatrist/dashboard'
 				: userRole === 'therapist' || userRole === 'coach'

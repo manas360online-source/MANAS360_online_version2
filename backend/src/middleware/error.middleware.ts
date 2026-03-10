@@ -29,7 +29,11 @@ export const errorHandler = (
 	res: Response,
 	_next: NextFunction,
 ): void => {
-	if (process.env.NODE_ENV !== 'production') {
+	const shouldLogError =
+		process.env.NODE_ENV !== 'production' &&
+		!(process.env.NODE_ENV === 'test' && process.env.TEST_LOG_ERRORS !== 'true');
+
+	if (shouldLogError) {
 		console.error('[errorHandler]', error);
 	}
 

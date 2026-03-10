@@ -155,15 +155,21 @@ export const validateSessionIdParam: RequestHandler[] = [
 ];
 
 const extractValidatedPatientProfile = (req: Request, _res: Response, next: NextFunction): void => {
+	const hasEmergencyContact = !!req.body.emergencyContact && typeof req.body.emergencyContact === 'object';
+	const carrier = typeof req.body.carrier === 'string' ? req.body.carrier.trim() : undefined;
+
 	req.validatedPatientProfile = {
 		age: Number(req.body.age),
 		gender: req.body.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
 		medicalHistory: typeof req.body.medicalHistory === 'string' ? req.body.medicalHistory.trim() : undefined,
-		emergencyContact: {
-			name: String(req.body.emergencyContact?.name ?? '').trim(),
-			relation: String(req.body.emergencyContact?.relation ?? '').trim(),
-			phone: String(req.body.emergencyContact?.phone ?? '').trim(),
-		},
+		carrier: carrier || undefined,
+		emergencyContact: hasEmergencyContact
+			? {
+				name: String(req.body.emergencyContact?.name ?? '').trim(),
+				relation: String(req.body.emergencyContact?.relation ?? '').trim(),
+				phone: String(req.body.emergencyContact?.phone ?? '').trim(),
+			}
+			: undefined,
 	};
 	next();
 };
@@ -174,14 +180,17 @@ export const validateCreatePatientProfileRequest: RequestHandler[] = [
 		.isIn(['male', 'female', 'other', 'prefer_not_to_say'])
 		.withMessage('gender must be one of male, female, other, prefer_not_to_say'),
 	body('medicalHistory').optional().isString().trim().isLength({ max: 2000 }).withMessage('medicalHistory max length is 2000'),
-	body('emergencyContact').isObject().withMessage('emergencyContact is required'),
-	body('emergencyContact.name').isString().trim().isLength({ min: 2, max: 100 }).withMessage('emergencyContact.name must be 2-100 characters'),
+	body('carrier').optional().isString().trim().isLength({ max: 100 }).withMessage('carrier max length is 100'),
+	body('emergencyContact').optional().isObject().withMessage('emergencyContact must be an object'),
+	body('emergencyContact.name').optional().isString().trim().isLength({ min: 2, max: 100 }).withMessage('emergencyContact.name must be 2-100 characters'),
 	body('emergencyContact.relation')
+		.optional()
 		.isString()
 		.trim()
 		.isLength({ min: 2, max: 50 })
 		.withMessage('emergencyContact.relation must be 2-50 characters'),
 	body('emergencyContact.phone')
+		.optional()
 		.isString()
 		.trim()
 		.matches(/^\+?[1-9]\d{1,14}$/)

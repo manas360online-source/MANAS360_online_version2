@@ -80,6 +80,8 @@ const meController = async (req, res) => {
             emailVerified: true,
             phoneVerified: true,
             mfaEnabled: true,
+            isTherapistVerified: true,
+            therapistVerifiedAt: true,
         },
     });
     if (!user) {
@@ -97,6 +99,8 @@ const meController = async (req, res) => {
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
         mfaEnabled: user.mfaEnabled,
+        isTherapistVerified: Boolean(user.isTherapistVerified),
+        therapistVerifiedAt: user.therapistVerifiedAt ?? null,
         companyKey: companyMeta.company_key,
         company_key: companyMeta.company_key,
         isCompanyAdmin: Boolean(companyMeta.is_company_admin),

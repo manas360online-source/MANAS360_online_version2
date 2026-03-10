@@ -93,6 +93,12 @@ async function seed() {
     predefined: [{ email: 'psychiatrist@demo.com', firstName: 'Psychiatrist', lastName: 'Demo', role: 'PSYCHIATRIST' }],
   });
 
+  const psychologistsSeed = createUsersByRole({
+    role: 'PSYCHOLOGIST',
+    count: 4,
+    predefined: [{ email: 'psychologist@demo.com', firstName: 'Psychologist', lastName: 'Demo', role: 'PSYCHOLOGIST' }],
+  });
+
   const adminsSeed = createUsersByRole({
     role: 'ADMIN',
     count: 1,
@@ -101,7 +107,7 @@ async function seed() {
     ],
   });
 
-  const allUsers = [...patientsSeed, ...therapistsSeed, ...coachesSeed, ...psychiatristsSeed, ...adminsSeed];
+  const allUsers = [...patientsSeed, ...therapistsSeed, ...coachesSeed, ...psychiatristsSeed, ...psychologistsSeed, ...adminsSeed];
   const persistedUsers = [];
   for (const userData of allUsers) {
     persistedUsers.push(await upsertUser(userData, passwordHash));
@@ -110,6 +116,7 @@ async function seed() {
   const usersByEmail = new Map(persistedUsers.map((user) => [String(user.email).toLowerCase(), user]));
   const patientUsers = patientsSeed.map((row) => usersByEmail.get(row.email.toLowerCase())).filter(Boolean);
   const therapistUsers = therapistsSeed.map((row) => usersByEmail.get(row.email.toLowerCase())).filter(Boolean);
+  const psychologistUsers = psychologistsSeed.map((row) => usersByEmail.get(row.email.toLowerCase())).filter(Boolean);
 
   // Ensure TherapistProfile rows exist for seeded therapists
   for (const t of therapistUsers) {
@@ -161,6 +168,39 @@ async function seed() {
     profileByUserId.set(patient.id, profile);
   }
 
+  // Assign patients to psychologists for role-specific dashboard and APIs
+  for (let idx = 0; idx < patientUsers.length; idx += 1) {
+    const patient = patientUsers[idx];
+    const psychologist = psychologistUsers[idx % psychologistUsers.length];
+    if (!patient || !psychologist) continue;
+
+    await prisma.careTeamAssignment.upsert({
+      where: {
+        patientId_providerId: {
+          patientId: patient.id,
+          providerId: psychologist.id,
+        },
+      },
+      update: {
+        status: 'ACTIVE',
+        accessScope: {
+          role: 'psychologist',
+          permissions: ['read_patient', 'write_assessment', 'write_report', 'request_testing'],
+        },
+      },
+      create: {
+        patientId: patient.id,
+        providerId: psychologist.id,
+        assignedById: null,
+        status: 'ACTIVE',
+        accessScope: {
+          role: 'psychologist',
+          permissions: ['read_patient', 'write_assessment', 'write_report', 'request_testing'],
+        },
+      },
+    }).catch(() => null);
+  }
+
   const planByEmail = {
     'free@demo.com': { planName: 'Free Plan', price: 0, billingCycle: 'monthly', status: 'active' },
     'basic@demo.com': { planName: 'Basic Plan', price: 999, billingCycle: 'monthly', status: 'active' },
@@ -191,6 +231,99 @@ async function seed() {
         renewalDate: plusDays(30),
       },
     });
+  }
+
+  // Seed psychologist assessments and reports in module-specific tables
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS psychologist_assessments (
+      id TEXT PRIMARY KEY,
+      psychologist_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      patient_id TEXT NOT NULL REFERENCES patient_profiles(id) ON DELETE CASCADE,
+      assessment_type TEXT NOT NULL,
+      title TEXT,
+      observations TEXT,
+      findings JSONB NOT NULL DEFAULT '{}'::jsonb,
+      score NUMERIC,
+      status TEXT NOT NULL DEFAULT 'completed',
+      evaluated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS psychologist_reports (
+      id TEXT PRIMARY KEY,
+      psychologist_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      patient_id TEXT NOT NULL REFERENCES patient_profiles(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      diagnosis_observations TEXT,
+      behavioral_analysis TEXT,
+      cognitive_findings TEXT,
+      recommendations TEXT,
+      attachments JSONB NOT NULL DEFAULT '[]'::jsonb,
+      status TEXT NOT NULL DEFAULT 'draft',
+      submitted_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  const psychologicalAssessmentTypes = ['cognitive', 'personality', 'behavioral'];
+  for (let idx = 0; idx < patientUsers.length; idx += 1) {
+    const patient = patientUsers[idx];
+    const profile = profileByUserId.get(patient.id);
+    const psychologist = psychologistUsers[idx % psychologistUsers.length];
+    if (!profile || !psychologist) continue;
+
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM psychologist_assessments WHERE psychologist_id = $1 AND patient_id = $2`,
+      psychologist.id,
+      profile.id,
+    );
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM psychologist_reports WHERE psychologist_id = $1 AND patient_id = $2`,
+      psychologist.id,
+      profile.id,
+    );
+
+    for (let i = 0; i < 2; i += 1) {
+      const type = psychologicalAssessmentTypes[(idx + i) % psychologicalAssessmentTypes.length];
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO psychologist_assessments (id, psychologist_id, patient_id, assessment_type, title, observations, findings, score, status, evaluated_at, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11,$12)`,
+        `psy-assess-${idx + 1}-${i + 1}`,
+        psychologist.id,
+        profile.id,
+        type,
+        `${type} assessment`,
+        'Seeded psychological observations for QA dashboard views',
+        JSON.stringify({ moodStability: randomItem(['low', 'moderate', 'high']), attentionSpan: randomItem(['low', 'moderate', 'high']) }),
+        55 + ((idx + i) % 35),
+        'completed',
+        plusDays(-(idx + i + 1)),
+        plusDays(-(idx + i + 1)),
+        plusDays(-(idx + i + 1)),
+      );
+    }
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO psychologist_reports (id, psychologist_id, patient_id, title, diagnosis_observations, behavioral_analysis, cognitive_findings, recommendations, attachments, status, submitted_at, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13)`,
+      `psy-report-${idx + 1}`,
+      psychologist.id,
+      profile.id,
+      'Psychological Evaluation Report',
+      'Seeded diagnostic observations',
+      'Seeded behavioral trend analysis',
+      'Seeded cognitive findings',
+      'Continue structured assessments and follow-up',
+      JSON.stringify([]),
+      idx % 2 === 0 ? 'submitted' : 'draft',
+      idx % 2 === 0 ? plusDays(-idx) : null,
+      plusDays(-(idx + 1)),
+      plusDays(-idx),
+    );
   }
 
   const patientIds = patientUsers.map((user) => user.id);

@@ -20,7 +20,8 @@ interface PatientProfilePayload {
 	age: number;
 	gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
 	medicalHistory?: string;
-	emergencyContact: {
+	carrier?: string;
+	emergencyContact?: {
 		name: string;
 		relation: string;
 		phone: string;

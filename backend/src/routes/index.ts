@@ -18,6 +18,7 @@ import landingRoutes from './landing.routes';
 import chatRoutes from './chat.routes';
 import riskAnalyticsRoutes from './riskAnalytics.routes';
 import psychiatristRoutes from './psychiatrist.routes';
+import psychologistRoutes from './psychologist.routes';
 import corporateRoutes from './corporate.routes';
 import ssoRoutes from './sso.routes';
 
@@ -48,6 +49,7 @@ router.use('/v1/presence', presenceRoutes);
 router.use('/v1/therapist/dashboard', dashboardRoutes);
 router.use('/v1/therapists/dashboard', dashboardRoutes);
 router.use('/v1/psychiatrist', psychiatristRoutes);
+router.use('/v1/psychologist', psychologistRoutes);
 router.use('/v1/payments', paymentRoutes);
 router.use('/v1/sso', ssoRoutes);
 router.use('/v1/subscriptions', subscriptionRoutes);

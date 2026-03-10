@@ -132,8 +132,9 @@ const registerWithEmail = async (input, meta) => {
         throw new error_middleware_1.AppError('Email already registered', 409);
     }
     const passwordHash = await (0, hash_1.hashPassword)(input.password);
-    const otp = (0, hash_1.generateNumericOtp)();
-    const otpHash = await (0, hash_1.hashOtp)(otp);
+    const shouldBypassVerification = env_1.env.allowDevVerificationBypass && env_1.env.nodeEnv === 'development';
+    const otp = shouldBypassVerification ? null : (0, hash_1.generateNumericOtp)();
+    const otpHash = otp ? await (0, hash_1.hashOtp)(otp) : null;
     const prismaRole = toPrismaUserRole(input.role);
     const supportedRoles = await getSupportedUserRoles();
     if (!supportedRoles.has(prismaRole)) {
@@ -144,7 +145,8 @@ const registerWithEmail = async (input, meta) => {
             email: input.email.toLowerCase(),
             passwordHash,
             emailVerificationOtpHash: otpHash,
-            emailVerificationOtpExpiresAt: nowPlusMinutes(env_1.env.otpTtlMinutes),
+            emailVerificationOtpExpiresAt: otp ? nowPlusMinutes(env_1.env.otpTtlMinutes) : null,
+            emailVerified: shouldBypassVerification,
             provider: 'LOCAL',
             role: prismaRole,
             name: input.name,
@@ -156,8 +158,10 @@ const registerWithEmail = async (input, meta) => {
     return {
         userId: String(user.id),
         email: user.email,
-        message: 'Registration successful. Verify your email OTP.',
-        devOtp: env_1.env.nodeEnv !== 'production' ? otp : undefined,
+        message: shouldBypassVerification
+            ? 'Registration successful. Email verification is bypassed in development.'
+            : 'Registration successful. Verify your email OTP.',
+        devOtp: env_1.env.nodeEnv !== 'production' && otp ? otp : undefined,
     };
 };
 exports.registerWithEmail = registerWithEmail;
@@ -191,13 +195,15 @@ const registerWithPhone = async (input) => {
         }
         throw new error_middleware_1.AppError('Phone already registered', 409);
     }
-    const otp = (0, hash_1.generateNumericOtp)();
-    const otpHash = await (0, hash_1.hashOtp)(otp);
+    const shouldBypassVerification = env_1.env.allowDevVerificationBypass && env_1.env.nodeEnv === 'development';
+    const otp = shouldBypassVerification ? null : (0, hash_1.generateNumericOtp)();
+    const otpHash = otp ? await (0, hash_1.hashOtp)(otp) : null;
     const user = await db.user.create({
         data: {
             phone: input.phone,
             phoneVerificationOtpHash: otpHash,
-            phoneVerificationOtpExpiresAt: nowPlusMinutes(env_1.env.otpTtlMinutes),
+            phoneVerificationOtpExpiresAt: otp ? nowPlusMinutes(env_1.env.otpTtlMinutes) : null,
+            phoneVerified: shouldBypassVerification,
             provider: 'PHONE',
             role: 'PATIENT',
             firstName: '',
@@ -207,8 +213,10 @@ const registerWithPhone = async (input) => {
     return {
         userId: String(user.id),
         phone: user.phone,
-        message: 'Phone OTP sent.',
-        devOtp: env_1.env.nodeEnv !== 'production' ? otp : undefined,
+        message: shouldBypassVerification
+            ? 'Registration successful. Phone verification is bypassed in development.'
+            : 'Phone OTP sent.',
+        devOtp: env_1.env.nodeEnv !== 'production' && otp ? otp : undefined,
     };
 };
 exports.registerWithPhone = registerWithPhone;
@@ -271,7 +279,8 @@ const loginWithPassword = async (input, meta) => {
         await audit('LOGIN_FAILED', 'failure', meta, { userId: user.id, email: user.email });
         throw new error_middleware_1.AppError('Invalid credentials', 401);
     }
-    if (user.email && !user.emailVerified) {
+    const shouldEnforceEmailVerification = !(env_1.env.allowDevVerificationBypass && env_1.env.nodeEnv === 'development');
+    if (shouldEnforceEmailVerification && user.email && !user.emailVerified) {
         await audit('LOGIN_BLOCKED_EMAIL_UNVERIFIED', 'failure', meta, { userId: user.id, email: user.email });
         throw new error_middleware_1.AppError('Email verification required before login', 403);
     }
@@ -300,6 +309,8 @@ const loginWithPassword = async (input, meta) => {
             emailVerified: user.emailVerified,
             phoneVerified: user.phoneVerified,
             mfaEnabled: user.mfaEnabled,
+            isTherapistVerified: Boolean(user.isTherapistVerified),
+            therapistVerifiedAt: user.therapistVerifiedAt ?? null,
             ...companyAdminMeta,
         },
         ...tokenPair,
@@ -362,6 +373,8 @@ const loginWithGoogle = async (input, meta) => {
             emailVerified: user.emailVerified,
             phoneVerified: user.phoneVerified,
             mfaEnabled: user.mfaEnabled,
+            isTherapistVerified: Boolean(user.isTherapistVerified),
+            therapistVerifiedAt: user.therapistVerifiedAt ?? null,
             ...companyAdminMeta,
         },
         ...tokenPair,

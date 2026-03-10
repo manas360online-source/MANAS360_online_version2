@@ -1,19 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { patientApi } from '../../api/patient';
+import { Link, useNavigate } from 'react-router-dom';
+import { isOnboardingRequiredError, patientApi } from '../../api/patient';
 
 export default function SessionsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
   const [upcoming, setUpcoming] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [u, h] = await Promise.all([patientApi.getUpcomingSessions(), patientApi.getSessionHistory()]);
-      setUpcoming((u.data ?? u) || []);
-      setHistory((h.data ?? h) || []);
+      try {
+        setError(null);
+        const [u, h] = await Promise.all([patientApi.getUpcomingSessions(), patientApi.getSessionHistory()]);
+        setUpcoming((u.data ?? u) || []);
+        setHistory((h.data ?? h) || []);
+      } catch (err: any) {
+        if (isOnboardingRequiredError(err)) {
+          navigate('/patient/onboarding', { replace: true });
+          return;
+        }
+        setError(err?.response?.data?.message || err?.message || 'Unable to load sessions right now.');
+      }
     })();
-  }, []);
+  }, [navigate]);
 
   const completed = history.filter((session) => session.status === 'completed');
   const cancelled = history.filter((session) => session.status === 'cancelled');
@@ -51,6 +62,11 @@ export default function SessionsPage() {
       </div>
 
       <section className="space-y-3">
+        {error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-800">
+            {error}
+          </div>
+        ) : null}
         {visibleSessions.length === 0 ? (
           <div className="rounded-2xl border border-calm-sage/15 bg-white/80 p-5 text-sm text-charcoal/60">
             No sessions in this tab.

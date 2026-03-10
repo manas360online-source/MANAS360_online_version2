@@ -34,14 +34,17 @@ const parseCorsOrigins = (value) => {
         .map((origin) => origin.trim())
         .filter((origin) => origin.length > 0);
 };
+const JWT_ACCESS_FALLBACK = 'change-access-secret';
+const JWT_REFRESH_FALLBACK = 'change-refresh-secret';
 exports.env = Object.freeze({
     nodeEnv: parseNodeEnv(process.env.NODE_ENV),
+    isDevelopment: parseNodeEnv(process.env.NODE_ENV) === 'development',
     port: parsePort(process.env.PORT),
     apiPrefix: process.env.API_PREFIX ?? '/api',
     corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
     databaseUrl: process.env.DATABASE_URL,
-    jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? 'change-access-secret',
-    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'change-refresh-secret',
+    jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? JWT_ACCESS_FALLBACK,
+    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? JWT_REFRESH_FALLBACK,
     jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
     jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
     cookieDomain: process.env.COOKIE_DOMAIN,
@@ -73,4 +76,10 @@ exports.env = Object.freeze({
     webhookIdempotencyTtlSeconds: parseNumber(process.env.WEBHOOK_IDEMPOTENCY_TTL_SECONDS, 3600),
     minPayoutMinor: parseNumber(process.env.MIN_PAYOUT_MINOR, 10000),
     secretEncryptionKey: process.env.SECRET_ENCRYPTION_KEY ?? undefined,
+    allowDevVerificationBypass: parseBoolean(process.env.DEV_VERIFICATION_BYPASS, parseNodeEnv(process.env.NODE_ENV) === 'development'),
+    allowDevPaymentBypass: parseBoolean(process.env.DEV_PAYMENT_BYPASS, parseNodeEnv(process.env.NODE_ENV) === 'development'),
 });
+if ((exports.env.nodeEnv === 'production' || exports.env.nodeEnv === 'staging')
+    && (exports.env.jwtAccessSecret === JWT_ACCESS_FALLBACK || exports.env.jwtRefreshSecret === JWT_REFRESH_FALLBACK)) {
+    throw new Error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be configured for staging/production');
+}

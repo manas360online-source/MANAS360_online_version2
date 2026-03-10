@@ -7,7 +7,7 @@ import {
   type AuthUser,
 } from '../api/auth';
 
-export type AppRole = 'patient' | 'therapist' | 'psychiatrist' | 'coach' | 'admin';
+export type AppRole = 'patient' | 'therapist' | 'psychiatrist' | 'psychologist' | 'coach' | 'admin';
 
 const normalizeRole = (value: unknown): AppRole | null => {
   if (typeof value !== 'string') {
@@ -15,7 +15,14 @@ const normalizeRole = (value: unknown): AppRole | null => {
   }
 
   const normalized = value.toLowerCase();
-  if (normalized === 'patient' || normalized === 'therapist' || normalized === 'psychiatrist' || normalized === 'coach' || normalized === 'admin') {
+  if (
+    normalized === 'patient' ||
+    normalized === 'therapist' ||
+    normalized === 'psychiatrist' ||
+    normalized === 'psychologist' ||
+    normalized === 'coach' ||
+    normalized === 'admin'
+  ) {
     return normalized;
   }
 
@@ -24,6 +31,7 @@ const normalizeRole = (value: unknown): AppRole | null => {
 
 export const getDefaultRouteForRole = (role: unknown): string => {
   const normalizedRole = normalizeRole(role);
+  if (normalizedRole === 'psychologist') return '/psychologist/dashboard';
   if (normalizedRole === 'admin') return '/admin/dashboard';
   if (normalizedRole === 'psychiatrist') return '/psychiatrist/dashboard';
   if (normalizedRole === 'therapist' || normalizedRole === 'coach') return '/therapist/analytics';

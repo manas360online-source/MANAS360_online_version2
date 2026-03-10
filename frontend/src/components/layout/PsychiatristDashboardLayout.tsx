@@ -14,6 +14,7 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   User,
   Users,
   X,
@@ -64,6 +65,8 @@ const selfSections: NavSection[] = [
     items: [
       { to: '/psychiatrist/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/psychiatrist/patients', label: 'My Patients', icon: Users },
+      { to: '/psychiatrist/document-verification', label: 'Document Verification', icon: ShieldCheck },
+      { to: '/certifications', label: 'Certifications', icon: ShieldCheck },
       { to: '/psychiatrist/consultation-analytics', label: 'Consultation Analytics', icon: Calendar },
       { to: '/psychiatrist/prescription-analytics', label: 'Prescription Analytics', icon: Pill },
     ],
@@ -122,6 +125,7 @@ const titleMap: Record<string, string> = {
   '/psychiatrist/earnings': 'Earnings',
   '/psychiatrist/settings': 'Settings',
   '/psychiatrist/help-support': 'Help & Support',
+  '/psychiatrist/document-verification': 'Document Verification',
 };
 
 const DASHBOARD_MODE_STORAGE_KEY = 'manas360.psychiatrist.dashboardMode';
@@ -156,6 +160,7 @@ export default function PsychiatristDashboardLayout() {
 
   const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || user?.email || 'Psychiatrist';
   const initials = initialsFromName(userName);
+  const providerVerified = Boolean((user as any)?.isTherapistVerified);
 
   const pageTitle = useMemo(() => {
     const exact = titleMap[location.pathname];
@@ -274,10 +279,13 @@ export default function PsychiatristDashboardLayout() {
         if (item.to === '/psychiatrist/prescriptions') {
           return { ...item, badge: typeof reviewsDue === 'number' ? `${reviewsDue} due` : undefined };
         }
+        if (item.to === '/psychiatrist/document-verification') {
+          return { ...item, badge: providerVerified ? 'Verified' : 'Required' };
+        }
         return item;
       }),
     }));
-  }, [dashboardMeta, dashboardMode, patientOptions.length]);
+  }, [dashboardMeta, dashboardMode, patientOptions.length, providerVerified]);
 
   const mobileNavItems = dashboardMode === 'professional' ? professionalMobileNavItems : selfMobileNavItems;
 
@@ -370,7 +378,7 @@ export default function PsychiatristDashboardLayout() {
         </aside>
 
         <div className="min-h-screen lg:ml-64">
-          <header className="sticky top-0 z-30 flex h-16 items-center border-b border-ink-100 bg-white/80 px-4 backdrop-blur-lg lg:px-6">
+          <header className="relative sticky top-0 z-30 flex h-16 items-center border-b border-ink-100 bg-white/80 px-4 backdrop-blur-lg lg:px-6">
             <button
               type="button"
               className="mr-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 lg:hidden"
@@ -380,9 +388,14 @@ export default function PsychiatristDashboardLayout() {
               <Menu className="h-5 w-5" />
             </button>
 
-            <div>
-              <h1 className="font-display text-lg font-bold text-ink-800">{pageTitle}</h1>
-              <p className="hidden text-[11px] text-ink-500 sm:block">{todayLabel}</p>
+            <div className="flex min-w-0 flex-col justify-center lg:hidden">
+              <h1 className="truncate font-display text-lg font-bold leading-tight text-ink-800">{pageTitle}</h1>
+              <p className="mt-0.5 hidden text-[11px] leading-none text-ink-500 sm:block">{todayLabel}</p>
+            </div>
+
+            <div className="pointer-events-none absolute left-1/2 hidden w-[420px] max-w-[46vw] -translate-x-1/2 flex-col items-center justify-center lg:flex">
+              <h1 className="w-full truncate text-center font-display text-lg font-bold leading-tight text-ink-800">{pageTitle}</h1>
+              <p className="mt-0.5 w-full truncate text-center text-[11px] leading-none text-ink-500">{todayLabel}</p>
             </div>
 
             <div className="ml-4 hidden items-center rounded-xl border border-ink-100 bg-white p-1 md:inline-flex">

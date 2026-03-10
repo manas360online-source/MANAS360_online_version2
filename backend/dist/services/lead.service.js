@@ -20,13 +20,15 @@ const assertTherapistUser = async (userId) => {
 const getMyTherapistLeads = async (userId, query) => {
     await assertTherapistUser(userId);
     const pagination = (0, pagination_1.normalizePagination)({ page: query.page, limit: query.limit }, { defaultPage: 1, defaultLimit: 10, maxLimit: 50 });
+    // Do not return unassigned leads (providerId: null) to avoid exposing newly-registered
+    // patients to all therapists. Therapists will only see leads reserved for them
+    // (paymentStatus: 'INITIATED') or leads they have purchased.
     const where = query.status
         ? query.status === 'available'
-            ? { OR: [{ status: 'AVAILABLE', providerId: null }, { status: 'AVAILABLE', providerId: userId, paymentStatus: 'INITIATED' }] }
+            ? { status: 'AVAILABLE', providerId: userId, paymentStatus: 'INITIATED' }
             : { status: 'PURCHASED', providerId: userId }
         : {
             OR: [
-                { status: 'AVAILABLE', providerId: null },
                 { status: 'AVAILABLE', providerId: userId, paymentStatus: 'INITIATED' },
                 { status: 'PURCHASED', providerId: userId },
             ],

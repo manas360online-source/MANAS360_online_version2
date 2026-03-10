@@ -162,15 +162,20 @@ exports.validateSessionIdParam = [
     (req, _res, next) => applyValidationResult(req, next),
 ];
 const extractValidatedPatientProfile = (req, _res, next) => {
+    const hasEmergencyContact = !!req.body.emergencyContact && typeof req.body.emergencyContact === 'object';
+    const carrier = typeof req.body.carrier === 'string' ? req.body.carrier.trim() : undefined;
     req.validatedPatientProfile = {
         age: Number(req.body.age),
         gender: req.body.gender,
         medicalHistory: typeof req.body.medicalHistory === 'string' ? req.body.medicalHistory.trim() : undefined,
-        emergencyContact: {
-            name: String(req.body.emergencyContact?.name ?? '').trim(),
-            relation: String(req.body.emergencyContact?.relation ?? '').trim(),
-            phone: String(req.body.emergencyContact?.phone ?? '').trim(),
-        },
+        carrier: carrier || undefined,
+        emergencyContact: hasEmergencyContact
+            ? {
+                name: String(req.body.emergencyContact?.name ?? '').trim(),
+                relation: String(req.body.emergencyContact?.relation ?? '').trim(),
+                phone: String(req.body.emergencyContact?.phone ?? '').trim(),
+            }
+            : undefined,
     };
     next();
 };
@@ -180,14 +185,17 @@ exports.validateCreatePatientProfileRequest = [
         .isIn(['male', 'female', 'other', 'prefer_not_to_say'])
         .withMessage('gender must be one of male, female, other, prefer_not_to_say'),
     (0, express_validator_1.body)('medicalHistory').optional().isString().trim().isLength({ max: 2000 }).withMessage('medicalHistory max length is 2000'),
-    (0, express_validator_1.body)('emergencyContact').isObject().withMessage('emergencyContact is required'),
-    (0, express_validator_1.body)('emergencyContact.name').isString().trim().isLength({ min: 2, max: 100 }).withMessage('emergencyContact.name must be 2-100 characters'),
+    (0, express_validator_1.body)('carrier').optional().isString().trim().isLength({ max: 100 }).withMessage('carrier max length is 100'),
+    (0, express_validator_1.body)('emergencyContact').optional().isObject().withMessage('emergencyContact must be an object'),
+    (0, express_validator_1.body)('emergencyContact.name').optional().isString().trim().isLength({ min: 2, max: 100 }).withMessage('emergencyContact.name must be 2-100 characters'),
     (0, express_validator_1.body)('emergencyContact.relation')
+        .optional()
         .isString()
         .trim()
         .isLength({ min: 2, max: 50 })
         .withMessage('emergencyContact.relation must be 2-50 characters'),
     (0, express_validator_1.body)('emergencyContact.phone')
+        .optional()
         .isString()
         .trim()
         .matches(/^\+?[1-9]\d{1,14}$/)

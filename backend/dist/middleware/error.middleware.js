@@ -18,7 +18,9 @@ const notFoundHandler = (_req, _res, next) => {
 };
 exports.notFoundHandler = notFoundHandler;
 const errorHandler = (error, _req, res, _next) => {
-    if (process.env.NODE_ENV !== 'production') {
+    const shouldLogError = process.env.NODE_ENV !== 'production' &&
+        !(process.env.NODE_ENV === 'test' && process.env.TEST_LOG_ERRORS !== 'true');
+    if (shouldLogError) {
         console.error('[errorHandler]', error);
     }
     if (error instanceof multer_1.MulterError) {

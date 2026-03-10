@@ -11,6 +11,7 @@ const db = db_1.prisma;
 exports.roleHierarchy = {
     patient: 1,
     therapist: 2,
+    psychologist: 2,
     psychiatrist: 2,
     coach: 2,
     admin: 3,
@@ -249,6 +250,7 @@ const requirePermission = (requiredPermissions) => {
         const rolePermissions = {
             patient: ['read_own_profile', 'book_session', 'view_therapists'],
             therapist: ['read_own_profile', 'manage_sessions', 'view_earnings'],
+            psychologist: ['read_own_profile', 'manage_assessments', 'manage_reports', 'view_assigned_patients'],
             psychiatrist: ['read_own_profile', 'manage_sessions', 'view_earnings'],
             coach: ['read_own_profile', 'manage_sessions', 'view_earnings'],
             admin: ['read_all_profiles', 'manage_users', 'manage_therapists', 'view_analytics'],

@@ -40,6 +40,7 @@ type SettingsState = {
     name: string;
     email: string;
     phone: string;
+    carrier: string;
     gender: string;
     location: string;
     bio: string;
@@ -101,6 +102,7 @@ const defaultState: SettingsState = {
     name: '',
     email: '',
     phone: '',
+    carrier: '',
     gender: '',
     location: '',
     bio: '',
@@ -427,6 +429,7 @@ export default function SettingsPage() {
         const name = state.profile.name.trim();
         const phone = state.profile.phone.trim();
         const email = state.profile.email.trim();
+        const carrier = state.profile.carrier.trim();
         if (!email && !phone) {
           throw new Error('At least Email or Phone is required.');
         }
@@ -444,12 +447,14 @@ export default function SettingsPage() {
             name: String(updated?.name || name),
             email: String(updated?.email || email),
             phone: String(updated?.phone || phone),
+            carrier,
             showNameToProviders:
               typeof updated?.showNameToProviders === 'boolean'
                 ? updated.showNameToProviders
                 : state.profile.showNameToProviders,
           },
         };
+        await patientApi.updateSettings(updatedState);
         setState(updatedState);
         setSavedState(updatedState);
         persistLocal(updatedState);
@@ -516,6 +521,15 @@ export default function SettingsPage() {
             value={state.profile.phone}
             onChange={(event) => setState((prev) => ({ ...prev, profile: { ...prev.profile, phone: event.target.value } }))}
             className="mt-1 w-full rounded-xl border border-calm-sage/25 bg-white px-3 py-2"
+          />
+        </label>
+        <label className="text-sm text-charcoal/80">
+          Carrier (optional)
+          <input
+            value={state.profile.carrier}
+            onChange={(event) => setState((prev) => ({ ...prev, profile: { ...prev.profile, carrier: event.target.value } }))}
+            className="mt-1 w-full rounded-xl border border-calm-sage/25 bg-white px-3 py-2"
+            placeholder="Airtel, Jio, VI..."
           />
         </label>
         <label className="text-sm text-charcoal/80">
