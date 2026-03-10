@@ -115,6 +115,8 @@ export const meController = async (req: Request, res: Response): Promise<void> =
 			emailVerified: true,
 			phoneVerified: true,
 			mfaEnabled: true,
+			isTherapistVerified: true,
+			therapistVerifiedAt: true,
 		},
 	});
 
@@ -140,6 +142,8 @@ export const meController = async (req: Request, res: Response): Promise<void> =
 			emailVerified: user.emailVerified,
 			phoneVerified: user.phoneVerified,
 			mfaEnabled: user.mfaEnabled,
+			isTherapistVerified: Boolean((user as any).isTherapistVerified),
+			therapistVerifiedAt: (user as any).therapistVerifiedAt ?? null,
 			companyKey: companyMeta.company_key,
 			company_key: companyMeta.company_key,
 			isCompanyAdmin: Boolean(companyMeta.is_company_admin),

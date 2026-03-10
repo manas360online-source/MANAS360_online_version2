@@ -1,10 +1,24 @@
 import { http } from '../lib/http';
 
+const isOnboardingMessage = (message: string): boolean => {
+  const normalized = message.toLowerCase();
+  return normalized.includes('patient profile not found') || normalized.includes('complete onboarding');
+};
+
+export const isOnboardingRequiredError = (error: any): boolean => {
+  const status = Number(error?.response?.status || 0);
+  const message = String(error?.response?.data?.message || error?.message || '');
+  return status === 404 && isOnboardingMessage(message);
+};
+
 const withV1Fallback = async <T>(primary: () => Promise<T>, fallback: () => Promise<T>): Promise<T> => {
   try {
     return await primary();
   } catch (error: any) {
     const status = Number(error?.response?.status || 0);
+    if (isOnboardingRequiredError(error)) {
+      throw error;
+    }
     if (status === 404) {
       return fallback();
     }
@@ -12,9 +26,38 @@ const withV1Fallback = async <T>(primary: () => Promise<T>, fallback: () => Prom
   }
 };
 
+const withFallbackChain = async <T>(requests: Array<() => Promise<T>>): Promise<T> => {
+  let lastError: unknown;
+
+  for (const request of requests) {
+    try {
+      return await request();
+    } catch (error: any) {
+      if (isOnboardingRequiredError(error)) {
+        throw error;
+      }
+      const status = Number(error?.response?.status || 0);
+      if (status !== 404) {
+        throw error;
+      }
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error('No fallback endpoint succeeded');
+};
+
 export const patientApi = {
-  getDashboard: async () => (await http.get('/v1/patient/dashboard')).data,
-  getDashboardV2: async () => (await http.get('/patient/dashboard')).data,
+  getDashboard: async () =>
+    withFallbackChain([
+      async () => (await http.get('/v1/patient/dashboard')).data,
+      async () => (await http.get('/patient/dashboard')).data,
+    ]),
+  getDashboardV2: async () =>
+    withFallbackChain([
+      async () => (await http.get('/patient/dashboard')).data,
+      async () => (await http.get('/v1/patient/dashboard')).data,
+    ]),
   changePassword: async (payload: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
     (await http.patch('/v1/users/me/password', payload)).data,
   getActiveSessions: async () => (await http.get('/v1/users/me/sessions')).data,
@@ -32,8 +75,22 @@ export const patientApi = {
     (await http.post('/v1/sessions/book', payload)).data,
   verifyPayment: async (payload: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
     (await http.post('/v1/payments/verify', payload)).data,
-  getUpcomingSessions: async () => (await http.get('/v1/sessions/upcoming')).data,
-  getSessionHistory: async () => (await http.get('/v1/sessions/history')).data,
+  getUpcomingSessions: async () =>
+    withFallbackChain([
+      async () => (await http.get('/v1/sessions/upcoming')).data,
+      async () => {
+        const sessions = (await http.get('/v1/patients/me/sessions')).data;
+        const rows = sessions?.data ?? sessions;
+        return Array.isArray(rows)
+          ? rows.filter((item: any) => String(item?.status || '').toLowerCase() !== 'completed')
+          : [];
+      },
+    ]),
+  getSessionHistory: async () =>
+    withFallbackChain([
+      async () => (await http.get('/v1/sessions/history')).data,
+      async () => (await http.get('/v1/patients/me/sessions')).data,
+    ]),
   getSessionDetail: async (id: string) => (await http.get(`/v1/sessions/${encodeURIComponent(id)}`)).data,
   downloadSessionPdf: async (id: string) =>
     (await http.get(`/v1/sessions/${encodeURIComponent(id)}/documents/session-pdf`, { responseType: 'blob' })).data,
@@ -77,10 +134,29 @@ export const patientApi = {
     ),
   addMoodLog: async (payload: { mood: number; note?: string }) => (await http.post('/patient/mood', payload)).data,
   getProgress: async () =>
-    withV1Fallback(
+    withFallbackChain([
       async () => (await http.get('/patient/progress')).data,
       async () => (await http.get('/v1/patient/progress')).data,
-    ),
+      async () => {
+        const dashboard = await withFallbackChain<any>([
+          async () => (await http.get('/patient/dashboard')).data,
+          async () => (await http.get('/v1/patient/dashboard')).data,
+        ]);
+        return dashboard?.progress ?? {
+          completedSessions: 0,
+          streakDays: 0,
+          improvementPercent: 0,
+          lastAssessmentScore: null,
+        };
+      },
+    ]),
+  createProfile: async (payload: {
+    age: number;
+    gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+    medicalHistory?: string;
+    carrier?: string;
+    emergencyContact?: { name: string; relation: string; phone: string };
+  }) => (await http.post('/v1/patients/profile', payload)).data,
   getSubscription: async () => (await http.get('/patient/subscription')).data,
   upgradeSubscription: async () => (await http.patch('/patient/subscription/upgrade')).data,
   downgradeSubscription: async () => (await http.patch('/patient/subscription/downgrade')).data,
@@ -95,6 +171,8 @@ export const patientApi = {
     (await http.get(`/patient/invoices/${encodeURIComponent(id)}/download`, { responseType: 'blob' })).data,
   getExercises: async () => (await http.get('/patient/exercises')).data,
   completeExercise: async (id: string) => (await http.patch(`/patient/exercises/${encodeURIComponent(id)}/complete`)).data,
+  getTherapyPlan: async () => (await http.get('/v1/therapy-plan')).data,
+  completeTherapyPlanTask: async (id: string) => (await http.patch(`/v1/therapy-plan/tasks/${encodeURIComponent(id)}/complete`)).data,
   aiChat: async (payload: { message: string; bot_type?: 'mood_ai' | 'clinical_ai'; response_style?: 'concise' | 'detailed' }) =>
     (await http.post('/chat/message', {
       message: payload.message,

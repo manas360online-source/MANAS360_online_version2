@@ -39,6 +39,15 @@ const assertPatientUser = async (userId) => {
 };
 const createPatientProfile = async (userId, input) => {
     await assertPatientUser(userId);
+    const emergencyContactPayload = {};
+    if (input.emergencyContact?.name)
+        emergencyContactPayload.name = input.emergencyContact.name;
+    if (input.emergencyContact?.relation)
+        emergencyContactPayload.relation = input.emergencyContact.relation;
+    if (input.emergencyContact?.phone)
+        emergencyContactPayload.phone = input.emergencyContact.phone;
+    if (input.carrier)
+        emergencyContactPayload.carrier = input.carrier;
     const existingProfile = await db_1.default.patientProfile.findUnique({ where: { userId } });
     if (existingProfile) {
         throw new error_middleware_1.AppError('Patient profile already exists', 409);
@@ -49,7 +58,7 @@ const createPatientProfile = async (userId, input) => {
             age: input.age,
             gender: input.gender,
             medicalHistory: input.medicalHistory ?? null,
-            emergencyContact: input.emergencyContact,
+            emergencyContact: emergencyContactPayload,
         },
     });
     return db_1.default.patientProfile.findUnique({ where: { id: profile.id }, select: safePatientSelect });

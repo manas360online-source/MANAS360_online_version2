@@ -7,6 +7,7 @@ import {
 	bookSessionController,
 	cancelPatientSubscriptionController,
 	completePatientExerciseController,
+	completeTreatmentPlanTaskController,
 	createMoodController,
 	downloadPatientInvoiceController,
 	downgradePatientSubscriptionController,
@@ -19,6 +20,7 @@ import {
 	getPatientMoodController,
 	getPatientPaymentMethodController,
 	getPatientSubscriptionController,
+	getMyTreatmentPlanController,
 	getProviderByIdController,
 	listNotificationsController,
 	listProvidersController,
@@ -54,6 +56,9 @@ router.get('/sessions/:id', requireAuth, requireRole('patient'), asyncHandler(se
 router.post('/payments/verify', requireAuth, requireRole('patient'), asyncHandler(verifyPaymentController));
 
 router.post('/assessments/submit', requireAuth, requireRole('patient'), asyncHandler(submitAssessmentController));
+
+router.get('/therapy-plan', requireAuth, requireRole('patient'), asyncHandler(getMyTreatmentPlanController));
+router.patch('/therapy-plan/tasks/:id/complete', requireAuth, requireRole('patient'), asyncHandler(completeTreatmentPlanTaskController));
 
 router.post('/mood', requireAuth, requireRole('patient'), asyncHandler(createMoodController));
 router.get('/mood/history', requireAuth, requireRole('patient'), asyncHandler(moodHistoryController));

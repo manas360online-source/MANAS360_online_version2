@@ -35,6 +35,11 @@ import NotificationsPage from './pages/patient/NotificationsPage'
 import CBTSessionPlayerPage from './pages/patient/CBTSessionPlayerPage'
 import MoodTrackerPage from './pages/patient/MoodTrackerPage'
 import MyProgressPage from './pages/patient/MyProgressPage'
+import PatientOnboardingPage from './pages/patient/PatientOnboardingPage'
+import TherapyPlanPage from './pages/patient/TherapyPlanPage'
+import ExercisesPage from './pages/patient/ExercisesPage'
+import CareTeamPage from './pages/patient/CareTeamPage'
+import ReportsPage from './pages/patient/ReportsPage'
 import AdminPortalLoginPage from './pages/admin/AdminPortalLoginPage'
 import AdminDashboardPage from './pages/admin/Dashboard'
 import AdminShellLayout from './components/admin/AdminShellLayout'
@@ -88,6 +93,31 @@ import PsychiatristMedicationLibraryPage from './pages/psychiatrist/Psychiatrist
 import PsychiatristAssessmentTemplatesPage from './pages/psychiatrist/PsychiatristAssessmentTemplatesPage';
 import PsychiatristEarningsPage from './pages/psychiatrist/PsychiatristEarningsPage';
 import PsychiatristSettingsPage from './pages/psychiatrist/PsychiatristSettingsPage';
+import PsychologistDashboardPage from './pages/psychologist/PsychologistDashboardPage';
+import PsychologistPatientsPage from './pages/psychologist/PsychologistPatientsPage';
+import PsychologistAssessmentsPage from './pages/psychologist/PsychologistAssessmentsPage';
+import PsychologistSchedulePage from './pages/psychologist/PsychologistSchedulePage';
+import PsychologistMessagesPage from './pages/psychologist/PsychologistMessagesPage';
+import PsychologistProfilePage from './pages/psychologist/PsychologistProfilePage';
+import PsychologistSettingsPage from './pages/psychologist/PsychologistSettingsPage';
+import PsychologistDiagnosticReportsPage from './pages/psychologist/PsychologistDiagnosticReportsPage';
+import PsychologistCognitiveTestsPage from './pages/psychologist/PsychologistCognitiveTestsPage';
+import PsychologistMoodAnalyticsPage from './pages/psychologist/PsychologistMoodAnalyticsPage';
+import PsychologistRiskMonitoringPage from './pages/psychologist/PsychologistRiskMonitoringPage';
+import PsychologistTreatmentPlansPage from './pages/psychologist/PsychologistTreatmentPlansPage';
+import PsychologistCareTeamPage from './pages/psychologist/PsychologistCareTeamPage';
+import PsychologistAiClinicalAssistantPage from './pages/psychologist/PsychologistAiClinicalAssistantPage';
+import PsychologistResearchInsightsPage from './pages/psychologist/PsychologistResearchInsightsPage';
+import PsychologistResourcesPage from './pages/psychologist/PsychologistResourcesPage';
+import PsychologistPersonalMoodPage from './pages/psychologist/PsychologistPersonalMoodPage';
+import PsychologistSelfAssessmentsPage from './pages/psychologist/PsychologistSelfAssessmentsPage';
+import PsychologistSelfCbtExercisesPage from './pages/psychologist/PsychologistSelfCbtExercisesPage';
+import PsychologistMeditationPage from './pages/psychologist/PsychologistMeditationPage';
+import PsychologistJournalPage from './pages/psychologist/PsychologistJournalPage';
+import PsychologistInsightsPage from './pages/psychologist/PsychologistInsightsPage';
+import PsychologistAiChatPage from './pages/psychologist/PsychologistAiChatPage';
+import ProviderDocumentVerificationPage from './pages/providers/ProviderDocumentVerificationPage';
+import ProviderDocumentVerificationGuard from './components/providers/ProviderDocumentVerificationGuard';
 import CancellationRefundPolicyPage from './pages/legal/CancellationRefundPolicyPage';
 import TermsOfUsePage from './pages/legal/TermsOfUsePage';
 import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
@@ -167,7 +197,15 @@ function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<TherapistDashboardPage />} />
-          <Route path="patients" element={<TherapistPatientsPage />} />
+          <Route
+            path="patients"
+            element={
+              <ProviderDocumentVerificationGuard redirectTo="/therapist/document-verification">
+                <TherapistPatientsPage />
+              </ProviderDocumentVerificationGuard>
+            }
+          />
+          <Route path="document-verification" element={<ProviderDocumentVerificationPage />} />
           <Route path="sessions" element={<TherapistSessionsPage />} />
           <Route path="sessions/:id" element={<SessionDetailPage />} />
           <Route
@@ -287,7 +325,15 @@ function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PsychiatristDashboardPage />} />
-          <Route path="patients" element={<PsychiatristPatientsPage />} />
+          <Route
+            path="patients"
+            element={
+              <ProviderDocumentVerificationGuard redirectTo="/psychiatrist/document-verification">
+                <PsychiatristPatientsPage />
+              </ProviderDocumentVerificationGuard>
+            }
+          />
+          <Route path="document-verification" element={<ProviderDocumentVerificationPage />} />
           <Route
             path="consultations"
             element={
@@ -402,6 +448,187 @@ function App() {
             }
           />
           <Route path="help-support" element={<PsychiatristHelpSupportPage />} />
+        </Route>
+
+        <Route
+          path="/psychologist"
+          element={
+            <ProtectedRoute allowedRoles={['psychologist']}>
+              <TherapistDashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PsychologistDashboardPage />} />
+          <Route
+            path="patients"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional', 'practice']} redirectTo="/psychologist/dashboard">
+                <ProviderDocumentVerificationGuard redirectTo="/psychologist/document-verification">
+                  <PsychologistPatientsPage />
+                </ProviderDocumentVerificationGuard>
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route path="document-verification" element={<ProviderDocumentVerificationPage />} />
+          <Route
+            path="assessments"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistAssessmentsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="diagnostic-reports"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistDiagnosticReportsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="cognitive-tests"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistCognitiveTestsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="mood-analytics"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistMoodAnalyticsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="risk-monitoring"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistRiskMonitoringPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="treatment-plans"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistTreatmentPlansPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="care-team"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional', 'practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistCareTeamPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="ai-clinical-assistant"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistAiClinicalAssistantPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="research-insights"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistResearchInsightsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="resources"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistResourcesPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+
+          <Route
+            path="personal-mood"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistPersonalMoodPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="self-assessments"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistSelfAssessmentsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="self-cbt-exercises"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistSelfCbtExercisesPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="meditation"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistMeditationPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="journal"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistJournalPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="insights"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistInsightsPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="ai-chat"
+            element={
+              <TherapistRouteModeGuard allowedModes={['practice']} redirectTo="/psychologist/dashboard">
+                <PsychologistAiChatPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+
+          <Route path="reports" element={<Navigate to="/psychologist/diagnostic-reports" replace />} />
+          <Route path="tests" element={<Navigate to="/psychologist/cognitive-tests" replace />} />
+          <Route
+            path="schedule"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistSchedulePage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route
+            path="messages"
+            element={
+              <TherapistRouteModeGuard allowedModes={['professional']} redirectTo="/psychologist/dashboard">
+                <PsychologistMessagesPage />
+              </TherapistRouteModeGuard>
+            }
+          />
+          <Route path="profile" element={<PsychologistProfilePage />} />
+          <Route path="settings" element={<PsychologistSettingsPage />} />
         </Route>
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/signup" element={<SignupPage />} />
@@ -576,12 +803,16 @@ function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="onboarding" element={<PatientOnboardingPage />} />
+          <Route path="therapy-plan" element={<TherapyPlanPage />} />
+          <Route path="care-team" element={<CareTeamPage />} />
           <Route path="providers" element={<ProvidersPage />} />
           <Route path="providers/:id" element={<ProviderDetailPage />} />
           <Route path="book/:providerId" element={<BookSessionPage />} />
           <Route path="sessions" element={<SessionsPage />} />
           <Route path="sessions/:id" element={<PatientSessionDetailPage />} />
           <Route path="cbt/:sessionId" element={<CBTSessionPlayerPage />} />
+          <Route path="exercises" element={<ExercisesPage />} />
           <Route path="sessions/:id/live" element={<LiveSessionPage />} />
           <Route path="messages" element={<AIChatPage />} />
           <Route path="profile" element={<ProfilePage />} />
@@ -592,7 +823,9 @@ function App() {
           <Route path="support" element={<SupportPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="mood" element={<MoodTrackerPage />} />
+          <Route path="insights" element={<MyProgressPage />} />
           <Route path="progress" element={<MyProgressPage />} />
+          <Route path="reports" element={<ReportsPage />} />
         </Route>
 
         <Route path="/dashboard" element={<Navigate to="/patient/dashboard" replace />} />
@@ -603,6 +836,8 @@ function App() {
         <Route path="/sessions" element={<Navigate to="/patient/sessions" replace />} />
         <Route path="/sessions/:id/live" element={<Navigate to="/patient/sessions" replace />} />
         <Route path="/ai-chat" element={<Navigate to="/patient/messages" replace />} />
+        <Route path="/patient/progress" element={<Navigate to="/patient/insights" replace />} />
+        <Route path="/patient/cbt" element={<Navigate to="/patient/exercises" replace />} />
         <Route path="/profile" element={<Navigate to="/patient/profile" replace />} />
         <Route path="/settings" element={<Navigate to="/patient/settings" replace />} />
         <Route path="/terms" element={<TermsOfUsePage />} />

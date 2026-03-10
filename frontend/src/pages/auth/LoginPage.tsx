@@ -11,6 +11,14 @@ export default function LoginPage() {
 	const from = (location.state as { from?: string } | null)?.from;
 	const next = new URLSearchParams(location.search).get('next');
 
+	const resolvePostLoginRoute = () => {
+		const candidate = from || next || null;
+		if (candidate && !candidate.startsWith('/auth/')) {
+			return candidate;
+		}
+		return getPostLoginRoute(user);
+	};
+
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +27,7 @@ export default function LoginPage() {
 			return;
 		}
 
-		const postLoginRoute = from || next || getPostLoginRoute(user);
+		const postLoginRoute = resolvePostLoginRoute();
 		navigate(postLoginRoute, { replace: true });
 	}, [from, isAuthenticated, navigate, next, user]);
 
@@ -28,7 +36,10 @@ export default function LoginPage() {
 		setLoading(true);
 		try {
 			const loggedInUser = await login(identifier, password);
-			const postLoginRoute = from || next || getPostLoginRoute(loggedInUser);
+			const candidate = from || next || null;
+			const postLoginRoute = candidate && !candidate.startsWith('/auth/')
+				? candidate
+				: getPostLoginRoute(loggedInUser);
 			navigate(postLoginRoute, { replace: true });
 		} catch (err) {
 			setError(getApiErrorMessage(err, 'Login failed'));

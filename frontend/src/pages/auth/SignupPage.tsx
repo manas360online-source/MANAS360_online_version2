@@ -22,7 +22,7 @@ export default function SignupPage() {
 		try {
 			await register(payload.email, payload.password, payload.name, payload.role);
 			setSuccess('Registration successful. Please verify email OTP to unlock login access.');
-			navigate(loginHref, { replace: true, state: { from: '/auth/signup' } });
+			navigate(loginHref, { replace: true });
 		} catch (err) {
 			setError(getApiErrorMessage(err, 'Registration failed'));
 		} finally {

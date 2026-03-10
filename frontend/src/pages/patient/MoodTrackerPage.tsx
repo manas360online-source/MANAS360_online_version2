@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { patientApi } from '../../api/patient';
+import { isOnboardingRequiredError, patientApi } from '../../api/patient';
 
 const moodLabels: Record<number, string> = {
   1: 'Very Low',
@@ -42,6 +43,7 @@ type MoodItem = {
 };
 
 export default function MoodTrackerPage() {
+  const navigate = useNavigate();
   const [mood, setMood] = useState(3);
   const [note, setNote] = useState('');
   const [history, setHistory] = useState<MoodItem[]>([]);
@@ -78,12 +80,16 @@ export default function MoodTrackerPage() {
         setError(null);
         await load();
       } catch (err: any) {
+        if (isOnboardingRequiredError(err)) {
+          navigate('/patient/onboarding', { replace: true });
+          return;
+        }
         setError(err?.response?.data?.message || err?.message || 'Unable to load mood tracker right now.');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [navigate]);
 
   const chartData = useMemo(() => {
     return [...history]

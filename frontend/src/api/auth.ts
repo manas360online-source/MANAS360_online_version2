@@ -21,6 +21,8 @@ export interface AuthUser {
 	emailVerified?: boolean;
 	phoneVerified?: boolean;
 	mfaEnabled?: boolean;
+	isTherapistVerified?: boolean;
+	therapistVerifiedAt?: string | null;
 }
 
 export interface LoginPayload {

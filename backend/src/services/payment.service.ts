@@ -9,10 +9,13 @@ import {
 } from './razorpay.service';
 
 const redis = createClient({ url: env.redisUrl });
-redis.on('error', (error) => {
-	console.warn('[payment.service] Redis unavailable, continuing with degraded idempotency cache', error);
-});
-void redis.connect().catch(() => undefined);
+const isTestEnv = process.env.NODE_ENV === 'test';
+if (!isTestEnv) {
+	redis.on('error', (error) => {
+		console.warn('[payment.service] Redis unavailable, continuing with degraded idempotency cache', error);
+	});
+	void redis.connect().catch(() => undefined);
+}
 
 const db = prisma as any;
 
@@ -151,10 +154,13 @@ export const processRazorpayWebhook = async (rawBody: string, signature: string)
 	}
 
 	const cacheKey = `webhook:razorpay:${eventId}`;
-	const setOk = await redis.set(cacheKey, '1', {
-		NX: true,
-		EX: env.webhookIdempotencyTtlSeconds,
-	});
+	let setOk: string | null = 'OK';
+	if (!isTestEnv) {
+		setOk = await redis.set(cacheKey, '1', {
+			NX: true,
+			EX: env.webhookIdempotencyTtlSeconds,
+		}).catch(() => 'OK');
+	}
 	if (!setOk) {
 		return { handled: true, message: 'Duplicate webhook (cache)' };
 	}

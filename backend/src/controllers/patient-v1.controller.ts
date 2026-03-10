@@ -37,6 +37,10 @@ import {
 	updatePatientSubscriptionPlan,
 	verifySessionPaymentAndCreateSession,
 } from '../services/patient-v1.service';
+import {
+	completeTreatmentPlanTask,
+	getMyTreatmentPlan,
+} from '../services/treatment-plan.service';
 
 const renderPdfBuffer = async (write: (doc: any) => void): Promise<Buffer> =>
 	new Promise((resolve, reject) => {
@@ -231,6 +235,18 @@ export const submitAssessmentController = async (req: Request, res: Response): P
 		answers: Array.isArray(req.body.answers) ? req.body.answers.map((a: any) => Number(a)) : undefined,
 	});
 	sendSuccess(res, result, 'Assessment submitted', 201);
+};
+
+export const getMyTreatmentPlanController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getMyTreatmentPlan(authUserId(req));
+	sendSuccess(res, data, 'Treatment plan fetched');
+};
+
+export const completeTreatmentPlanTaskController = async (req: Request, res: Response): Promise<void> => {
+	const id = String(req.params.id || '').trim();
+	if (!id) throw new AppError('task id is required', 422);
+	const data = await completeTreatmentPlanTask(authUserId(req), id);
+	sendSuccess(res, data, 'Treatment plan task completed');
 };
 
 export const createMoodController = async (req: Request, res: Response): Promise<void> => {

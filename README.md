@@ -67,6 +67,15 @@ Prerequisites: Node 18+, npm (or yarn), Docker (optional, for Postgres/Redis), a
 - If Prisma schema changed, run `npx prisma generate` and `npx prisma migrate dev` before starting backend.
 - If exports fail, ensure AWS S3 credentials are present and that `REDIS_URL` is configured for the queue.
 
+**Development Bypass Modes (local testing only)**
+
+- Backend supports two dev-only toggles in `backend/.env`:
+	- `DEV_VERIFICATION_BYPASS=true`: skips OTP verification gating for local email/phone auth testing.
+	- `DEV_PAYMENT_BYPASS=true`: skips Razorpay payment signature validation for local booking tests.
+- These toggles are intended only for `NODE_ENV=development` and must stay disabled outside local development.
+- Frontend booking page shows a `Paid (Dev)` button automatically in Vite dev mode (`import.meta.env.DEV`).
+	- Flow: create booking intent -> simulate payment verify -> continue to patient sessions.
+
 ---
 
 ## Authentication System (User Story 2.1)

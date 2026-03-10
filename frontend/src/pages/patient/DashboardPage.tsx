@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { patientApi } from '../../api/patient';
+import { isOnboardingRequiredError, patientApi } from '../../api/patient';
 
 const moodEmojiMap: Record<number, string> = {
   1: '😢',
@@ -42,6 +43,7 @@ const formatDateTime = (value?: string | Date) => {
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -75,12 +77,16 @@ export default function DashboardPage() {
         setError(null);
         await fetchDashboardData();
       } catch (err: any) {
+        if (isOnboardingRequiredError(err)) {
+          navigate('/patient/onboarding', { replace: true });
+          return;
+        }
         setError(err?.response?.data?.message || err?.message || 'Unable to load dashboard right now.');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [navigate]);
 
   const todayLabel = useMemo(
     () =>
@@ -112,6 +118,76 @@ export default function DashboardPage() {
     const total = normalizedMoodTrend.reduce((sum: number, point: any) => sum + Number(point.score || 0), 0);
     return Number((total / normalizedMoodTrend.length).toFixed(1));
   }, [normalizedMoodTrend]);
+
+  const wellnessScore = useMemo(() => {
+    const moodScore = avgMood ? (avgMood / 5) * 40 : 0;
+    const totalExercises = Number(dashboard?.progress?.totalExercises || 0);
+    const completedExercises = Number(dashboard?.progress?.exercisesCompleted || 0);
+    const exerciseRatio = totalExercises > 0 ? completedExercises / totalExercises : 0;
+    const exerciseScore = exerciseRatio * 25;
+
+    const totalSessions = Number(dashboard?.totalSessions || 0);
+    const completedSessions = Number(dashboard?.sessionsCompleted || 0);
+    const attendanceRatio = totalSessions > 0 ? completedSessions / totalSessions : 0;
+    const attendanceScore = attendanceRatio * 25;
+
+    const hasAssessment = Array.isArray(dashboard?.recentActivity)
+      ? dashboard.recentActivity.some((item: any) =>
+          String(item?.title || '').toLowerCase().includes('assessment'),
+        )
+      : false;
+    const assessmentScore = hasAssessment ? 10 : 0;
+
+    return Math.round(Math.min(100, moodScore + exerciseScore + attendanceScore + assessmentScore));
+  }, [avgMood, dashboard]);
+
+  const weeklyDelta = useMemo(() => {
+    if (normalizedMoodTrend.length < 4) return 0;
+    const mid = Math.floor(normalizedMoodTrend.length / 2);
+    const first = normalizedMoodTrend.slice(0, mid);
+    const second = normalizedMoodTrend.slice(mid);
+    if (!first.length || !second.length) return 0;
+
+    const firstAvg = first.reduce((sum: number, point: any) => sum + Number(point.score || 0), 0) / first.length;
+    const secondAvg = second.reduce((sum: number, point: any) => sum + Number(point.score || 0), 0) / second.length;
+    const deltaPoints = (secondAvg - firstAvg) * 8;
+    return Math.round(deltaPoints);
+  }, [normalizedMoodTrend]);
+
+  const todayPlanItems = useMemo(() => {
+    const moodChecked = normalizedMoodTrend.length > 0;
+    const pendingExercise = exercises.find((item: any) => String(item?.status || '').toUpperCase() !== 'COMPLETED');
+    const hasUpcomingSession = Boolean(upcomingSession?.scheduledAt);
+
+    return [
+      { label: 'Mood check-in', done: moodChecked },
+      { label: pendingExercise ? `CBT Exercise (${pendingExercise.duration || 5} min)` : 'CBT Exercise', done: !pendingExercise },
+      { label: 'Meditation session', done: false },
+      { label: hasUpcomingSession ? 'Therapist session tomorrow' : 'Schedule next therapist session', done: hasUpcomingSession },
+    ];
+  }, [normalizedMoodTrend.length, exercises, upcomingSession]);
+
+  const aiSuggestions = useMemo(() => {
+    const items: string[] = [];
+
+    if (avgMood > 0 && avgMood <= 2.5) {
+      items.push('Grounding + breathing reset (5 min)');
+      items.push('Low-mood thought reframing worksheet');
+    } else if (avgMood > 2.5 && avgMood < 4) {
+      items.push('Sleep improvement CBT micro exercise');
+      items.push('Evening reflection journal');
+    } else {
+      items.push('Maintain momentum with gratitude practice');
+      items.push('Short mindfulness session');
+    }
+
+    const pendingCount = exercises.filter((item: any) => String(item?.status || '').toUpperCase() !== 'COMPLETED').length;
+    if (pendingCount > 0) {
+      items.push('Complete one pending assigned exercise today');
+    }
+
+    return items.slice(0, 3);
+  }, [avgMood, exercises]);
 
   const onSaveMood = async () => {
     setSavingMood(true);
@@ -180,7 +256,10 @@ export default function DashboardPage() {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="h-full rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-sm">
           <p className="text-xs uppercase tracking-wider text-charcoal/50">Wellness Score</p>
-          <p className="mt-2 text-3xl font-semibold text-calm-sage">{dashboard?.wellnessScore ?? 0}</p>
+          <p className="mt-2 text-3xl font-semibold text-calm-sage">{dashboard?.wellnessScore ?? wellnessScore}/100</p>
+          <p className={`mt-1 text-xs ${weeklyDelta >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+            {weeklyDelta >= 0 ? `+${weeklyDelta}` : `${weeklyDelta}`} this week
+          </p>
         </article>
 
         <article className="h-full rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-sm">
@@ -199,6 +278,53 @@ export default function DashboardPage() {
           <p className="text-xs uppercase tracking-wider text-charcoal/50">Exercises</p>
           <p className="mt-2 text-3xl font-semibold text-charcoal">{dashboard?.progress?.exercisesCompleted ?? 0}</p>
           <p className="text-xs text-charcoal/55">of {dashboard?.progress?.totalExercises ?? 0} completed</p>
+        </article>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <article className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-sm">
+          <h2 className="text-base font-semibold text-charcoal">Today's Plan</h2>
+          <div className="mt-3 space-y-2">
+            {todayPlanItems.map((item) => (
+              <div key={item.label} className="flex items-center gap-2">
+                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${item.done ? 'bg-emerald-100 text-emerald-700' : 'bg-ink-100 text-ink-500'}`}>
+                  {item.done ? '✓' : '○'}
+                </span>
+                <p className="text-sm text-charcoal/80">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-sm">
+          <h2 className="text-base font-semibold text-charcoal">Therapist Status</h2>
+          {!upcomingSession ? (
+            <div className="mt-3 space-y-2">
+              <p className="text-sm text-charcoal/70">No therapist session is currently scheduled.</p>
+              <Link to="/patient/providers" className="inline-flex min-h-[36px] items-center rounded-full border border-calm-sage/25 px-3 text-xs font-medium text-charcoal/80">
+                Find Therapist
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-2">
+              <p className="text-sm font-semibold text-charcoal">{upcomingSession?.provider?.name || 'Assigned Therapist'}</p>
+              <p className="text-xs text-charcoal/65">Next Session: {formatDateTime(upcomingSession.scheduledAt)}</p>
+              <div className="flex flex-wrap gap-2">
+                <Link to="/patient/sessions" className="inline-flex min-h-[34px] items-center rounded-full border border-calm-sage/25 px-3 text-xs">View Plan</Link>
+                <Link to="/patient/messages" className="inline-flex min-h-[34px] items-center rounded-full border border-calm-sage/25 px-3 text-xs">Message Support</Link>
+              </div>
+            </div>
+          )}
+        </article>
+
+        <article className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft-sm">
+          <h2 className="text-base font-semibold text-charcoal">AI Suggestions</h2>
+          <p className="mt-1 text-xs text-charcoal/60">Based on your mood trend and activity</p>
+          <ul className="mt-3 list-disc space-y-1 pl-4 text-sm text-charcoal/80">
+            {aiSuggestions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </article>
       </section>
 

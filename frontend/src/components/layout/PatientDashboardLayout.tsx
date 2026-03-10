@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Bell,
   CalendarDays,
+  ClipboardList,
   FileText,
   HeartPulse,
   Home,
@@ -9,7 +10,6 @@ import {
   LogOut,
   Menu,
   MessageSquare,
-  Search,
   Settings2,
   Sparkles,
   User,
@@ -20,30 +20,35 @@ import { useAuth } from '../../context/AuthContext';
 
 const mainNavItems = [
   { to: '/patient/dashboard', label: 'Dashboard', icon: Home },
-  { to: '/patient/assessments', label: 'Assessment', icon: HeartPulse },
-  { to: '/patient/providers', label: 'Find Therapist', icon: Search },
-  { to: '/patient/sessions', label: 'My Sessions', icon: CalendarDays, badge: '1 upcoming' },
+  { to: '/patient/therapy-plan', label: 'My Therapy Plan', icon: ClipboardList },
+  { to: '/patient/sessions', label: 'Sessions', icon: CalendarDays, badge: '1 upcoming' },
+  { to: '/patient/providers', label: 'Therapists', icon: User },
+  { to: '/patient/care-team', label: 'Care Team', icon: User },
+  { to: '/patient/assessments', label: 'Assessments', icon: HeartPulse },
 ];
 
-const wellnessNavItems = [
-  { to: '/patient/messages', label: "Dr. Meera 'Ai", icon: MessageSquare, badge: 'AI' },
-  { to: '/patient/assessments', label: 'CBT Exercises', icon: FileText },
+const selfCareNavItems = [
+  { to: '/patient/messages', label: 'AI Support (Dr. Meera)', icon: MessageSquare, badge: 'AI' },
+  { to: '/patient/exercises', label: 'Exercises', icon: FileText },
   { to: '/patient/mood', label: 'Mood Tracker', icon: HeartPulse },
-  { to: '/patient/progress', label: 'My Progress', icon: Sparkles },
-  { to: '/patient/support', label: 'Sound Therapy', icon: LifeBuoy },
-  { to: '/patient/support', label: 'Group Sessions', icon: CalendarDays },
+  { to: '/patient/support?section=faq', label: 'Sound Therapy', icon: Sparkles },
+];
+
+const progressNavItems = [
+  { to: '/patient/insights', label: 'Progress Insights', icon: Sparkles },
+  { to: '/patient/reports', label: 'Reports', icon: FileText },
 ];
 
 const supportNavItems = [
-  { to: '/crisis', label: 'Crisis Support', icon: LifeBuoy },
   { to: '/patient/support', label: 'Help Center', icon: LifeBuoy },
+  { to: '/crisis', label: 'Crisis Support', icon: LifeBuoy },
 ];
 
 const bottomNavItems = [
   { to: '/patient/dashboard', label: 'Dashboard', icon: Home },
   { to: '/patient/sessions', label: 'Sessions', icon: CalendarDays },
-  { to: '/patient/providers', label: 'Find Therapist', icon: Search },
-  { to: '/patient/messages', label: "Dr. Meera 'Ai", icon: MessageSquare },
+  { to: '/patient/therapy-plan', label: 'Plan', icon: ClipboardList },
+  { to: '/patient/messages', label: 'AI Support', icon: MessageSquare },
   { to: '/patient/settings', label: 'Settings', icon: User },
 ];
 
@@ -78,6 +83,24 @@ export default function PatientDashboardLayout() {
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const pageTitleMap: Record<string, string> = {
+    '/patient/dashboard': 'Dashboard',
+    '/patient/therapy-plan': 'My Therapy Plan',
+    '/patient/sessions': 'Sessions',
+    '/patient/care-team': 'Care Team',
+    '/patient/assessments': 'Assessments',
+    '/patient/providers': 'Therapists',
+    '/patient/messages': 'AI Support',
+    '/patient/exercises': 'Exercises',
+    '/patient/mood': 'Mood Tracker',
+    '/patient/insights': 'Progress Insights',
+    '/patient/reports': 'Reports',
+    '/patient/support': 'Help Center',
+    '/patient/settings': 'Settings',
+    '/patient/profile': 'Profile',
+  };
+  const pageTitle = Object.entries(pageTitleMap).find(([path]) => location.pathname.startsWith(path))?.[1] || 'Dashboard';
 
   const handleLogout = async () => {
     await logout();
@@ -187,7 +210,8 @@ export default function PatientDashboardLayout() {
 
           <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="Patient dashboard navigation">
             {renderNavSection('Main', mainNavItems)}
-            {renderNavSection('Wellness Tools', wellnessNavItems)}
+            {renderNavSection('Self Care', selfCareNavItems)}
+            {renderNavSection('Progress', progressNavItems)}
             {renderNavSection('Support', supportNavItems)}
           </nav>
 
@@ -225,7 +249,7 @@ export default function PatientDashboardLayout() {
               </button>
 
               <div className="flex items-center gap-2">
-                <p className="font-display text-lg font-bold leading-none text-ink-800">Dashboard</p>
+                <p className="font-display text-lg font-bold leading-none text-ink-800">{pageTitle}</p>
                 <p className="-mt-0.5 hidden text-[11px] leading-none text-ink-400 sm:block">{todayLabel}</p>
               </div>
             </div>

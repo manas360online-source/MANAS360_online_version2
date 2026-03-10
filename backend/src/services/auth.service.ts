@@ -186,8 +186,9 @@ export const registerWithEmail = async (input: RegisterEmailInput, meta: Request
 	}
 
 	const passwordHash = await hashPassword(input.password);
-	const otp = generateNumericOtp();
-	const otpHash = await hashOtp(otp);
+	const shouldBypassVerification = env.allowDevVerificationBypass && env.nodeEnv === 'development';
+	const otp = shouldBypassVerification ? null : generateNumericOtp();
+	const otpHash = otp ? await hashOtp(otp) : null;
 	const prismaRole = toPrismaUserRole(input.role);
 	const supportedRoles = await getSupportedUserRoles();
 
@@ -200,7 +201,8 @@ export const registerWithEmail = async (input: RegisterEmailInput, meta: Request
 			email: input.email.toLowerCase(),
 			passwordHash,
 			emailVerificationOtpHash: otpHash,
-			emailVerificationOtpExpiresAt: nowPlusMinutes(env.otpTtlMinutes),
+			emailVerificationOtpExpiresAt: otp ? nowPlusMinutes(env.otpTtlMinutes) : null,
+			emailVerified: shouldBypassVerification,
 			provider: 'LOCAL',
 			role: prismaRole,
 			name: input.name,
@@ -214,8 +216,10 @@ export const registerWithEmail = async (input: RegisterEmailInput, meta: Request
 	return {
 		userId: String(user.id),
 		email: user.email,
-		message: 'Registration successful. Verify your email OTP.',
-		devOtp: env.nodeEnv !== 'production' ? otp : undefined,
+		message: shouldBypassVerification
+			? 'Registration successful. Email verification is bypassed in development.'
+			: 'Registration successful. Verify your email OTP.',
+		devOtp: env.nodeEnv !== 'production' && otp ? otp : undefined,
 	};
 };
 
@@ -254,14 +258,16 @@ export const registerWithPhone = async (input: RegisterPhoneInput) => {
 		throw new AppError('Phone already registered', 409);
 	}
 
-	const otp = generateNumericOtp();
-	const otpHash = await hashOtp(otp);
+	const shouldBypassVerification = env.allowDevVerificationBypass && env.nodeEnv === 'development';
+	const otp = shouldBypassVerification ? null : generateNumericOtp();
+	const otpHash = otp ? await hashOtp(otp) : null;
 
 	const user = await db.user.create({
 		data: {
 			phone: input.phone,
 			phoneVerificationOtpHash: otpHash,
-			phoneVerificationOtpExpiresAt: nowPlusMinutes(env.otpTtlMinutes),
+			phoneVerificationOtpExpiresAt: otp ? nowPlusMinutes(env.otpTtlMinutes) : null,
+			phoneVerified: shouldBypassVerification,
 			provider: 'PHONE',
 			role: 'PATIENT',
 			firstName: '',
@@ -272,8 +278,10 @@ export const registerWithPhone = async (input: RegisterPhoneInput) => {
 	return {
 		userId: String(user.id),
 		phone: user.phone,
-		message: 'Phone OTP sent.',
-		devOtp: env.nodeEnv !== 'production' ? otp : undefined,
+		message: shouldBypassVerification
+			? 'Registration successful. Phone verification is bypassed in development.'
+			: 'Phone OTP sent.',
+		devOtp: env.nodeEnv !== 'production' && otp ? otp : undefined,
 	};
 };
 
@@ -345,7 +353,8 @@ export const loginWithPassword = async (input: LoginInput, meta: RequestMeta) =>
 		throw new AppError('Invalid credentials', 401);
 	}
 
-	if (user.email && !user.emailVerified) {
+	const shouldEnforceEmailVerification = !(env.allowDevVerificationBypass && env.nodeEnv === 'development');
+	if (shouldEnforceEmailVerification && user.email && !user.emailVerified) {
 		await audit('LOGIN_BLOCKED_EMAIL_UNVERIFIED', 'failure', meta, { userId: user.id, email: user.email });
 		throw new AppError('Email verification required before login', 403);
 	}
@@ -378,6 +387,8 @@ export const loginWithPassword = async (input: LoginInput, meta: RequestMeta) =>
 			emailVerified: user.emailVerified,
 			phoneVerified: user.phoneVerified,
 			mfaEnabled: user.mfaEnabled,
+			isTherapistVerified: Boolean((user as any).isTherapistVerified),
+			therapistVerifiedAt: (user as any).therapistVerifiedAt ?? null,
 			...companyAdminMeta,
 		},
 		...tokenPair,
@@ -446,6 +457,8 @@ export const loginWithGoogle = async (input: GoogleLoginInput, meta: RequestMeta
 			emailVerified: user.emailVerified,
 			phoneVerified: user.phoneVerified,
 			mfaEnabled: user.mfaEnabled,
+			isTherapistVerified: Boolean((user as any).isTherapistVerified),
+			therapistVerifiedAt: (user as any).therapistVerifiedAt ?? null,
 			...companyAdminMeta,
 		},
 		...tokenPair,

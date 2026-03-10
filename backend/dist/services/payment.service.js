@@ -41,10 +41,13 @@ const db_1 = require("../config/db");
 const error_middleware_1 = require("../middleware/error.middleware");
 const razorpay_service_1 = require("./razorpay.service");
 const redis = (0, redis_1.createClient)({ url: env_1.env.redisUrl });
-redis.on('error', (error) => {
-    console.warn('[payment.service] Redis unavailable, continuing with degraded idempotency cache', error);
-});
-void redis.connect().catch(() => undefined);
+const isTestEnv = process.env.NODE_ENV === 'test';
+if (!isTestEnv) {
+    redis.on('error', (error) => {
+        console.warn('[payment.service] Redis unavailable, continuing with degraded idempotency cache', error);
+    });
+    void redis.connect().catch(() => undefined);
+}
 const db = db_1.prisma;
 const asMinor = (value) => Math.max(0, Math.round(value));
 const sha256 = (input) => crypto_1.default.createHash('sha256').update(input).digest('hex');
@@ -154,10 +157,13 @@ const processRazorpayWebhook = async (rawBody, signature) => {
         throw new error_middleware_1.AppError('Invalid webhook payload', 422);
     }
     const cacheKey = `webhook:razorpay:${eventId}`;
-    const setOk = await redis.set(cacheKey, '1', {
-        NX: true,
-        EX: env_1.env.webhookIdempotencyTtlSeconds,
-    });
+    let setOk = 'OK';
+    if (!isTestEnv) {
+        setOk = await redis.set(cacheKey, '1', {
+            NX: true,
+            EX: env_1.env.webhookIdempotencyTtlSeconds,
+        }).catch(() => 'OK');
+    }
     if (!setOk) {
         return { handled: true, message: 'Duplicate webhook (cache)' };
     }

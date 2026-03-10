@@ -1,10 +1,12 @@
 import crypto from 'crypto';
+import { env } from '../config/env';
 import { prisma } from '../config/db';
 import { AppError } from '../middleware/error.middleware';
 import { decryptSessionNote } from '../utils/encryption';
 import { createSessionPayment } from './payment.service';
 import { verifyRazorpayPaymentSignature } from './razorpay.service';
 import { processChatMessage } from './chat.service';
+import { syncTreatmentPlanFromAssessment } from './treatment-plan.service';
 
 const db = prisma as any;
 
@@ -504,11 +506,19 @@ export const verifySessionPaymentAndCreateSession = async (
 	userId: string,
 	input: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string },
 ) => {
-	const secret = process.env.RAZORPAY_KEY_SECRET;
-	if (!secret) throw new AppError('Razorpay key secret not configured', 500);
+	const allowDevBypass = env.allowDevPaymentBypass && env.nodeEnv === 'development';
+	if (!allowDevBypass) {
+		const secret = process.env.RAZORPAY_KEY_SECRET;
+		if (!secret) throw new AppError('Razorpay key secret not configured', 500);
 
-	const isValid = verifyRazorpayPaymentSignature(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature, secret);
-	if (!isValid) throw new AppError('Invalid Razorpay signature', 401);
+		const isValid = verifyRazorpayPaymentSignature(
+			input.razorpay_order_id,
+			input.razorpay_payment_id,
+			input.razorpay_signature,
+			secret,
+		);
+		if (!isValid) throw new AppError('Invalid Razorpay signature', 401);
+	}
 
 	const intent = await db.sessionBookingIntent.findUnique({ where: { razorpayOrderId: input.razorpay_order_id } });
 	if (!intent || String(intent.patientId) !== userId) throw new AppError('Booking intent not found', 404);
@@ -847,6 +857,12 @@ export const submitAssessment = async (userId: string, input: { type: string; sc
 			sentAt: new Date(),
 		},
 	});
+
+	await syncTreatmentPlanFromAssessment(userId, {
+		assessmentType: input.type,
+		score: created.totalScore,
+		severity: created.severityLevel,
+	}).catch(() => null);
 
 	return {
 		id: created.id,
@@ -1189,11 +1205,15 @@ export const getPatientSettings = async (userId: string) => {
 
 	const mergedSettings = {
 		...(payloadSettings || {}),
+		profile: {
+			...((payloadSettings as any)?.profile || {}),
+			carrier: String((emergencyContact as any)?.carrier || (payloadSettings as any)?.profile?.carrier || ''),
+		},
 		therapy: {
 			...((payloadSettings as any)?.therapy || {}),
 			emergencyName: String((emergencyContact as any)?.name || (payloadSettings as any)?.therapy?.emergencyName || ''),
 			emergencyPhone: String((emergencyContact as any)?.phone || (payloadSettings as any)?.therapy?.emergencyPhone || ''),
-			emergencyRelationship: String((emergencyContact as any)?.relationship || (payloadSettings as any)?.therapy?.emergencyRelationship || ''),
+			emergencyRelationship: String((emergencyContact as any)?.relation || (emergencyContact as any)?.relationship || (payloadSettings as any)?.therapy?.emergencyRelationship || ''),
 		},
 		security: {
 			...((payloadSettings as any)?.security || {}),
@@ -1213,6 +1233,7 @@ export const updatePatientSettings = async (userId: string, settings: Record<str
 	const emergencyName = String(settings?.therapy?.emergencyName || '').trim();
 	const emergencyPhone = String(settings?.therapy?.emergencyPhone || '').trim();
 	const emergencyRelationship = String(settings?.therapy?.emergencyRelationship || '').trim();
+	const carrier = String(settings?.profile?.carrier || '').trim();
 
 	await Promise.all([
 		db.notification.create({
@@ -1238,7 +1259,8 @@ export const updatePatientSettings = async (userId: string, settings: Record<str
 				emergencyContact: {
 					name: emergencyName,
 					phone: emergencyPhone,
-					relationship: emergencyRelationship,
+					relation: emergencyRelationship,
+					carrier,
 				},
 			},
 		}).catch(() => ({ count: 0 })),
