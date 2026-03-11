@@ -28,6 +28,7 @@ import {
 	sendReminderController,
 	startLiveSessionController,
 	duplicateTemplateController,
+	therapistProposeAppointmentSlotController,
 } from '../controllers/therapist.actions.controller';
 import { analyticsController } from '../controllers/analytics.controller';
 import { requireSessionOwnership } from '../middleware/ownership.middleware';
@@ -74,6 +75,12 @@ import {
 	postMyTherapistResourceTrackController,
 	putMyTherapistStructuredSessionNoteController,
 } from '../controllers/therapist-modules.controller';
+import {
+	assignProviderQuestionController,
+	createProviderExtraQuestionController,
+	listProviderExtraQuestionsController,
+	listProviderQuestionAssignmentsController,
+} from '../controllers/free-screening-provider.controller';
 
 const router = Router();
 
@@ -119,6 +126,7 @@ router.post('/me/sessions/:id/actions/reschedule', requireAuth, requireTherapist
 router.post('/me/sessions/:id/actions/cancel', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(cancelSessionController));
 router.post('/me/sessions/:id/actions/remind', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(sendReminderController));
 router.post('/me/sessions/:id/actions/start-live', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(startLiveSessionController));
+router.post('/me/appointments/propose-slot', requireAuth, requireTherapistRole, asyncHandler(therapistProposeAppointmentSlotController));
 // Analytics
 router.get('/me/analytics/summary', requireAuth, requireTherapistRole, asyncHandler(analyticsController.getSummary.bind(analyticsController)));
 router.get('/me/analytics/sessions', requireAuth, requireTherapistRole, asyncHandler(analyticsController.getTimeSeries.bind(analyticsController)));
@@ -141,5 +149,10 @@ router.post(
 
 // Template actions
 router.post('/me/templates/:id/actions/duplicate', requireAuth, requireTherapistRole, asyncHandler(duplicateTemplateController));
+
+router.get('/me/free-screening/questions', requireAuth, requireTherapistRole, asyncHandler(listProviderExtraQuestionsController));
+router.post('/me/free-screening/questions', requireAuth, requireTherapistRole, asyncHandler(createProviderExtraQuestionController));
+router.post('/me/free-screening/questions/:questionId/assign', requireAuth, requireTherapistRole, asyncHandler(assignProviderQuestionController));
+router.get('/me/free-screening/assignments', requireAuth, requireTherapistRole, asyncHandler(listProviderQuestionAssignmentsController));
 
 export default router;

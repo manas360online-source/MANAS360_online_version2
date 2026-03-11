@@ -142,6 +142,102 @@ export type AdminSubscriptionsResponse = {
 	};
 };
 
+export type AdminPricingPlatformFee = {
+	id: string;
+	planName: string;
+	monthlyFee: number;
+	description?: string | null;
+	active: boolean;
+	effectiveFrom?: string | null;
+	effectiveTo?: string | null;
+};
+
+export type AdminPricingSessionItem = {
+	id: string;
+	providerType: string;
+	durationMinutes: number;
+	price: number;
+	providerShare: number;
+	platformShare: number;
+	active: boolean;
+	effectiveFrom?: string | null;
+	effectiveTo?: string | null;
+};
+
+export type AdminPricingBundleItem = {
+	id: string;
+	bundleName: string;
+	minutes: number;
+	price: number;
+	active: boolean;
+	effectiveFrom?: string | null;
+	effectiveTo?: string | null;
+};
+
+export type AdminPricingConfig = {
+	platformFee: AdminPricingPlatformFee | null;
+	sessionPricing: AdminPricingSessionItem[];
+	premiumBundles: AdminPricingBundleItem[];
+	surchargePercent: number;
+	impactSummary?: {
+		totalSubscriptions: number;
+		activeSubscriptions: number;
+		lockedToPreviousPrice: number;
+		alignedWithCurrentPrice: number;
+		renewalsNext7Days: number;
+		renewalsNext30Days: number;
+	};
+};
+
+export type AdminScreeningTemplate = {
+	id: string;
+	key: string;
+	title: string;
+	description?: string | null;
+	estimatedMinutes: number;
+	isPublic: boolean;
+	randomizeOrder: boolean;
+	status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type AdminScreeningQuestionOption = {
+	id: string;
+	questionId: string;
+	label: string;
+	optionIndex: number;
+	points: number;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type AdminScreeningQuestion = {
+	id: string;
+	templateId: string;
+	prompt: string;
+	sectionKey: string;
+	orderIndex: number;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+	options: AdminScreeningQuestionOption[];
+};
+
+export type AdminScreeningScoringBand = {
+	id: string;
+	templateId: string;
+	minScore: number;
+	maxScore: number;
+	severity: string;
+	interpretation: string;
+	recommendation: string;
+	actionLabel: string;
+	orderIndex: number;
+	createdAt: string;
+	updatedAt: string;
+};
+
 const buildQuery = (params: Record<string, string | number | undefined>) => {
 	const query = Object.entries(params)
 		.filter(([, value]) => value !== undefined && value !== '')
@@ -237,4 +333,107 @@ export const verifyAdminTherapist = async (therapistId: string): Promise<ApiEnve
 
 export const getAdminModuleSummary = async (module: string): Promise<ApiEnvelope<AdminModuleSummary>> => {
 	return (await client.get<ApiEnvelope<AdminModuleSummary>>(`/v1/admin/modules/${encodeURIComponent(module)}/summary`)).data;
+};
+
+export const getAdminPricingConfig = async (): Promise<ApiEnvelope<AdminPricingConfig>> => {
+	return (await client.get<ApiEnvelope<AdminPricingConfig>>('/v1/admin/pricing')).data;
+};
+
+export const updateAdminPricingConfig = async (payload: {
+	platform_fee?: number;
+	preferred_time_surcharge?: number;
+	session_pricing?: Array<{
+		providerType: string;
+		durationMinutes: number;
+		price: number;
+		providerShare?: number;
+		platformShare?: number;
+		active?: boolean;
+	}>;
+	premium_bundles?: Array<{
+		bundleName: string;
+		minutes: number;
+		price: number;
+		active?: boolean;
+	}>;
+}): Promise<ApiEnvelope<AdminPricingConfig>> => {
+	return (await client.patch<ApiEnvelope<AdminPricingConfig>>('/v1/admin/pricing', payload)).data;
+};
+
+export const getAdminScreeningTemplates = async (): Promise<ApiEnvelope<{ items: AdminScreeningTemplate[] }>> => {
+	return (await client.get<ApiEnvelope<{ items: AdminScreeningTemplate[] }>>('/v1/admin/screening/templates')).data;
+};
+
+export const ensureAdminScreeningTemplateDefault = async (templateKey: string): Promise<ApiEnvelope<AdminScreeningTemplate>> => {
+	return (await client.post<ApiEnvelope<AdminScreeningTemplate>>(`/v1/admin/screening/templates/defaults/${encodeURIComponent(templateKey)}/ensure`)).data;
+};
+
+export const updateAdminScreeningTemplate = async (
+	templateId: string,
+	payload: {
+		title?: string;
+		description?: string;
+		estimatedMinutes?: number;
+		isPublic?: boolean;
+		randomizeOrder?: boolean;
+		status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+	},
+): Promise<ApiEnvelope<AdminScreeningTemplate>> => {
+	return (await client.put<ApiEnvelope<AdminScreeningTemplate>>(`/v1/admin/screening/templates/${encodeURIComponent(templateId)}`, payload)).data;
+};
+
+export const getAdminTemplateQuestions = async (templateId: string): Promise<ApiEnvelope<{ items: AdminScreeningQuestion[] }>> => {
+	return (await client.get<ApiEnvelope<{ items: AdminScreeningQuestion[] }>>(`/v1/admin/screening/templates/${encodeURIComponent(templateId)}/questions`)).data;
+};
+
+export const createAdminTemplateQuestion = async (
+	templateId: string,
+	payload: {
+		prompt: string;
+		sectionKey?: string;
+		orderIndex?: number;
+		options?: Array<{ label: string; optionIndex: number; points: number }>;
+	},
+): Promise<ApiEnvelope<AdminScreeningQuestion>> => {
+	return (await client.post<ApiEnvelope<AdminScreeningQuestion>>(`/v1/admin/screening/templates/${encodeURIComponent(templateId)}/questions`, payload)).data;
+};
+
+export const updateAdminTemplateQuestion = async (
+	questionId: string,
+	payload: { prompt?: string; sectionKey?: string; orderIndex?: number; isActive?: boolean },
+): Promise<ApiEnvelope<AdminScreeningQuestion>> => {
+	return (await client.put<ApiEnvelope<AdminScreeningQuestion>>(`/v1/admin/screening/questions/${encodeURIComponent(questionId)}`, payload)).data;
+};
+
+export const createAdminQuestionOption = async (
+	questionId: string,
+	payload: { label: string; optionIndex: number; points: number },
+): Promise<ApiEnvelope<AdminScreeningQuestionOption>> => {
+	return (await client.post<ApiEnvelope<AdminScreeningQuestionOption>>(`/v1/admin/screening/questions/${encodeURIComponent(questionId)}/options`, payload)).data;
+};
+
+export const updateAdminQuestionOption = async (
+	optionId: string,
+	payload: { label?: string; optionIndex?: number; points?: number },
+): Promise<ApiEnvelope<AdminScreeningQuestionOption>> => {
+	return (await client.put<ApiEnvelope<AdminScreeningQuestionOption>>(`/v1/admin/screening/options/${encodeURIComponent(optionId)}`, payload)).data;
+};
+
+export const getAdminScoringBands = async (templateId: string): Promise<ApiEnvelope<{ items: AdminScreeningScoringBand[] }>> => {
+	return (await client.get<ApiEnvelope<{ items: AdminScreeningScoringBand[] }>>(`/v1/admin/screening/templates/${encodeURIComponent(templateId)}/scoring-bands`)).data;
+};
+
+export const replaceAdminScoringBands = async (
+	templateId: string,
+	bands: Array<{
+		orderIndex: number;
+		minScore: number;
+		maxScore: number;
+		severity: string;
+		interpretation: string;
+		recommendation: string;
+		actionLabel: string;
+	}>,
+): Promise<ApiEnvelope<{ items: AdminScreeningScoringBand[] }>> => {
+	return (await client.put<ApiEnvelope<{ items: AdminScreeningScoringBand[] }>>(`/v1/admin/screening/templates/${encodeURIComponent(templateId)}/scoring-bands`, { bands })).data;
 };

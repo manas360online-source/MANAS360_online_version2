@@ -51,7 +51,9 @@ const assertPaymentActors = async (tx: any, patientId: string, providerId: strin
 		throw new AppError('Invalid patient account', 422);
 	}
 
-	if (!provider || provider.isDeleted || String(provider.role) !== 'THERAPIST') {
+	const providerRole = String(provider?.role || '');
+	const isValidProviderRole = ['THERAPIST', 'PSYCHOLOGIST', 'PSYCHIATRIST', 'COACH'].includes(providerRole);
+	if (!provider || provider.isDeleted || !isValidProviderRole) {
 		throw new AppError('Invalid provider account', 422);
 	}
 };
@@ -64,16 +66,28 @@ export const createSessionPayment = async (input: CreateFinancialSessionInput) =
 
 	const idempotencyKey = randomUUID();
 	const receipt = `sess_${Date.now()}_${idempotencyKey.slice(0, 8)}`;
+	const shouldBypass = env.allowDevPaymentBypass && env.nodeEnv === 'development';
 
-	const order = await createRazorpayOrder({
-		amountMinor,
-		currency: input.currency ?? 'INR',
-		receipt,
-		notes: {
-			patientId: input.patientId,
-			providerId: input.providerId,
-		},
-	});
+	let order: { id: string };
+	try {
+		order = await createRazorpayOrder({
+			amountMinor,
+			currency: input.currency ?? 'INR',
+			receipt,
+			notes: {
+				patientId: input.patientId,
+				providerId: input.providerId,
+			},
+		});
+	} catch (error: any) {
+		if (!shouldBypass) {
+			throw new AppError(error?.message || 'Failed to create Razorpay order', 500);
+		}
+
+		order = {
+			id: `order_dev_${Date.now()}_${idempotencyKey.slice(0, 8)}`,
+		};
+	}
 
 	const created = await db.$transaction(async (tx: any) => {
 		await assertPaymentActors(tx, input.patientId, input.providerId);
@@ -113,9 +127,14 @@ export const createSessionPayment = async (input: CreateFinancialSessionInput) =
 	return {
 		sessionId: created.session.id,
 		paymentId: created.payment.id,
+		paymentType: 'provider_fee',
 		razorpayOrderId: order.id,
 		amountMinor,
 		currency: input.currency ?? 'INR',
+		feeBreakdown: {
+			platformFeeMinor: Math.round(amountMinor * platformShareRatio),
+			providerFeeMinor: Math.floor(amountMinor * providerShareRatio),
+		},
 		idempotencyKey,
 	};
 };
@@ -281,6 +300,7 @@ export const processRazorpayWebhook = async (rawBody: string, signature: string)
 					grossAmountMinor: amountMinor,
 					platformCommissionMinor: platformShareMinor,
 					providerShareMinor: therapistShareMinor,
+					paymentType: 'PROVIDER_FEE',
 					taxAmountMinor: 0,
 					currency: payment.currency,
 					referenceId: payment.sessionId,

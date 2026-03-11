@@ -1,13 +1,118 @@
 import { http } from '../lib/http';
 
+export type JourneyPathway = 'stepped-care' | 'direct-provider' | 'urgent-care';
+
+export type JourneyRecommendationResponse = {
+  pathway: JourneyPathway;
+  severity?: string;
+  followUpDays?: number;
+  recommendation?: {
+    providerTypes?: string[];
+    urgency?: 'routine' | 'priority' | 'urgent' | string;
+    rationale?: string[];
+  };
+  crisis?: {
+    detected: boolean;
+    reason?: string | null;
+  };
+  nextActions?: string[];
+  assessment?: {
+    id?: string;
+    type?: string;
+    score?: number;
+  };
+  selectedPathway?: {
+    pathway: JourneyPathway;
+    reason?: string | null;
+    selectedAt?: string;
+    updatedAt?: string;
+  };
+};
+
+export type JourneySelectPathwayRequest = {
+  pathway: JourneyPathway;
+  reason?: string;
+  metadata?: Record<string, any>;
+};
+
+export type JourneySelectPathwayResponse = {
+  pathway: JourneyPathway;
+  reason?: string | null;
+  selectedAt?: string;
+  updatedAt?: string;
+};
+
+export type JourneyQuickScreeningRequest = {
+  answers: number[];
+};
+
+export type JourneyClinicalRequest = {
+  type: 'PHQ-9' | 'GAD-7';
+  score?: number;
+  answers?: number[];
+};
+
+export type StructuredAssessmentQuestion = {
+  questionId: string;
+  position: number;
+  prompt: string;
+  sectionKey: string;
+  options: Array<{
+    optionIndex: number;
+    label: string;
+    points: number;
+  }>;
+};
+
+export type StructuredAssessmentStartResponse = {
+  attemptId: string;
+  attemptToken?: string;
+  template: {
+    id: string;
+    key: string;
+    title: string;
+    description?: string;
+    estimatedMinutes?: number;
+  };
+  questions: StructuredAssessmentQuestion[];
+};
+
+export type StructuredAssessmentSubmitResponse = {
+  attemptId: string;
+  templateKey: string;
+  totalScore: number;
+  severityLevel: string;
+  interpretation: string;
+  recommendation: string;
+  action: string;
+};
+
+const unwrapPayload = <T = any>(value: any): T => {
+  if (value && typeof value === 'object') {
+    if (value.data !== undefined) {
+      return unwrapPayload<T>(value.data);
+    }
+    if (value.subscription !== undefined) {
+      return unwrapPayload<T>(value.subscription);
+    }
+  }
+  return value as T;
+};
+
 const isOnboardingMessage = (message: string): boolean => {
   const normalized = message.toLowerCase();
-  return normalized.includes('patient profile not found') || normalized.includes('complete onboarding');
+  return (
+    normalized.includes('patient profile not found')
+    || normalized.includes('patient profile unavailable')
+    || normalized.includes('complete onboarding')
+    || normalized.includes('create profile first')
+  );
 };
 
 export const isOnboardingRequiredError = (error: any): boolean => {
   const status = Number(error?.response?.status || 0);
   const message = String(error?.response?.data?.message || error?.message || '');
+  if (isOnboardingMessage(message)) return true;
   return status === 404 && isOnboardingMessage(message);
 };
 
@@ -71,7 +176,15 @@ export const patientApi = {
   listProviders: async (params?: { specialization?: string; language?: string; minPrice?: number; maxPrice?: number; page?: number; limit?: number }) =>
     (await http.get('/v1/providers', { params })).data,
   getProvider: async (id: string) => (await http.get(`/v1/providers/${encodeURIComponent(id)}`)).data,
-  bookSession: async (payload: { providerId: string; scheduledAt: string; durationMinutes?: number; amountMinor?: number }) =>
+  bookSession: async (payload: {
+    providerId: string;
+    scheduledAt: string;
+    durationMinutes?: number;
+    amountMinor?: number;
+    providerType?: string;
+    preferredTime?: boolean;
+    preferredWindow?: string;
+  }) =>
     (await http.post('/v1/sessions/book', payload)).data,
   verifyPayment: async (payload: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
     (await http.post('/v1/payments/verify', payload)).data,
@@ -98,6 +211,29 @@ export const patientApi = {
     (await http.get(`/v1/sessions/${encodeURIComponent(id)}/documents/invoice`, { responseType: 'blob' })).data,
   submitAssessment: async (payload: { type: string; score?: number; answers?: number[] }) =>
     (await http.post('/v1/assessments/submit', payload)).data,
+  submitQuickScreeningJourney: async (payload: JourneyQuickScreeningRequest): Promise<JourneyRecommendationResponse> =>
+    (await http.post('/v1/patient-journey/quick-screening', payload)).data,
+  submitClinicalJourney: async (payload: JourneyClinicalRequest): Promise<JourneyRecommendationResponse> =>
+    (await http.post('/v1/patient-journey/clinical-assessment', payload)).data,
+  startStructuredAssessment: async (payload: { templateKey: string }): Promise<StructuredAssessmentStartResponse> => {
+    const response = await http.post('/v1/free-screening/start/me', payload);
+    return response.data?.data ?? response.data;
+  },
+  submitStructuredAssessment: async (
+    attemptId: string,
+    payload: { answers: Array<{ questionId: string; optionIndex: number }> },
+  ): Promise<StructuredAssessmentSubmitResponse> => {
+    const response = await http.post(`/v1/free-screening/${encodeURIComponent(attemptId)}/submit/me`, payload);
+    return response.data?.data ?? response.data;
+  },
+  getStructuredAssessmentHistory: async () => {
+    const response = await http.get('/v1/free-screening/history');
+    return response.data?.data ?? response.data;
+  },
+  getJourneyRecommendation: async (): Promise<JourneyRecommendationResponse> =>
+    (await http.get('/v1/patient-journey/recommendation')).data,
+  selectJourneyPathway: async (payload: JourneySelectPathwayRequest): Promise<JourneySelectPathwayResponse> =>
+    (await http.post('/v1/patient-journey/select-pathway', payload)).data,
   addMood: async (payload: { mood: number; note?: string }) => (await http.post('/v1/mood', payload)).data,
   getMoodHistory: async () => (await http.get('/v1/mood/history')).data,
   getMoodLogs: async () => (await http.get('/patient/mood')).data,
@@ -157,9 +293,18 @@ export const patientApi = {
     carrier?: string;
     emergencyContact?: { name: string; relation: string; phone: string };
   }) => (await http.post('/v1/patients/profile', payload)).data,
-  getSubscription: async () => (await http.get('/patient/subscription')).data,
-  upgradeSubscription: async () => (await http.patch('/patient/subscription/upgrade')).data,
-  downgradeSubscription: async () => (await http.patch('/patient/subscription/downgrade')).data,
+  getSubscription: async () => {
+    const response = await http.get('/patient/subscription');
+    return unwrapPayload(response.data);
+  },
+  upgradeSubscription: async () => {
+    const response = await http.patch('/patient/subscription/upgrade');
+    return unwrapPayload(response.data);
+  },
+  downgradeSubscription: async () => {
+    const response = await http.patch('/patient/subscription/downgrade');
+    return unwrapPayload(response.data);
+  },
   cancelSubscription: async () => (await http.patch('/patient/subscription/cancel')).data,
   reactivateSubscription: async () => (await http.patch('/patient/subscription/reactivate')).data,
   setSubscriptionAutoRenew: async (autoRenew: boolean) => (await http.patch('/patient/subscription/auto-renew', { autoRenew })).data,
@@ -173,6 +318,11 @@ export const patientApi = {
   completeExercise: async (id: string) => (await http.patch(`/patient/exercises/${encodeURIComponent(id)}/complete`)).data,
   getTherapyPlan: async () => (await http.get('/v1/therapy-plan')).data,
   completeTherapyPlanTask: async (id: string) => (await http.patch(`/v1/therapy-plan/tasks/${encodeURIComponent(id)}/complete`)).data,
+  getPricing: async () =>
+    withFallbackChain([
+      async () => (await http.get('/v1/pricing')).data,
+      async () => (await http.get('/pricing')).data,
+    ]),
   aiChat: async (payload: { message: string; bot_type?: 'mood_ai' | 'clinical_ai'; response_style?: 'concise' | 'detailed' }) =>
     (await http.post('/chat/message', {
       message: payload.message,
@@ -183,4 +333,61 @@ export const patientApi = {
     (await http.get(`/v1/risk/${encodeURIComponent(userId)}/current`)).data,
   getNotifications: async () => (await http.get('/v1/notifications')).data,
   markNotificationRead: async (id: string) => (await http.patch(`/v1/notifications/${encodeURIComponent(id)}/read`)).data,
+    // Progress & Analytics
+    getInsights: async () =>
+      withFallbackChain([
+        async () => (await http.get('/v1/patient/insights')).data,
+        async () => (await http.get('/patient/insights')).data,
+      ]),
+    getReports: async () =>
+      withFallbackChain([
+        async () => (await http.get('/v1/patient/reports')).data,
+        async () => (await http.get('/patient/reports')).data,
+      ]),
+    // Care Team
+    getMyProviders: async () =>
+      withFallbackChain([
+        async () => (await http.get('/v1/patient/care-team')).data,
+        async () => (await http.get('/patient/care-team')).data,
+      ]),
+    getAvailableProviders: async (params?: { specialization?: string; language?: string; maxPrice?: number; role?: string }) =>
+      withFallbackChain([
+        async () => (await http.get('/v1/patient/providers/available', { params })).data,
+        async () => (await http.get('/v1/providers', { params })).data,
+      ]),
+      requestAppointmentToPreferredProviders: async (payload: {
+        providerIds: string[];
+        preferredLanguage?: string;
+        preferredTime?: string;
+        preferredSpecialization?: string;
+        carePath?: string;
+        urgency?: string;
+        note?: string;
+      }) =>
+        (await http.post('/v1/patient/appointments/request', payload)).data,
+      confirmProposedAppointmentSlot: async (payload: {
+        requestRef: string;
+        providerId: string;
+        proposedStartAt?: string;
+        accept: boolean;
+      }) =>
+        (await http.post('/v1/patient/appointments/confirm-slot', payload)).data,
+    // Messaging
+    getConversations: async () =>
+      withFallbackChain([
+        async () => (await http.get('/v1/patient/messages/conversations')).data,
+        async () => (await http.get('/patient/messages/conversations')).data,
+        async () => ([]),
+      ]),
+    getMessages: async (conversationId: string) =>
+      withFallbackChain([
+        async () => (await http.get(`/v1/patient/messages/${encodeURIComponent(conversationId)}`)).data,
+        async () => (await http.get(`/patient/messages/${encodeURIComponent(conversationId)}`)).data,
+        async () => ([]),
+      ]),
+    sendMessage: async (payload: { conversationId: string; content: string }) =>
+      withFallbackChain([
+        async () => (await http.post('/v1/patient/messages', payload)).data,
+        async () => (await http.post('/patient/messages', payload)).data,
+      ]),
 };

@@ -67,7 +67,9 @@ const assertPaymentActors = async (tx, patientId, providerId) => {
     if (!patient || patient.isDeleted || String(patient.role) !== 'PATIENT') {
         throw new error_middleware_1.AppError('Invalid patient account', 422);
     }
-    if (!provider || provider.isDeleted || String(provider.role) !== 'THERAPIST') {
+    const providerRole = String(provider?.role || '');
+    const isValidProviderRole = ['THERAPIST', 'PSYCHOLOGIST', 'PSYCHIATRIST', 'COACH'].includes(providerRole);
+    if (!provider || provider.isDeleted || !isValidProviderRole) {
         throw new error_middleware_1.AppError('Invalid provider account', 422);
     }
 };
@@ -78,15 +80,27 @@ const createSessionPayment = async (input) => {
     }
     const idempotencyKey = (0, crypto_1.randomUUID)();
     const receipt = `sess_${Date.now()}_${idempotencyKey.slice(0, 8)}`;
-    const order = await (0, razorpay_service_1.createRazorpayOrder)({
-        amountMinor,
-        currency: input.currency ?? 'INR',
-        receipt,
-        notes: {
-            patientId: input.patientId,
-            providerId: input.providerId,
-        },
-    });
+    const shouldBypass = env_1.env.allowDevPaymentBypass && env_1.env.nodeEnv === 'development';
+    let order;
+    try {
+        order = await (0, razorpay_service_1.createRazorpayOrder)({
+            amountMinor,
+            currency: input.currency ?? 'INR',
+            receipt,
+            notes: {
+                patientId: input.patientId,
+                providerId: input.providerId,
+            },
+        });
+    }
+    catch (error) {
+        if (!shouldBypass) {
+            throw new error_middleware_1.AppError(error?.message || 'Failed to create Razorpay order', 500);
+        }
+        order = {
+            id: `order_dev_${Date.now()}_${idempotencyKey.slice(0, 8)}`,
+        };
+    }
     const created = await db.$transaction(async (tx) => {
         await assertPaymentActors(tx, input.patientId, input.providerId);
         await tx.providerWallet.upsert({
@@ -120,9 +134,14 @@ const createSessionPayment = async (input) => {
     return {
         sessionId: created.session.id,
         paymentId: created.payment.id,
+        paymentType: 'provider_fee',
         razorpayOrderId: order.id,
         amountMinor,
         currency: input.currency ?? 'INR',
+        feeBreakdown: {
+            platformFeeMinor: Math.round(amountMinor * platformShareRatio),
+            providerFeeMinor: Math.floor(amountMinor * providerShareRatio),
+        },
         idempotencyKey,
     };
 };
@@ -261,6 +280,7 @@ const processRazorpayWebhook = async (rawBody, signature) => {
                     grossAmountMinor: amountMinor,
                     platformCommissionMinor: platformShareMinor,
                     providerShareMinor: therapistShareMinor,
+                    paymentType: 'PROVIDER_FEE',
                     taxAmountMinor: 0,
                     currency: payment.currency,
                     referenceId: payment.sessionId,

@@ -12,20 +12,27 @@ import {
 	downloadPatientInvoiceController,
 	downgradePatientSubscriptionController,
 	getPatientExercisesController,
+	getPatientInsightsController,
 	getPatientMoodStatsController,
 	getPatientMoodTodayController,
 	getPatientProgressController,
+	getPatientReportsController,
 	getPatientDashboardController,
 	getPatientInvoicesController,
 	getPatientMoodController,
+	getJourneyRecommendationController,
+	getMyCareTeamController,
 	getPatientPaymentMethodController,
 	getPatientSubscriptionController,
 	getMyTreatmentPlanController,
 	getProviderByIdController,
+	listAvailableProvidersController,
 	listNotificationsController,
 	listProvidersController,
 	markNotificationReadController,
 	moodHistoryController,
+	patientConfirmProposedAppointmentSlotController,
+	requestAppointmentWithPreferredProvidersController,
 	reactivatePatientSubscriptionController,
 	sessionInvoicePdfController,
 	sessionDetailController,
@@ -42,6 +49,12 @@ import {
 const router = Router();
 
 router.get('/patient/dashboard', requireAuth, requireRole('patient'), asyncHandler(getPatientDashboardController));
+router.get('/patient/insights', requireAuth, requireRole('patient'), asyncHandler(getPatientInsightsController));
+router.get('/patient/reports', requireAuth, requireRole('patient'), asyncHandler(getPatientReportsController));
+router.get('/patient/care-team', requireAuth, requireRole('patient'), asyncHandler(getMyCareTeamController));
+router.get('/patient/providers/available', requireAuth, requireRole('patient'), asyncHandler(listAvailableProvidersController));
+router.post('/patient/appointments/request', requireAuth, requireRole('patient'), asyncHandler(requestAppointmentWithPreferredProvidersController));
+router.post('/patient/appointments/confirm-slot', requireAuth, requireRole('patient'), asyncHandler(patientConfirmProposedAppointmentSlotController));
 
 router.get('/providers', requireAuth, requireRole('patient'), asyncHandler(listProvidersController));
 router.get('/providers/:id', requireAuth, requireRole('patient'), asyncHandler(getProviderByIdController));
@@ -56,6 +69,7 @@ router.get('/sessions/:id', requireAuth, requireRole('patient'), asyncHandler(se
 router.post('/payments/verify', requireAuth, requireRole('patient'), asyncHandler(verifyPaymentController));
 
 router.post('/assessments/submit', requireAuth, requireRole('patient'), asyncHandler(submitAssessmentController));
+router.get('/assessments/journey-recommendation', requireAuth, requireRole('patient'), asyncHandler(getJourneyRecommendationController));
 
 router.get('/therapy-plan', requireAuth, requireRole('patient'), asyncHandler(getMyTreatmentPlanController));
 router.patch('/therapy-plan/tasks/:id/complete', requireAuth, requireRole('patient'), asyncHandler(completeTreatmentPlanTaskController));

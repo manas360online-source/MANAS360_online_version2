@@ -10,12 +10,16 @@ import {
 	getMoodToday,
 	getMoodStats,
 	getPatientExercises,
+	getPatientInsights,
 	getMoodHistory,
+	getMyCareTeamProviders,
 	getPatientProgressAnalytics,
 	getPatientDashboard,
 	getPatientInvoiceById,
 	getPatientInvoices,
+	getLatestJourneyRecommendation,
 	getPatientPaymentMethod,
+	getPatientReports,
 	getPatientSubscription,
 	getProviderById,
 	getSessionDocumentPayload,
@@ -23,9 +27,13 @@ import {
 	getSessionHistory,
 	getUpcomingSessions,
 	initiateSessionBooking,
+	listAvailableProvidersForPatient,
 	listNotifications,
 	listProviders,
 	markNotificationRead,
+	requestAppointmentWithPreferredProviders,
+	patientConfirmProposedAppointmentSlot,
+	therapistProposeAppointmentSlot,
 	getPatientSettings,
 	updatePatientSettings,
 	getPatientSupportCenter,
@@ -68,12 +76,42 @@ export const listProvidersController = async (req: Request, res: Response): Prom
 	const result = await listProviders({
 		specialization: typeof req.query.specialization === 'string' ? req.query.specialization : undefined,
 		language: typeof req.query.language === 'string' ? req.query.language : undefined,
+		role: typeof req.query.role === 'string' ? req.query.role : undefined,
 		minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
 		maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
 		page: req.query.page ? Number(req.query.page) : 1,
 		limit: req.query.limit ? Number(req.query.limit) : 10,
 	});
 	sendSuccess(res, result, 'Providers fetched');
+};
+
+export const listAvailableProvidersController = async (req: Request, res: Response): Promise<void> => {
+	const result = await listAvailableProvidersForPatient(authUserId(req), {
+		search: typeof req.query.search === 'string' ? req.query.search : undefined,
+		specialization: typeof req.query.specialization === 'string' ? req.query.specialization : undefined,
+		language: typeof req.query.language === 'string' ? req.query.language : undefined,
+		role: typeof req.query.role === 'string' ? req.query.role : undefined,
+		minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
+		maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) * 100 : undefined,
+		page: req.query.page ? Number(req.query.page) : 1,
+		limit: req.query.limit ? Number(req.query.limit) : 12,
+	});
+	sendSuccess(res, result, 'Available providers fetched');
+};
+
+export const getPatientInsightsController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getPatientInsights(authUserId(req));
+	sendSuccess(res, data, 'Patient insights fetched');
+};
+
+export const getPatientReportsController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getPatientReports(authUserId(req));
+	sendSuccess(res, data, 'Patient reports fetched');
+};
+
+export const getMyCareTeamController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getMyCareTeamProviders(authUserId(req));
+	sendSuccess(res, data, 'Care team fetched');
 };
 
 export const getProviderByIdController = async (req: Request, res: Response): Promise<void> => {
@@ -95,6 +133,9 @@ export const bookSessionController = async (req: Request, res: Response): Promis
 		scheduledAt,
 		durationMinutes: req.body.durationMinutes ? Number(req.body.durationMinutes) : undefined,
 		amountMinor: req.body.amountMinor ? Number(req.body.amountMinor) : undefined,
+		providerType: req.body.providerType ? String(req.body.providerType) : undefined,
+		preferredTime: req.body.preferredTime !== undefined ? Boolean(req.body.preferredTime) : undefined,
+		preferredWindow: req.body.preferredWindow ? String(req.body.preferredWindow) : undefined,
 	});
 
 	sendSuccess(res, result, 'Booking initiated', 201);
@@ -237,6 +278,11 @@ export const submitAssessmentController = async (req: Request, res: Response): P
 	sendSuccess(res, result, 'Assessment submitted', 201);
 };
 
+export const getJourneyRecommendationController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getLatestJourneyRecommendation(authUserId(req));
+	sendSuccess(res, data, 'Journey recommendation fetched');
+};
+
 export const getMyTreatmentPlanController = async (req: Request, res: Response): Promise<void> => {
 	const data = await getMyTreatmentPlan(authUserId(req));
 	sendSuccess(res, data, 'Treatment plan fetched');
@@ -277,6 +323,62 @@ export const markNotificationReadController = async (req: Request, res: Response
 	if (!id) throw new AppError('notification id is required', 422);
 	const data = await markNotificationRead(userId, id);
 	sendSuccess(res, data, 'Notification marked as read');
+};
+
+export const requestAppointmentWithPreferredProvidersController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const providerIds = Array.isArray(req.body?.providerIds) ? req.body.providerIds.map((id: any) => String(id || '').trim()) : [];
+	if (!providerIds.length) {
+		throw new AppError('providerIds is required', 422);
+	}
+
+	const data = await requestAppointmentWithPreferredProviders(userId, {
+		providerIds,
+		preferredLanguage: req.body?.preferredLanguage ? String(req.body.preferredLanguage) : undefined,
+		preferredTime: req.body?.preferredTime ? String(req.body.preferredTime) : undefined,
+		preferredSpecialization: req.body?.preferredSpecialization ? String(req.body.preferredSpecialization) : undefined,
+		carePath: req.body?.carePath ? String(req.body.carePath) : undefined,
+		urgency: req.body?.urgency ? String(req.body.urgency) : undefined,
+		note: req.body?.note ? String(req.body.note) : undefined,
+	});
+
+	sendSuccess(res, data, 'Appointment request sent', 201);
+};
+
+export const patientConfirmProposedAppointmentSlotController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const requestRef = String(req.body?.requestRef || '').trim();
+	const providerId = String(req.body?.providerId || '').trim();
+	const accept = Boolean(req.body?.accept);
+	if (!requestRef || !providerId) {
+		throw new AppError('requestRef and providerId are required', 422);
+	}
+
+	const data = await patientConfirmProposedAppointmentSlot(userId, {
+		requestRef,
+		providerId,
+		proposedStartAt: req.body?.proposedStartAt ? String(req.body.proposedStartAt) : undefined,
+		accept,
+	});
+
+	sendSuccess(res, data, 'Appointment slot response recorded');
+};
+
+export const therapistProposeAppointmentSlotController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const requestRef = String(req.body?.requestRef || '').trim();
+	const proposedStartAt = String(req.body?.proposedStartAt || '').trim();
+	if (!requestRef || !proposedStartAt) {
+		throw new AppError('requestRef and proposedStartAt are required', 422);
+	}
+
+	const data = await therapistProposeAppointmentSlot(userId, {
+		requestRef,
+		proposedStartAt,
+		note: req.body?.note ? String(req.body.note) : undefined,
+	});
+
+	sendSuccess(res, data, 'Proposed slot sent to patient');
 };
 
 export const getPatientSettingsController = async (req: Request, res: Response): Promise<void> => {
