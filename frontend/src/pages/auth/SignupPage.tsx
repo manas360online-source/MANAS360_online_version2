@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../../api/auth';
+import { patientApi } from '../../api/patient';
 import RegisterForm from '../../components/auth/RegisterForm';
 import { useAuth } from '../../context/AuthContext';
 
 export default function SignupPage() {
-	const { register } = useAuth();
+	const { register, login } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const next = new URLSearchParams(location.search).get('next');
@@ -15,16 +16,30 @@ export default function SignupPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
 
-	const onSubmit = async (payload: { name: string; email: string; password: string; role: 'patient' | 'therapist' | 'psychiatrist' | 'coach' }) => {
+	const onSubmit = async (payload: {
+		name: string;
+		email: string;
+		password: string;
+		role: 'patient' | 'therapist' | 'psychiatrist' | 'coach';
+		selectedPlan?: 'basic' | 'standard' | 'premium';
+		paymentMethod?: string;
+	}) => {
 		setError(null);
 		setSuccess(null);
 		setLoading(true);
 		try {
 			await register(payload.email, payload.password, payload.name, payload.role);
-			setSuccess('Registration successful. Please verify email OTP to unlock login access.');
-			navigate(loginHref, { replace: true });
+			if (payload.role === 'patient') {
+				await login(payload.email, payload.password);
+				await patientApi.upgradeSubscription();
+				setSuccess('Registration and platform activation successful. Redirecting to assessments...');
+				navigate('/patient/onboarding?next=/patient/assessments', { replace: true });
+			} else {
+				setSuccess('Registration successful. Please verify email OTP to unlock login access.');
+				navigate(loginHref, { replace: true });
+			}
 		} catch (err) {
-			setError(getApiErrorMessage(err, 'Registration failed'));
+			setError(getApiErrorMessage(err, 'Registration failed.'));
 		} finally {
 			setLoading(false);
 		}

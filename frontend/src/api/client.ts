@@ -14,10 +14,14 @@ export class ApiClientError extends Error {
 	}
 }
 
+const defaultApiBase = typeof window === 'undefined'
+	? 'http://localhost:3000/api'
+	: `${window.location.protocol}//${window.location.hostname}:3000/api`;
+
 const configuredBase =
 	import.meta.env.VITE_API_BASE_URL?.trim() ||
 	import.meta.env.VITE_API_URL?.trim() ||
-	'http://localhost:3000/api';
+	defaultApiBase;
 
 const joinUrl = (path: string): string => {
 	if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -53,6 +57,15 @@ const client = {
 	async patch<T = any>(url: string, body?: any) {
 		const res = await fetch(joinUrl(url), {
 			method: 'PATCH',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body ?? {}),
+		});
+		return parseResponse<T>(res);
+	},
+	async put<T = any>(url: string, body?: any) {
+		const res = await fetch(joinUrl(url), {
+			method: 'PUT',
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body ?? {}),
