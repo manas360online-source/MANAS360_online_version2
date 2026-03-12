@@ -259,7 +259,7 @@ export default function CBTSessionPlayerPage() {
   if (!currentQuestion) {
     return (
       <div className="space-y-4 rounded-2xl border border-calm-sage/15 bg-white/85 p-6">
-        <h1 className="font-serif text-2xl font-light">Session complete</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">Session complete</h1>
         <p className="text-sm text-charcoal/65">You have completed this CBT session.</p>
         <Link to={`/patient/sessions/${sessionId}`} className="inline-flex min-h-[40px] items-center rounded-full bg-charcoal px-4 text-sm font-medium text-cream">
           View Session Summary

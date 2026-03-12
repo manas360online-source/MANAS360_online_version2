@@ -14,6 +14,7 @@ const exportRateLimiter_middleware_1 = require("../middleware/exportRateLimiter.
 const therapist_dashboard_controller_1 = require("../controllers/therapist-dashboard.controller");
 const therapist_modules_controller_1 = require("../controllers/therapist-modules.controller");
 const free_screening_provider_controller_1 = require("../controllers/free-screening-provider.controller");
+const smart_match_controller_1 = require("../controllers/smart-match.controller");
 const router = (0, express_1.Router)();
 router.post('/profile', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, ...validate_middleware_1.validateCreateTherapistProfileRequest, (0, validate_middleware_1.asyncHandler)(therapist_controller_1.createTherapistProfileController));
 router.get('/me/profile', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(therapist_controller_1.getMyTherapistProfileController));
@@ -53,6 +54,9 @@ router.post('/me/sessions/:id/actions/cancel', auth_middleware_1.requireAuth, rb
 router.post('/me/sessions/:id/actions/remind', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, ...validate_middleware_1.validateSessionIdParam, (0, validate_middleware_1.asyncHandler)(therapist_actions_controller_1.sendReminderController));
 router.post('/me/sessions/:id/actions/start-live', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, ...validate_middleware_1.validateSessionIdParam, (0, validate_middleware_1.asyncHandler)(therapist_actions_controller_1.startLiveSessionController));
 router.post('/me/appointments/propose-slot', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(therapist_actions_controller_1.therapistProposeAppointmentSlotController));
+// Smart Match appointment booking
+router.post('/me/appointments/accept', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(smart_match_controller_1.acceptAppointmentController));
+router.post('/me/appointments/reject', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(smart_match_controller_1.rejectAppointmentController));
 // Analytics
 router.get('/me/analytics/summary', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(analytics_controller_1.analyticsController.getSummary.bind(analytics_controller_1.analyticsController)));
 router.get('/me/analytics/sessions', auth_middleware_1.requireAuth, rbac_middleware_1.requireTherapistRole, (0, validate_middleware_1.asyncHandler)(analytics_controller_1.analyticsController.getTimeSeries.bind(analytics_controller_1.analyticsController)));

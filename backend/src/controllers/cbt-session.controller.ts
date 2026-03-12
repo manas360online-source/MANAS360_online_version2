@@ -10,27 +10,27 @@ export class CBTSessionController {
   // ============ TEMPLATE ENDPOINTS ============
 
   /**
-   * POST /api/cbt-sessions/templates
-   * Create new session template
+   * POST /api/v1/cbt-sessions/templates
+   * Create or update session template (sync from Builder)
    */
   async createTemplate(req: Request, res: Response) {
     try {
-      const { title, description, category, targetAudience, estimatedDuration } = req.body;
-      const therapistId = String(req.user?.id); // From auth middleware
+      const { id, title, description, category, targetAudience, estimatedDuration, questions } = req.body;
+      const therapistId = String(req.auth?.userId); // From auth middleware
 
-      const template = await cbtSessionService.createTemplate(therapistId, {
+      const template = await cbtSessionService.saveTemplateFull(therapistId, {
+        id,
         title,
         description,
         category,
-        targetAudience,
-        estimatedDuration,
+        questions: questions || [],
       });
 
-      res.status(201).json({
+      res.status(id && id !== 'draft' ? 200 : 201).json({
         success: true,
         data: template,
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ success: false, error: error.message });
     }
   }
@@ -121,7 +121,7 @@ export class CBTSessionController {
   async duplicateVersion(req: Request, res: Response) {
     try {
       const { versionId } = req.params; // id is templateId
-      const authorId = String(req.user?.id);
+      const authorId = String(req.auth?.userId);
       const { publish } = req.body;
 
       const newVersion = await cbtSessionService.duplicateVersion(String(versionId), authorId, { publish });
@@ -274,7 +274,7 @@ export class CBTSessionController {
   async cloneTemplate(req: Request, res: Response) {
     try {
       const { templateId, makePrivate, title } = req.body;
-      const therapistId = String(req.user?.id);
+      const therapistId = String(req.auth?.userId);
       const tpl = await cbtSessionService.cloneTemplate(String(templateId), therapistId, { makePrivate, title });
       res.status(201).json({ success: true, data: tpl });
     } catch (error) {
@@ -291,7 +291,7 @@ export class CBTSessionController {
   async startSession(req: Request, res: Response) {
     try {
       const { templateId, versionId } = req.body;
-      const patientId = String(req.user?.id);
+      const patientId = String(req.auth?.userId);
 
       const session = await cbtSessionService.startPatientSession(patientId, String(templateId), String(versionId));
 
@@ -345,7 +345,7 @@ export class CBTSessionController {
     try {
       const id = String(req.params.id);
       const { questionId, responseData, timeSpentSeconds, idempotencyKey } = req.body;
-      const patientId = String(req.user?.id);
+      const patientId = String(req.auth?.userId);
       const keyFromHeader = typeof req.get('x-idempotency-key') === 'string' ? String(req.get('x-idempotency-key')) : '';
       const messageId = String(idempotencyKey || keyFromHeader || '').trim();
 

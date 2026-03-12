@@ -1,144 +1,145 @@
-import { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
+import { useState, Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { GlobalFallbackLoader } from './components/ui/FallbackLoader';
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 import { AuthProvider, getPostLoginRoute, useAuth } from './context/AuthContext';
 import { Assessment } from './pages/Assessment'
 import { ResultsPage } from './pages/Results'
 import { CrisisPage } from './pages/Crisis'
 import { OnboardingName } from './pages/OnboardingName'
 import { OnboardingEmail } from './pages/OnboardingEmail'
-import SessionSocketDemo from './components/SessionSocketDemo'
-import LoginPage from './pages/auth/LoginPage'
-import SignupPage from './pages/auth/SignupPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-import SessionDetailPage from './pages/therapist/SessionDetailPage'
+const SessionSocketDemo = lazy(() => import('./components/SessionSocketDemo'));
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const SessionDetailPage = lazy(() => import('./pages/therapist/SessionDetailPage'));
 import ProtectedRoute from './components/ProtectedRoute'
 import PlatformAdminRoute from './components/PlatformAdminRoute'
 import CorporateRoute from './components/CorporateRoute'
-import PatientDashboardLayout from './components/layout/PatientDashboardLayout'
-import TherapistDashboardLayout from './components/layout/TherapistDashboardLayout'
-import DashboardPage from './pages/patient/DashboardPage'
-import BookSessionPage from './pages/patient/BookSessionPage'
-import SessionsPage from './pages/patient/SessionsPage'
-import PatientSessionDetailPage from './pages/patient/SessionDetailPage'
-import AIChatPage from './pages/patient/AIChatPage'
-import ProfilePage from './pages/patient/ProfilePage'
-import SettingsPage from './pages/patient/SettingsPage'
-import LiveSessionPage from './pages/patient/LiveSessionPage'
-import AssessmentsPage from './pages/patient/AssessmentsPage'
-import AssessmentReportsPage from './pages/patient/AssessmentReportsPage'
-import DocumentsPage from './pages/patient/DocumentsPage'
-import ProgressPage from './pages/patient/ProgressPage'
-import SupportPage from './pages/patient/SupportPage'
-import CBTSessionPlayerPage from './pages/patient/CBTSessionPlayerPage'
-import PatientOnboardingPage from './pages/patient/PatientOnboardingPage'
-import TherapyPlanPage from './pages/patient/TherapyPlanPage'
-import ExercisesPage from './pages/patient/ExercisesPage'
-import CareTeamPage from './pages/patient/CareTeamPage'
-import PricingPage from './pages/patient/PricingPage'
-import PatientTimelinePage from './pages/patient/PatientTimelinePage'
-import MoodTrackerPage from './pages/patient/MoodTrackerPage'
-import ReportsPage from './pages/patient/ReportsPage'
-import NotificationsPage from './pages/patient/NotificationsPage'
-import SoundTherapyPage from './pages/patient/SoundTherapyPage'
-import ProviderMessagesPage from './pages/patient/ProviderMessagesPage'
-import AdminPortalLoginPage from './pages/admin/AdminPortalLoginPage'
-import AdminDashboardPage from './pages/admin/Dashboard'
-import AdminShellLayout from './components/admin/AdminShellLayout'
-import AdminEntryGate from './components/admin/AdminEntryGate'
-import AdminUsersPage from './pages/admin/Users'
-import AdminRolesPage from './pages/admin/Roles'
-import AdminCompaniesPage from './pages/admin/Companies'
-import AdminCompanySubscriptionsPage from './pages/admin/CompanySubscriptions'
-import AdminCompanyReportsPage from './pages/admin/CompanyReports'
-import AdminPlatformHealthPage from './pages/admin/PlatformHealth'
-import AdminVerificationPage from './pages/admin/Verification'
-import AdminRevenuePage from './pages/admin/Revenue'
-import AdminSettingsPage from './pages/admin/Settings'
-import AdminPricingManagementPage from './pages/admin/PricingManagement'
-import ClinicalAssistantPage from './pages/admin/ClinicalAssistantPage'
-import AdminSectionPage from './pages/admin/AdminSectionPage'
-import CertificationsPage from './pages/CertificationsPage'
-import TherapistDashboardPage from './pages/therapist/TherapistDashboardPage'
-import TherapistPatientsPage from './pages/therapist/TherapistPatientsPage'
-import TherapistSessionsPage from './pages/therapist/TherapistSessionsPage'
-import TherapistSessionNotesPage from './pages/therapist/TherapistSessionNotesPage'
-import TherapistEarningsPage from './pages/therapist/TherapistEarningsPage'
-import TherapistPayoutHistoryPage from './pages/therapist/TherapistPayoutHistoryPage'
-import TherapistMessagesPage from './pages/therapist/TherapistMessagesPage'
-import TherapistExerciseLibraryPage from './pages/therapist/TherapistExerciseLibraryPage'
-import TherapistAnalyticsPage from './pages/therapist/TherapistAnalyticsPage'
-import TherapistSettingsPage from './pages/therapist/TherapistSettingsPage'
-import TherapistHelpSupportPage from './pages/therapist/TherapistHelpSupportPage'
-import TherapistProfilePage from './pages/therapist/Profile';
-import TherapistMoodTrackingPage from './pages/therapist/TherapistMoodTrackingPage';
-import TherapistCbtModulesPage from './pages/therapist/TherapistCbtModulesPage';
-import TherapistAssessmentsPage from './pages/therapist/TherapistAssessmentsPage';
-import TherapistResourcesPage from './pages/therapist/TherapistResourcesPage';
-import TherapistCareTeamPage from './pages/therapist/TherapistCareTeamPage';
+const PatientDashboardLayout = lazy(() => import('./components/layout/PatientDashboardLayout'));
+const TherapistDashboardLayout = lazy(() => import('./components/layout/TherapistDashboardLayout'));
+const DashboardPage = lazy(() => import('./pages/patient/DashboardPage'));
+const BookSessionPage = lazy(() => import('./pages/patient/BookSessionPage'));
+const SessionsPage = lazy(() => import('./pages/patient/SessionsPage'));
+const PatientSessionDetailPage = lazy(() => import('./pages/patient/SessionDetailPage'));
+const AIChatPage = lazy(() => import('./pages/patient/AIChatPage'));
+const ProfilePage = lazy(() => import('./pages/patient/ProfilePage'));
+const SettingsPage = lazy(() => import('./pages/patient/SettingsPage'));
+const LiveSessionPage = lazy(() => import('./pages/patient/LiveSessionPage'));
+const AssessmentsPage = lazy(() => import('./pages/patient/AssessmentsPage'));
+const DocumentsPage = lazy(() => import('./pages/patient/DocumentsPage'));
+const ProgressPage = lazy(() => import('./pages/patient/ProgressPage'));
+const SupportPage = lazy(() => import('./pages/patient/SupportPage'));
+const CBTSessionPlayerPage = lazy(() => import('./pages/patient/CBTSessionPlayerPage'));
+const TherapyPlanPage = lazy(() => import('./pages/patient/TherapyPlanPage'));
+const ExercisesPage = lazy(() => import('./pages/patient/ExercisesPage'));
+
+const PricingPage = lazy(() => import('./pages/patient/PricingPage'));
+const PatientTimelinePage = lazy(() => import('./pages/patient/PatientTimelinePage'));
+const MoodTrackerPage = lazy(() => import('./pages/patient/MoodTrackerPage'));
+const ReportsPage = lazy(() => import('./pages/patient/ReportsPage'));
+const NotificationsPage = lazy(() => import('./pages/patient/NotificationsPage'));
+const SoundTherapyPage = lazy(() => import('./pages/patient/SoundTherapyPage'));
+const ProviderMessagesPage = lazy(() => import('./pages/patient/ProviderMessagesPage'));
+const PatientOnboardingPage = lazy(() => import('./pages/patient/PatientOnboardingPage'));
+const AdminPortalLoginPage = lazy(() => import('./pages/admin/AdminPortalLoginPage'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/Dashboard'));
+const AdminShellLayout = lazy(() => import('./components/admin/AdminShellLayout'));
+const AdminEntryGate = lazy(() => import('./components/admin/AdminEntryGate'));
+const AdminUsersPage = lazy(() => import('./pages/admin/Users'));
+const AdminRolesPage = lazy(() => import('./pages/admin/Roles'));
+const AdminCompaniesPage = lazy(() => import('./pages/admin/Companies'));
+const AdminCompanySubscriptionsPage = lazy(() => import('./pages/admin/CompanySubscriptions'));
+const AdminCompanyReportsPage = lazy(() => import('./pages/admin/CompanyReports'));
+const AdminPlatformHealthPage = lazy(() => import('./pages/admin/PlatformHealth'));
+const AdminVerificationPage = lazy(() => import('./pages/admin/Verification'));
+const AdminRevenuePage = lazy(() => import('./pages/admin/Revenue'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/Settings'));
+const AdminPricingManagementPage = lazy(() => import('./pages/admin/PricingManagement'));
+const ClinicalAssistantPage = lazy(() => import('./pages/admin/ClinicalAssistantPage'));
+const AdminSectionPage = lazy(() => import('./pages/admin/AdminSectionPage'));
+const AdminTemplatesPage = lazy(() => import('./pages/admin/Templates'));
+const CertificationsPage = lazy(() => import('./pages/CertificationsPage'));
+const TherapistDashboardPage = lazy(() => import('./pages/therapist/TherapistDashboardPage'));
+const TherapistPatientsPage = lazy(() => import('./pages/therapist/TherapistPatientsPage'));
+const TherapistSessionsPage = lazy(() => import('./pages/therapist/TherapistSessionsPage'));
+const TherapistSessionNotesPage = lazy(() => import('./pages/therapist/TherapistSessionNotesPage'));
+const TherapistEarningsPage = lazy(() => import('./pages/therapist/TherapistEarningsPage'));
+const TherapistPayoutHistoryPage = lazy(() => import('./pages/therapist/TherapistPayoutHistoryPage'));
+const TherapistMessagesPage = lazy(() => import('./pages/therapist/TherapistMessagesPage'));
+const TherapistExerciseLibraryPage = lazy(() => import('./pages/therapist/TherapistExerciseLibraryPage'));
+const TherapistAnalyticsPage = lazy(() => import('./pages/therapist/TherapistAnalyticsPage'));
+const TherapistSettingsPage = lazy(() => import('./pages/therapist/TherapistSettingsPage'));
+const TherapistHelpSupportPage = lazy(() => import('./pages/therapist/TherapistHelpSupportPage'));
+const TherapistProfilePage = lazy(() => import('./pages/therapist/Profile'));
+const TherapistMoodTrackingPage = lazy(() => import('./pages/therapist/TherapistMoodTrackingPage'));
+const TherapistCbtModulesPage = lazy(() => import('./pages/therapist/TherapistCbtModulesPage'));
+const TherapistAssessmentsPage = lazy(() => import('./pages/therapist/TherapistAssessmentsPage'));
+const TherapistResourcesPage = lazy(() => import('./pages/therapist/TherapistResourcesPage'));
+const TherapistCareTeamPage = lazy(() => import('./pages/therapist/TherapistCareTeamPage'));
 import TherapistRouteModeGuard from './components/therapist/dashboard/TherapistRouteModeGuard';
-import PsychiatristDashboardLayout from './components/layout/PsychiatristDashboardLayout';
-import PsychiatristDashboardPage from './pages/psychiatrist/PsychiatristDashboardPage';
-import PsychiatristPatientsPage from './pages/psychiatrist/PsychiatristPatientsPage';
-import PsychiatristAssessmentsPage from './pages/psychiatrist/PsychiatristAssessmentsPage';
-import PsychiatristPrescriptionsPage from './pages/psychiatrist/PsychiatristPrescriptionsPage';
-import PsychiatristParameterTrackingPage from './pages/psychiatrist/PsychiatristParameterTrackingPage';
-import PsychiatristMedicationHistoryPage from './pages/psychiatrist/PsychiatristMedicationHistoryPage';
-import PsychiatristCareTeamPage from './pages/psychiatrist/PsychiatristCareTeamPage';
-import PsychiatristMessagesPage from './pages/psychiatrist/PsychiatristMessagesPage';
-import PsychiatristReportsPage from './pages/psychiatrist/PsychiatristReportsPage';
-import PsychiatristConsultationsPage from './pages/psychiatrist/PsychiatristConsultationsPage';
-import PsychiatristDrugInteractionsPage from './pages/psychiatrist/PsychiatristDrugInteractionsPage';
-import PsychiatristHelpSupportPage from './pages/psychiatrist/PsychiatristHelpSupportPage';
-import PsychiatristConsultationAnalyticsPage from './pages/psychiatrist/PsychiatristConsultationAnalyticsPage';
-import PsychiatristPrescriptionAnalyticsPage from './pages/psychiatrist/PsychiatristPrescriptionAnalyticsPage';
-import PsychiatristMedicationLibraryPage from './pages/psychiatrist/PsychiatristMedicationLibraryPage';
-import PsychiatristAssessmentTemplatesPage from './pages/psychiatrist/PsychiatristAssessmentTemplatesPage';
-import PsychiatristEarningsPage from './pages/psychiatrist/PsychiatristEarningsPage';
-import PsychiatristSettingsPage from './pages/psychiatrist/PsychiatristSettingsPage';
-import PsychologistDashboardPage from './pages/psychologist/PsychologistDashboardPage';
-import PsychologistPatientsPage from './pages/psychologist/PsychologistPatientsPage';
-import PsychologistAssessmentsPage from './pages/psychologist/PsychologistAssessmentsPage';
-import PsychologistSchedulePage from './pages/psychologist/PsychologistSchedulePage';
-import PsychologistMessagesPage from './pages/psychologist/PsychologistMessagesPage';
-import PsychologistProfilePage from './pages/psychologist/PsychologistProfilePage';
-import PsychologistSettingsPage from './pages/psychologist/PsychologistSettingsPage';
-import PsychologistDiagnosticReportsPage from './pages/psychologist/PsychologistDiagnosticReportsPage';
-import PsychologistCognitiveTestsPage from './pages/psychologist/PsychologistCognitiveTestsPage';
-import PsychologistMoodAnalyticsPage from './pages/psychologist/PsychologistMoodAnalyticsPage';
-import PsychologistRiskMonitoringPage from './pages/psychologist/PsychologistRiskMonitoringPage';
-import PsychologistTreatmentPlansPage from './pages/psychologist/PsychologistTreatmentPlansPage';
-import PsychologistCareTeamPage from './pages/psychologist/PsychologistCareTeamPage';
-import PsychologistAiClinicalAssistantPage from './pages/psychologist/PsychologistAiClinicalAssistantPage';
-import PsychologistResearchInsightsPage from './pages/psychologist/PsychologistResearchInsightsPage';
-import PsychologistResourcesPage from './pages/psychologist/PsychologistResourcesPage';
-import PsychologistPersonalMoodPage from './pages/psychologist/PsychologistPersonalMoodPage';
-import PsychologistSelfAssessmentsPage from './pages/psychologist/PsychologistSelfAssessmentsPage';
-import PsychologistSelfCbtExercisesPage from './pages/psychologist/PsychologistSelfCbtExercisesPage';
-import PsychologistMeditationPage from './pages/psychologist/PsychologistMeditationPage';
-import PsychologistJournalPage from './pages/psychologist/PsychologistJournalPage';
-import PsychologistInsightsPage from './pages/psychologist/PsychologistInsightsPage';
-import PsychologistAiChatPage from './pages/psychologist/PsychologistAiChatPage';
-import ProviderDocumentVerificationPage from './pages/providers/ProviderDocumentVerificationPage';
+const PsychiatristDashboardLayout = lazy(() => import('./components/layout/PsychiatristDashboardLayout'));
+const PsychiatristDashboardPage = lazy(() => import('./pages/psychiatrist/PsychiatristDashboardPage'));
+const PsychiatristPatientsPage = lazy(() => import('./pages/psychiatrist/PsychiatristPatientsPage'));
+const PsychiatristAssessmentsPage = lazy(() => import('./pages/psychiatrist/PsychiatristAssessmentsPage'));
+const PsychiatristPrescriptionsPage = lazy(() => import('./pages/psychiatrist/PsychiatristPrescriptionsPage'));
+const PsychiatristParameterTrackingPage = lazy(() => import('./pages/psychiatrist/PsychiatristParameterTrackingPage'));
+const PsychiatristMedicationHistoryPage = lazy(() => import('./pages/psychiatrist/PsychiatristMedicationHistoryPage'));
+const PsychiatristCareTeamPage = lazy(() => import('./pages/psychiatrist/PsychiatristCareTeamPage'));
+const PsychiatristMessagesPage = lazy(() => import('./pages/psychiatrist/PsychiatristMessagesPage'));
+const PsychiatristReportsPage = lazy(() => import('./pages/psychiatrist/PsychiatristReportsPage'));
+const PsychiatristConsultationsPage = lazy(() => import('./pages/psychiatrist/PsychiatristConsultationsPage'));
+const PsychiatristDrugInteractionsPage = lazy(() => import('./pages/psychiatrist/PsychiatristDrugInteractionsPage'));
+const PsychiatristHelpSupportPage = lazy(() => import('./pages/psychiatrist/PsychiatristHelpSupportPage'));
+const PsychiatristConsultationAnalyticsPage = lazy(() => import('./pages/psychiatrist/PsychiatristConsultationAnalyticsPage'));
+const PsychiatristPrescriptionAnalyticsPage = lazy(() => import('./pages/psychiatrist/PsychiatristPrescriptionAnalyticsPage'));
+const PsychiatristMedicationLibraryPage = lazy(() => import('./pages/psychiatrist/PsychiatristMedicationLibraryPage'));
+const PsychiatristAssessmentTemplatesPage = lazy(() => import('./pages/psychiatrist/PsychiatristAssessmentTemplatesPage'));
+const PsychiatristEarningsPage = lazy(() => import('./pages/psychiatrist/PsychiatristEarningsPage'));
+const PsychiatristSettingsPage = lazy(() => import('./pages/psychiatrist/PsychiatristSettingsPage'));
+const PsychologistDashboardPage = lazy(() => import('./pages/psychologist/PsychologistDashboardPage'));
+const PsychologistPatientsPage = lazy(() => import('./pages/psychologist/PsychologistPatientsPage'));
+const PsychologistAssessmentsPage = lazy(() => import('./pages/psychologist/PsychologistAssessmentsPage'));
+const PsychologistSchedulePage = lazy(() => import('./pages/psychologist/PsychologistSchedulePage'));
+const PsychologistMessagesPage = lazy(() => import('./pages/psychologist/PsychologistMessagesPage'));
+const PsychologistProfilePage = lazy(() => import('./pages/psychologist/PsychologistProfilePage'));
+const PsychologistSettingsPage = lazy(() => import('./pages/psychologist/PsychologistSettingsPage'));
+const PsychologistDiagnosticReportsPage = lazy(() => import('./pages/psychologist/PsychologistDiagnosticReportsPage'));
+const PsychologistCognitiveTestsPage = lazy(() => import('./pages/psychologist/PsychologistCognitiveTestsPage'));
+const PsychologistMoodAnalyticsPage = lazy(() => import('./pages/psychologist/PsychologistMoodAnalyticsPage'));
+const PsychologistRiskMonitoringPage = lazy(() => import('./pages/psychologist/PsychologistRiskMonitoringPage'));
+const PsychologistTreatmentPlansPage = lazy(() => import('./pages/psychologist/PsychologistTreatmentPlansPage'));
+const PsychologistCareTeamPage = lazy(() => import('./pages/psychologist/PsychologistCareTeamPage'));
+const PsychologistAiClinicalAssistantPage = lazy(() => import('./pages/psychologist/PsychologistAiClinicalAssistantPage'));
+const PsychologistResearchInsightsPage = lazy(() => import('./pages/psychologist/PsychologistResearchInsightsPage'));
+const PsychologistResourcesPage = lazy(() => import('./pages/psychologist/PsychologistResourcesPage'));
+const PsychologistPersonalMoodPage = lazy(() => import('./pages/psychologist/PsychologistPersonalMoodPage'));
+const PsychologistSelfAssessmentsPage = lazy(() => import('./pages/psychologist/PsychologistSelfAssessmentsPage'));
+const PsychologistSelfCbtExercisesPage = lazy(() => import('./pages/psychologist/PsychologistSelfCbtExercisesPage'));
+const PsychologistMeditationPage = lazy(() => import('./pages/psychologist/PsychologistMeditationPage'));
+const PsychologistJournalPage = lazy(() => import('./pages/psychologist/PsychologistJournalPage'));
+const PsychologistInsightsPage = lazy(() => import('./pages/psychologist/PsychologistInsightsPage'));
+const PsychologistAiChatPage = lazy(() => import('./pages/psychologist/PsychologistAiChatPage'));
+const ProviderDocumentVerificationPage = lazy(() => import('./pages/providers/ProviderDocumentVerificationPage'));
 import ProviderDocumentVerificationGuard from './components/providers/ProviderDocumentVerificationGuard';
-import CancellationRefundPolicyPage from './pages/legal/CancellationRefundPolicyPage';
-import TermsOfUsePage from './pages/legal/TermsOfUsePage';
-import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
-import CorporateAnalyticsPage from './pages/corporate/CorporateAnalyticsPage';
-import CorporateEmployeeDirectoryPage from './pages/corporate/CorporateEmployeeDirectoryPage';
-import CorporateEnrollmentPage from './pages/corporate/CorporateEnrollmentPage';
-import CorporateSessionAllocationPage from './pages/corporate/CorporateSessionAllocationPage';
-import CorporateUtilizationReportsPage from './pages/corporate/CorporateUtilizationReportsPage';
-import CorporateWellbeingReportsPage from './pages/corporate/CorporateWellbeingReportsPage';
-import CorporateEngagementReportsPage from './pages/corporate/CorporateEngagementReportsPage';
-import CorporateInvoicesPage from './pages/corporate/CorporateInvoicesPage';
-import CorporatePaymentMethodsPage from './pages/corporate/CorporatePaymentMethodsPage';
-import CorporatePlanPage from './pages/corporate/CorporatePlanPage';
-import CorporateHelpPage from './pages/corporate/CorporateHelpPage';
-import SSOSettingsPage from './pages/corporate/SSOSettingsPage';
-import CorporateDashboardPage from './pages/corporate/CorporateDashboardPage';
-import CorporateOnboardingPage from './pages/corporate/CorporateOnboardingPage';
+const CancellationRefundPolicyPage = lazy(() => import('./pages/legal/CancellationRefundPolicyPage'));
+const TermsOfUsePage = lazy(() => import('./pages/legal/TermsOfUsePage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/legal/PrivacyPolicyPage'));
+const CorporateAnalyticsPage = lazy(() => import('./pages/corporate/CorporateAnalyticsPage'));
+const CorporateEmployeeDirectoryPage = lazy(() => import('./pages/corporate/CorporateEmployeeDirectoryPage'));
+const CorporateEnrollmentPage = lazy(() => import('./pages/corporate/CorporateEnrollmentPage'));
+const CorporateSessionAllocationPage = lazy(() => import('./pages/corporate/CorporateSessionAllocationPage'));
+const CorporateUtilizationReportsPage = lazy(() => import('./pages/corporate/CorporateUtilizationReportsPage'));
+const CorporateWellbeingReportsPage = lazy(() => import('./pages/corporate/CorporateWellbeingReportsPage'));
+const CorporateEngagementReportsPage = lazy(() => import('./pages/corporate/CorporateEngagementReportsPage'));
+const CorporateInvoicesPage = lazy(() => import('./pages/corporate/CorporateInvoicesPage'));
+const CorporatePaymentMethodsPage = lazy(() => import('./pages/corporate/CorporatePaymentMethodsPage'));
+const CorporatePlanPage = lazy(() => import('./pages/corporate/CorporatePlanPage'));
+const CorporateHelpPage = lazy(() => import('./pages/corporate/CorporateHelpPage'));
+const SSOSettingsPage = lazy(() => import('./pages/corporate/SSOSettingsPage'));
+const CorporateDashboardPage = lazy(() => import('./pages/corporate/CorporateDashboardPage'));
+const CorporateOnboardingPage = lazy(() => import('./pages/corporate/CorporateOnboardingPage'));
 
 interface AssessmentData {
   symptoms?: string[];
@@ -176,7 +177,8 @@ function App() {
 
   return (
     <AuthProvider>
-      <Routes>
+      <Suspense fallback={<GlobalFallbackLoader />}>
+        <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/assessment" element={<Assessment onSubmit={handleAssessmentSubmit} />} />
       <Route path="/certifications" element={<CertificationsPage />} />
@@ -680,7 +682,7 @@ function App() {
           <Route path="company-reports" element={<AdminCompanyReportsPage />} />
 
           <Route path="live-sessions" element={<AdminSectionPage title="Live Sessions" description="Monitor active sessions, disruptions, and quality metrics in real-time." bullets={['Live session monitor', 'Drop/disconnect alerts', 'Therapist capacity overview', 'Session intervention controls']} />} />
-          <Route path="templates" element={<AdminSectionPage title="Template Management" description="Manage intervention templates, exercises, and standardized care workflows." bullets={['CBT template library', 'Versioning and rollback', 'Usage analytics', 'Quality review']} />} />
+          <Route path="templates" element={<AdminTemplatesPage />} />
           <Route path="crisis-alerts" element={<AdminSectionPage title="Crisis Alerts" description="Triage and escalate high-risk events with defined safety protocols." bullets={['Suicide risk alerts', 'Escalate to psychiatrist', 'Emergency protocol status', 'Resolution timeline']} />} />
 
           <Route path="revenue" element={<AdminRevenuePage />} />
@@ -827,9 +829,9 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="onboarding" element={<PatientOnboardingPage />} />
           <Route path="therapy-plan" element={<TherapyPlanPage />} />
-          <Route path="care-team" element={<CareTeamPage />} />
-          <Route path="providers" element={<Navigate to="/patient/care-team?tab=browse" replace />} />
-          <Route path="providers/:id" element={<Navigate to="/patient/care-team?tab=browse" replace />} />
+          <Route path="care-team" element={<Navigate to="/patient/sessions" replace />} />
+          <Route path="providers" element={<Navigate to="/patient/sessions" replace />} />
+          <Route path="providers/:id" element={<Navigate to="/patient/sessions" replace />} />
           <Route path="book/:providerId" element={<BookSessionPage />} />
           <Route path="sessions" element={<SessionsPage />} />
           <Route path="sessions/:id" element={<PatientSessionDetailPage />} />
@@ -843,19 +845,19 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="assessments" element={<AssessmentsPage />} />
-          <Route path="assessment-reports" element={<AssessmentReportsPage />} />
+          <Route path="assessment-reports" element={<Navigate to="/patient/progress?tab=clinical" replace />} />
           <Route path="billing" element={<Navigate to="/patient/settings?section=billing" replace />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="timeline" element={<PatientTimelinePage />} />
-          <Route path="insights" element={<ProgressPage />} />
+          <Route path="insights" element={<Navigate to="/patient/progress?tab=mood" replace />} />
           <Route path="progress" element={<ProgressPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="pricing" element={<PricingPage />} />
           </Route>
-        <Route path="/providers/:id" element={<Navigate to="/patient/care-team?tab=browse" replace />} />
-        <Route path="/book/:providerId" element={<Navigate to="/patient/care-team?tab=browse" replace />} />
+        <Route path="/providers/:id" element={<Navigate to="/patient/sessions" replace />} />
+        <Route path="/book/:providerId" element={<Navigate to="/patient/sessions" replace />} />
         <Route path="/sessions" element={<Navigate to="/patient/sessions" replace />} />
         <Route path="/sessions/:id/live" element={<Navigate to="/patient/sessions" replace />} />
         <Route path="/ai-chat" element={<Navigate to="/patient/messages" replace />} />
@@ -866,6 +868,7 @@ function App() {
         <Route path="/refunds" element={<CancellationRefundPolicyPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

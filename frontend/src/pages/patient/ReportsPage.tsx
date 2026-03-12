@@ -87,7 +87,7 @@ export default function ReportsPage() {
             <FileText className="h-5 w-5 text-calm-sage" />
           </div>
           <div>
-            <h1 className="font-serif text-2xl font-semibold text-charcoal sm:text-3xl">Reports</h1>
+            <h1 className="text-2xl font-semibold text-charcoal sm:text-3xl">Reports</h1>
             <p className="mt-1 text-sm text-charcoal/70">View, download, and share clinical progress reports.</p>
           </div>
         </div>

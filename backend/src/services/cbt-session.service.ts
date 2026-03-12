@@ -20,25 +20,106 @@ export class CBTSessionService {
   // ============ TEMPLATE MANAGEMENT ============
 
   /**
-   * Create a new CBT session template
+   * Create or update a CBT session template with its questions (sync from builder)
    */
-  async createTemplate(
+  async saveTemplateFull(
     therapistId: string,
     data: {
+      id?: string;
       title: string;
       description?: string;
       category?: string;
-      targetAudience?: string;
-      estimatedDuration?: number;
+      questions: any[];
     }
   ): Promise<CBTSessionTemplate> {
-    return prisma.cBTSessionTemplate.create({
-      data: {
-        ...data,
-        therapistId,
-        status: 'DRAFT',
-        version: 1,
-      },
+    return prisma.$transaction(async (tx: any) => {
+      let template;
+      
+      // 1. Create or Find Template
+      if (data.id && data.id !== 'draft') {
+        template = await tx.cBTSessionTemplate.findUnique({ where: { id: data.id } });
+        if (!template) throw new Error('Template not found');
+        
+        template = await tx.cBTSessionTemplate.update({
+          where: { id: data.id },
+          data: {
+            title: data.title,
+            description: data.description || '',
+            category: data.category || '',
+            updatedAt: new Date(),
+          }
+        });
+
+        // Clear existing questions so we can cleanly recreate the tree
+        // Branching rules will cascade delete if properly configured, else we delete them here
+        await tx.questionBranchingRule.deleteMany({
+          where: { toQuestion: { sessionId: template.id } }
+        });
+        await tx.cBTQuestion.deleteMany({
+          where: { sessionId: template.id }
+        });
+        
+      } else {
+        template = await tx.cBTSessionTemplate.create({
+          data: {
+            title: data.title || 'Untitled Session',
+            description: data.description || '',
+            category: data.category || '',
+            therapistId,
+            status: 'DRAFT',
+            version: 1,
+          },
+        });
+      }
+
+      // 2. Re-insert Questions
+      // We map the frontend temporary IDs to real DB IDs to fix branching references
+      const idMap = new Map<string | number, string>();
+      
+      for (const [index, q] of (data.questions || []).entries()) {
+        const created = await tx.cBTQuestion.create({
+          data: {
+            sessionId: template.id,
+            type: q.type || 'text',
+            prompt: q.text || '',
+            orderIndex: index,
+            isRequired: !!q.required,
+            metadata: {
+              validation: q.validation,
+              options: q.options,
+            }
+          }
+        });
+        idMap.set(q.id, created.id);
+      }
+
+      // 3. Re-insert Branching Rules
+      for (const q of (data.questions || [])) {
+        if (!q.branching) continue;
+        const realFromId = idMap.get(q.id);
+        if (!realFromId) continue;
+
+        for (const [conditionValue, targetId] of Object.entries(q.branching)) {
+          const realToId = idMap.get(targetId as string | number);
+          if (!realToId) continue;
+          
+          const defaultOperator = conditionValue === 'default' ? 'ANY' : 'EQUALS';
+          
+          await tx.questionBranchingRule.create({
+            data: {
+              fromQuestionId: realFromId,
+              toQuestionId: realToId,
+              condition: { operator: defaultOperator, value: conditionValue },
+              isActive: true,
+            }
+          });
+        }
+      }
+
+      return tx.cBTSessionTemplate.findUnique({
+        where: { id: template.id },
+        include: { questions: { include: { branchingRules: true } } }
+      });
     });
   }
 
@@ -96,9 +177,7 @@ export class CBTSessionService {
 
     // Return updated template
     return prisma.cBTSessionTemplate.findUnique({ where: { id: templateId } });
-  }
-
-  /**
+  }  /**
    * Create a new version of existing template
    */
   async createNewVersion(templateId: string, changeNotes?: string) {

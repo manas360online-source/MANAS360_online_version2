@@ -254,41 +254,9 @@ export default function PricingPage() {
         {pricingError ? <p className="mt-3 text-xs text-amber-700">{pricingError}</p> : null}
       </section>
 
-      <section className="rounded-3xl border border-violet-100 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-violet-600">Section 2 - Therapy Session Pricing</p>
-        <p className="mt-2 text-xs text-slate-600">Paid at booking time. Platform access is billed separately in Section 1.</p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {sessionPricingConfig.map((tier) => {
-            const providerShare45 = Math.round(tier.mins45 * 0.6);
-            const platformShare45 = tier.mins45 - providerShare45;
-            const providerShare60 = Math.round(tier.mins60 * 0.6);
-            const platformShare60 = tier.mins60 - providerShare60;
-
-            return (
-              <article key={tier.provider} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h3 className="text-base font-semibold text-slate-900">{tier.provider}</h3>
-                <div className="mt-3 space-y-2 text-sm text-slate-700">
-                  <p>45 min: <span className="font-semibold text-slate-900">₹{tier.mins45}</span></p>
-                  <p>60 min: <span className="font-semibold text-slate-900">₹{tier.mins60}</span></p>
-                </div>
-                <div className="mt-3 rounded-xl bg-teal-50 p-3 text-xs text-teal-800">
-                  <p>Provider share (60%): ₹{providerShare45} / ₹{providerShare60}</p>
-                  <p>Platform share (40%): ₹{platformShare45} / ₹{platformShare60}</p>
-                </div>
-                <Link
-                  to="/patient/care-team?tab=browse"
-                  className="mt-4 inline-flex min-h-[38px] items-center rounded-xl border border-violet-300 bg-violet-50 px-4 text-sm font-semibold text-violet-700 hover:bg-violet-100"
-                >
-                  Book Session
-                </Link>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
       <section className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-700">Section 3 - Premium Feature Bundles</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-700">Section 2 - Premium Wallet</p>
+        <p className="mt-2 text-xs text-slate-600">Buy minutes to unlock premium AI features, CBT modules, analytics, and wellness tools. Minutes never expire.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {bundleConfig.map((bundle) => (
             <article
@@ -301,16 +269,18 @@ export default function PricingPage() {
                 </span>
               ) : null}
               <p className="text-sm font-semibold text-slate-900">{bundle.label}</p>
-              <p className="mt-1 text-xs text-slate-600">{bundle.minutes} minutes</p>
+              <p className="mt-1 text-xs text-slate-600">{bundle.minutes} minutes of premium access</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">₹{bundle.price}</p>
-              {bundle.savings ? <p className="mt-1 text-xs font-medium text-emerald-700">Save ₹{bundle.savings}</p> : null}
-              <button className="mt-4 inline-flex min-h-[38px] items-center rounded-xl bg-teal-600 px-4 text-sm font-semibold text-white hover:bg-teal-500">
-                Buy Bundle
-              </button>
+              {bundle.savings ? <p className="mt-1 text-xs font-medium text-emerald-700">Save ₹{bundle.savings} vs buying separately</p> : null}
+              <Link
+                to="/patient/settings?section=billing"
+                className="mt-4 inline-flex min-h-[38px] items-center rounded-xl bg-teal-600 px-4 text-sm font-semibold text-white hover:bg-teal-500"
+              >
+                Buy in Wallet
+              </Link>
             </article>
           ))}
         </div>
-
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {premiumFeatures.map((item) => {
             const Icon = item.icon;
@@ -321,6 +291,43 @@ export default function PricingPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-violet-100 bg-white p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-violet-600">Section 3 - Therapy Session Rate Card</p>
+        <p className="mt-2 text-xs text-slate-600">Paid at booking time only when you schedule a session. Platform access (Section 1) is billed separately.</p>
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+          <table className="min-w-full bg-white text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-5 py-3 font-semibold">Provider Type</th>
+                <th className="px-5 py-3 font-semibold">45 min</th>
+                <th className="px-5 py-3 font-semibold">60 min</th>
+                <th className="px-5 py-3 font-semibold"></th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-800">
+              {sessionPricingConfig.map((tier) => (
+                <tr key={tier.provider} className="border-t border-slate-100">
+                  <td className="px-5 py-3 font-medium">{tier.provider}</td>
+                  <td className="px-5 py-3">₹{tier.mins45}</td>
+                  <td className="px-5 py-3">₹{tier.mins60}</td>
+                  <td className="px-5 py-3">
+                    <Link
+                      to="/patient/care-team?tab=browse"
+                      className="inline-flex items-center rounded-lg border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100"
+                    >
+                      Book Session
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          ⏰ <span className="font-semibold">Peak Hours (+{surchargePercent}% surcharge):</span> Sessions booked during Evenings (6–9 PM), Early Mornings (6–9 AM), and Weekends carry a {surchargePercent}% premium.
         </div>
       </section>
 

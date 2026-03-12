@@ -7,20 +7,23 @@ import { Provider } from 'react-redux'
 import App from './App'
 import './index.css'
 import { store } from './store'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={new QueryClient()}>
         <Provider store={store}>
-          <RouterProvider
-            router={createHashRouter([
-              // Parent route must accept nested routes — use a trailing /*
-              { path: '/*', element: <App /> },
-            ])}
-            // Opt into v7 behavior to avoid future warnings
-            future={{ v7_startTransition: true }}
-          />
+          <ErrorBoundary>
+            <RouterProvider
+              router={createHashRouter([
+                // Parent route must accept nested routes — use a trailing /*
+                { path: '/*', element: <App /> },
+              ])}
+              // Opt into v7 behavior to avoid future warnings
+              future={{ v7_startTransition: true }}
+            />
+          </ErrorBoundary>
         </Provider>
       </QueryClientProvider>
     </HelmetProvider>

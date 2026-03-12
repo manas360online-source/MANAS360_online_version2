@@ -157,6 +157,17 @@
 
 /* Responsive utilities and component patterns */
 @layer components {
+  .patient-shell-bg {
+    background:
+      radial-gradient(1200px 520px at 12% -8%, rgba(168, 181, 160, 0.22), transparent 60%),
+      radial-gradient(900px 460px at 95% 6%, rgba(157, 173, 190, 0.16), transparent 58%),
+      linear-gradient(180deg, #fbfcf9 0%, #f7f8f4 46%, #f3f5f1 100%);
+  }
+
+  .patient-content-shell {
+    @apply rounded-2xl border border-calm-sage/10 bg-white/65 p-3 shadow-soft-sm backdrop-blur-sm sm:p-4 lg:p-5;
+  }
+
   .responsive-page {
     @apply min-h-screen bg-[#f5f3ef] flex justify-center;
   }

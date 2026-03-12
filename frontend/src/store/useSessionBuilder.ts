@@ -1,5 +1,6 @@
 import create from 'zustand';
 import { devtools } from 'zustand/middleware';
+import axios from 'axios';
 import { Question, ResponseRecord } from '../types/question';
 import {
   SessionState,
@@ -11,9 +12,13 @@ import {
 
 type BuilderState = {
   questions: Question[];
+  title: string;
+  description: string;
+  category: string;
   version: number;
   isDraft: boolean;
   autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  backendId?: string;
   responses: Record<string, ResponseRecord | undefined>;
   branching?: Branching | undefined;
   session?: SessionState | undefined;
@@ -21,7 +26,9 @@ type BuilderState = {
   addQuestion: () => void;
   reorderQuestions: (from: number, to: number) => void;
   updateQuestion: (id: string | number, data: Partial<Question>) => void;
+  updateMetadata: (data: { title?: string; description?: string; category?: string }) => void;
   saveTemplate: () => Promise<void>;
+  loadTemplate: (templateId: string) => Promise<void>;
   setResponse: (questionId: string | number, value: any) => void;
   validateQuestion: (questionId: string | number) => ResponseRecord;
   setBranching: (b: Branching) => void;
@@ -33,9 +40,13 @@ type BuilderState = {
 export const useSessionBuilder = create<BuilderState>(
   devtools((set: any, get: any) => ({
     questions: [],
+    title: 'Untitled Session',
+    description: '',
+    category: '',
     version: 1,
     isDraft: true,
     autosaveStatus: 'idle',
+    backendId: undefined,
     responses: {},
     branching: undefined,
     session: undefined,
@@ -60,12 +71,73 @@ export const useSessionBuilder = create<BuilderState>(
         questions: state.questions.map((q: Question) => (q.id === id ? { ...q, ...data } : q)),
         isDraft: true,
       })),
+    updateMetadata: (data: { title?: string; description?: string; category?: string }) => 
+      set((state: any) => ({
+        title: data.title ?? state.title,
+        description: data.description ?? state.description,
+        category: data.category ?? state.category,
+        isDraft: true,
+      })),
+    loadTemplate: async (templateId: string) => {
+      try {
+        const token = localStorage.getItem('manas_token');
+        if (!token) return;
+        const res = await axios.get(`http://localhost:5001/api/v1/cbt-sessions/templates/${templateId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data?.success) {
+          const t = res.data.data;
+          set({
+            backendId: t.id,
+            title: t.title,
+            description: t.description || '',
+            category: t.category || '',
+            version: t.version || 1,
+            questions: t.questions?.map((q: any) => ({
+              id: q.id,
+              type: q.type,
+              text: q.prompt,
+              required: q.isRequired,
+              branching: q.branchingRules?.reduce((acc: any, r: any) => ({ ...acc, [r.condition.value]: r.toQuestionId }), {}),
+              validation: q.metadata?.validation,
+              options: q.metadata?.options
+            })) || [],
+            isDraft: false,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load template", e);
+      }
+    },
     saveTemplate: async () => {
       set({ autosaveStatus: 'saving' });
+      const state = get();
       try {
-        // TODO: Replace with API call to persist template
-        await new Promise((res) => setTimeout(res, 500));
-        set((state: any) => ({ version: state.version + 1, isDraft: false, autosaveStatus: 'saved' }));
+        const token = localStorage.getItem('manas_token');
+        if (!token) throw new Error("No auth token");
+        
+        const payload = {
+          id: state.backendId || 'draft',
+          title: state.title,
+          description: state.description,
+          category: state.category,
+          questions: state.questions,
+        };
+
+        const res = await axios.post('http://localhost:5001/api/v1/cbt-sessions/templates', payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.data?.success && res.data.data) {
+          set((state: any) => ({ 
+            backendId: res.data.data.id,
+            version: state.version + 1, 
+            isDraft: false, 
+            autosaveStatus: 'saved' 
+          }));
+        } else {
+           throw new Error("Failed to save");
+        }
       } catch (e) {
         set({ autosaveStatus: 'error' });
       }

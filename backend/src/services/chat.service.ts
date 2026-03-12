@@ -8,6 +8,7 @@ import {
 } from './crisisEscalation.service';
 import { analyzeChatCrisis, persistChatAnalysis } from './chatCrisisDetector';
 import { recomputeCompositeRisk } from './compositeRisk';
+import { formatDailyCheckInEnergy, formatDailyCheckInTag, parseDailyCheckInNote } from './dailyCheckIn.service';
 import { decryptSensitiveText, encryptSensitiveText } from '../utils/chatDataCrypto';
 
 const db = prisma as any;
@@ -53,13 +54,16 @@ const RESPONSE_STYLE_PROMPTS: Record<ResponseStyle, string> = {
 		'Response style: detailed. Provide richer explanation, clear structure, and examples when relevant while remaining focused and safe.',
 };
 
-const resolveSystemPrompt = (botType: BotType, responseStyle: ResponseStyle): string =>
-	`${botType === 'mood_ai' ? MOOD_SUPPORT_PROMPT : CLINICAL_ASSISTANT_PROMPT}\n\n${RESPONSE_STYLE_PROMPTS[responseStyle]}`;
-
 const resolveAiRole = (role: UserRole): 'patient' | 'provider' | 'admin' => {
 	if (role === 'admin') return 'admin';
 	if (role === 'provider') return 'provider';
 	return 'patient';
+};
+
+const resolveSystemPrompt = (botType: BotType, responseStyle: ResponseStyle, additionalContext?: string): string => {
+	const basePrompt = botType === 'mood_ai' ? MOOD_SUPPORT_PROMPT : CLINICAL_ASSISTANT_PROMPT;
+	const contextBlock = additionalContext ? `\n\n### Patient Clinical Context:\n${additionalContext}\nUse this context subtly to guide the user, without explicitly stating "I see in your database". You can also suggest engaging with a Therapy Plan task, or practicing a short interactive exercise (e.g. by sending [WIDGET:BREATHING] verbatim in your response).` : '';
+	return `${basePrompt}${contextBlock}\n\n${RESPONSE_STYLE_PROMPTS[responseStyle]}`;
 };
 
 const resolveUserRole = (role: string): UserRole => {
@@ -232,6 +236,87 @@ export const processChatMessage = async (input: {
 		runAsyncChatCrisisPipeline({ userId: input.userId, botType, message });
 	}
 
+	let clinicalContextStr = '';
+	if (botType === 'mood_ai') {
+		// Enforce Free Tier Chat Limits
+		const todayStart = new Date();
+		todayStart.setHours(0, 0, 0, 0);
+		
+		const [messagesToday, subscription] = await Promise.all([
+			db.chatMessage.count({
+				where: {
+					userId: input.userId,
+					botType: 'mood_ai',
+					timestamp: { gte: todayStart },
+					role: 'user'
+				}
+			}),
+			db.patientSubscription.findFirst({
+				where: { userId: input.userId, status: 'ACTIVE' }
+			})
+		]);
+
+		const isPremium = !!subscription;
+		const DAILY_FREE_LIMIT = 5;
+		
+		if (!isPremium && messagesToday >= DAILY_FREE_LIMIT) {
+			return {
+				conversation_id: 'limit-reached',
+				response: "We've reached our chat limit for today on the Basic plan, but you did great work today! I've added a journaling prompt to your Therapy Plan if you want to keep reflecting.",
+				messages: [],
+				bot_name: 'dr meera',
+				bot_type: botType,
+				crisis_detected: false,
+				usage: { tokensUsed: 0, latencyMs: 0, model: 'none', fallback: true },
+				limit_reached: true
+			} as any;
+		}
+
+		// Fetch Clinical Context for Memory
+		try {
+			const patientProfile = await db.patientProfile.findUnique({
+				where: { userId: input.userId },
+				select: { id: true },
+			}).catch(() => null);
+
+			const [recentMoods, therapyTasks, lastPhq9] = await Promise.all([
+				db.moodLog.findMany({
+					where: { userId: input.userId },
+					orderBy: { loggedAt: 'desc' },
+					take: 3,
+					select: { moodValue: true, note: true }
+				}),
+				db.therapyPlanActivity.findMany({
+					where: patientProfile?.id ? { plan: { patientId: patientProfile.id }, status: 'PENDING' } : { id: '__none__' },
+					take: 3,
+					select: { title: true }
+				}),
+				db.pHQ9Assessment.findFirst({
+					where: { userId: input.userId },
+					orderBy: { assessedAt: 'desc' },
+					select: { totalScore: true, severity: true }
+				})
+			]);
+
+			if (recentMoods.length > 0) {
+				const summarized = recentMoods.map((entry: any) => {
+					const parsed = parseDailyCheckInNote(entry.note);
+					const parts = [`mood ${Number(entry.moodValue || 0)}/5`];
+					if (parsed.metadata.tags.length) parts.push(`tags: ${parsed.metadata.tags.map(formatDailyCheckInTag).join(', ')}`);
+					if (parsed.metadata.energy) parts.push(`energy: ${formatDailyCheckInEnergy(parsed.metadata.energy)}`);
+					if (parsed.metadata.sleepHours) parts.push(`sleep: ${parsed.metadata.sleepHours}`);
+					if (parsed.journal) parts.push(`journal: ${parsed.journal}`);
+					return parts.join(' | ');
+				}).join(' ; ');
+				clinicalContextStr += `- Recent Daily Check-ins: ${summarized}\n`;
+			}
+			if (therapyTasks.length > 0) clinicalContextStr += `- Pending Therapy Tasks: ${therapyTasks.map((t: any) => t.title).join(', ')}\n`;
+			if (lastPhq9) clinicalContextStr += `- Latest PHQ-9 Score: ${lastPhq9.totalScore} (${lastPhq9.severity})\n`;
+		} catch (err) {
+			console.error("[chat] failed to fetch context", err);
+		}
+	}
+
 	const latest = await db.aIConversation.findFirst({ where: { userId: input.userId }, orderBy: { createdAt: 'desc' } });
 	const storedContext = await getLastChatMessages(input.userId, botType);
 	const fallbackContext = getLastMessages(latest?.messages, botType);
@@ -263,7 +348,7 @@ export const processChatMessage = async (input: {
 	}
 
 	const aiInputMessages = [
-		{ role: 'system' as const, content: resolveSystemPrompt(botType, responseStyle) },
+		{ role: 'system' as const, content: resolveSystemPrompt(botType, responseStyle, clinicalContextStr) },
 		...contextMessages.map((m) => ({ role: m.role, content: m.content })),
 		{ role: 'user' as const, content: message },
 	];

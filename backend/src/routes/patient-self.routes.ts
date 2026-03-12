@@ -18,10 +18,15 @@ import {
   getPatientPaymentMethodController,
   getPatientProgressController,
   getPatientReportsController,
+  generateCompleteHealthSummaryController,
+  getPatientRecordSecureUrlController,
+  createPatientRecordShareLinkController,
+  streamSharedPatientRecordController,
   getPatientSettingsController,
   getPatientSupportCenterController,
   getPatientSubscriptionController,
   getMyCareTeamController,
+  logWellnessLibraryActivityController,
   listAvailableProvidersController,
   reactivatePatientSubscriptionController,
   createPatientSupportTicketController,
@@ -30,6 +35,13 @@ import {
   updatePatientPaymentMethodController,
   upgradePatientSubscriptionController,
 } from '../controllers/patient-v1.controller';
+import {
+  getConversationsController,
+  getMessagesController,
+  sendMessageController,
+  markMessagesReadController,
+  startConversationController,
+} from '../controllers/messaging.controller';
 
 const router = Router();
 
@@ -43,6 +55,10 @@ router.get('/health', (req, res) => {
 router.get('/dashboard', requireAuth, requireRole('patient'), asyncHandler(getPatientDashboardController));
 router.get('/insights', requireAuth, requireRole('patient'), asyncHandler(getPatientInsightsController));
 router.get('/reports', requireAuth, requireRole('patient'), asyncHandler(getPatientReportsController));
+router.post('/reports/health-summary', requireAuth, requireRole('patient'), asyncHandler(generateCompleteHealthSummaryController));
+router.get('/records/:id/url', requireAuth, requireRole('patient'), asyncHandler(getPatientRecordSecureUrlController));
+router.post('/records/:id/share', requireAuth, requireRole('patient'), asyncHandler(createPatientRecordShareLinkController));
+router.get('/records/shared/:token', asyncHandler(streamSharedPatientRecordController));
 router.get('/care-team', requireAuth, requireRole('patient'), asyncHandler(getMyCareTeamController));
 router.get('/providers/available', requireAuth, requireRole('patient'), asyncHandler(listAvailableProvidersController));
 
@@ -74,6 +90,14 @@ router.get('/mood/stats', requireAuth, requireRole('patient'), asyncHandler(getP
 router.get('/progress', requireAuth, requireRole('patient'), asyncHandler(getPatientProgressController));
 
 router.get('/exercises', requireAuth, requireRole('patient'), asyncHandler(getPatientExercisesController));
+router.post('/exercises/library', requireAuth, requireRole('patient'), asyncHandler(logWellnessLibraryActivityController));
 router.patch('/exercises/:id/complete', requireAuth, requireRole('patient'), asyncHandler(completePatientExerciseController));
+
+// Direct messaging
+router.get('/messages/conversations', requireAuth, requireRole('patient'), asyncHandler(getConversationsController));
+router.post('/messages/start', requireAuth, requireRole('patient'), asyncHandler(startConversationController));
+router.get('/messages/:conversationId', requireAuth, requireRole('patient'), asyncHandler(getMessagesController));
+router.post('/messages', requireAuth, requireRole('patient'), asyncHandler(sendMessageController));
+router.post('/messages/:conversationId/read', requireAuth, requireRole('patient'), asyncHandler(markMessagesReadController));
 
 export default router;

@@ -5,7 +5,7 @@ import { patientApi } from '../../api/patient';
 type TimelineItem = {
   id: string;
   date: string;
-  type: 'session' | 'mood' | 'assessment' | 'report' | 'system';
+  type: 'session' | 'mood' | 'assessment' | 'report' | 'system' | 'wellness';
   title: string;
   description?: string;
   status?: 'completed' | 'scheduled' | 'pending';
@@ -21,6 +21,8 @@ const typeIcon = (type: TimelineItem['type']) => {
       return CheckCircle2;
     case 'report':
       return FileText;
+    case 'wellness':
+      return CheckCircle2;
     default:
       return MessageSquare;
   }
@@ -60,7 +62,7 @@ export default function PatientTimelinePage() {
             timeline.push({
               id: `activity-${row.id || Math.random()}`,
               date: row.date || new Date().toISOString(),
-              type: row.type === 'mood' ? 'mood' : 'system',
+              type: row.type === 'mood' ? 'mood' : row.type === 'wellness' ? 'wellness' : 'system',
               title: String(row.title || 'Activity update'),
               description: row.description ? String(row.description) : undefined,
               status: 'completed',
@@ -120,7 +122,7 @@ export default function PatientTimelinePage() {
   return (
     <div className="space-y-5 pb-20 lg:pb-6">
       <section className="rounded-2xl border border-calm-sage/15 bg-white/90 p-5 shadow-soft-sm">
-        <h1 className="font-serif text-3xl font-light md:text-4xl">Patient Timeline</h1>
+        <h1 className="text-3xl font-semibold text-charcoal md:text-4xl">Patient Timeline</h1>
         <p className="mt-2 text-sm text-charcoal/70">A chronological view of your therapy, assessments, and milestones.</p>
       </section>
 
