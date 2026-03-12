@@ -20,14 +20,14 @@ const router = (0, express_1.Router)();
  *   - page: pagination page number (default: 1)
  *   - limit: items per page (default: 10, max: 50)
  */
-router.get('/users', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), ...validate_middleware_1.validateAdminListUsersQuery, (0, validate_middleware_1.asyncHandler)(admin_controller_1.listUsersController));
+router.get('/users', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('manage_users'), ...validate_middleware_1.validateAdminListUsersQuery, (0, validate_middleware_1.asyncHandler)(admin_controller_1.listUsersController));
 /**
  * GET /api/v1/admin/users/:id
  * Get a single user by ID
  * Route parameters:
  *   - id: user identifier
  */
-router.get('/users/:id', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), ...validate_middleware_1.validateAdminGetUserIdParam, (0, validate_middleware_1.asyncHandler)(admin_controller_1.getUserController));
+router.get('/users/:id', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('read_all_profiles'), ...validate_middleware_1.validateAdminGetUserIdParam, (0, validate_middleware_1.asyncHandler)(admin_controller_1.getUserController));
 /**
  * PATCH /api/v1/admin/therapists/:id/verify
  * Verify therapist credentials
@@ -36,7 +36,7 @@ router.get('/users/:id', auth_middleware_1.requireAuth, (0, rbac_middleware_1.re
  *   - id: therapist identifier
  * Response: Updated therapist profile summary
  */
-router.patch('/therapists/:id/verify', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), ...validate_middleware_1.validateTherapistProfileIdParam, (0, validate_middleware_1.asyncHandler)(admin_controller_1.verifyTherapistController));
+router.patch('/therapists/:id/verify', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('manage_therapists'), ...validate_middleware_1.validateTherapistProfileIdParam, (0, validate_middleware_1.asyncHandler)(admin_controller_1.verifyTherapistController));
 /**
  * GET /api/v1/admin/metrics
  * Get comprehensive platform metrics
@@ -49,7 +49,7 @@ router.patch('/therapists/:id/verify', auth_middleware_1.requireAuth, (0, rbac_m
  *   - totalRevenue: Sum of all transaction amounts
  *   - activeSubscriptions: Count of therapists with active patients
  */
-router.get('/metrics', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_controller_1.getMetricsController));
+router.get('/metrics', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('view_analytics'), (0, validate_middleware_1.asyncHandler)(admin_controller_1.getMetricsController));
 /**
  * GET /api/v1/admin/subscriptions
  * List all active subscriptions with pagination and filters
@@ -90,7 +90,7 @@ router.get('/modules/:module/summary', auth_middleware_1.requireAuth, (0, rbac_m
  *   - organizationKey: bigint (required)
  *   - therapistId: string (optional)
  */
-router.get('/analytics/summary', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminAnalyticsSummaryController));
+router.get('/analytics/summary', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('view_analytics'), (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.getAdminAnalyticsSummaryController));
 /**
  * GET /api/v1/admin/analytics/templates
  * Query params:
@@ -123,7 +123,7 @@ router.get('/analytics/utilization', auth_middleware_1.requireAuth, (0, rbac_mid
  *   - includeChartsSnapshot?: boolean
  *   - chartSnapshots?: string[] (data URL images; optional)
  */
-router.post('/analytics/export', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), rateLimiter_middleware_1.adminAnalyticsExportRateLimiter, (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.exportAdminAnalyticsReportController));
+router.post('/analytics/export', auth_middleware_1.requireAuth, (0, rbac_middleware_1.requireRole)('admin'), (0, rbac_middleware_1.requirePermission)('view_analytics'), rateLimiter_middleware_1.adminAnalyticsExportRateLimiter, (0, validate_middleware_1.asyncHandler)(admin_analytics_controller_1.exportAdminAnalyticsReportController));
 /**
  * POST /api/v1/admin/analytics/export/async
  * Queue heavy export job for async processing.

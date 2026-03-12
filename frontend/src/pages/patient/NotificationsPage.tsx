@@ -41,8 +41,8 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-5 pb-20 lg:pb-6">
-      <h1 className="font-serif text-3xl font-light md:text-4xl">Notifications</h1>
+    <div className="mx-auto w-full max-w-[1400px] space-y-6 px-4 md:px-6 pb-20 lg:pb-6">
+      <h1 className="text-3xl md:text-4xl font-semibold text-charcoal">Notifications</h1>
 
       <section className="rounded-2xl border border-calm-sage/15 bg-white/85 p-5 shadow-soft-sm">
         <div className="space-y-2">

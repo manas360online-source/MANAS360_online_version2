@@ -246,6 +246,7 @@ export default function TherapistDashboardLayout() {
   const [dashboardMeta, setDashboardMeta] = useState<TherapistDashboardResponse | null>(null);
   const [patientOptions, setPatientOptions] = useState<TherapistPatientItem[]>([]);
   const [patientSearch, setPatientSearch] = useState('');
+  const [isOnline, setIsOnline] = useState(true);
   const [dashboardMode, setDashboardMode] = useState<ProviderDashboardMode>(() => {
     if (typeof window === 'undefined') return 'professional';
     const cached =
@@ -595,53 +596,58 @@ export default function TherapistDashboardLayout() {
       </aside>
 
       <div className="min-h-screen lg:ml-64">
-        <header className="relative sticky top-0 z-30 flex h-16 items-center border-b border-ink-100 bg-white/80 px-4 backdrop-blur-lg lg:px-6">
+        <header className="relative sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-ink-100 bg-white/80 px-4 backdrop-blur-lg lg:px-6">
           <button
             type="button"
-            className="mr-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 lg:hidden"
+            className="mr-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 lg:hidden"
             onClick={() => setMobileSidebarOpen(true)}
             aria-label="Open sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="flex min-w-0 flex-col justify-center lg:hidden">
-            <h1 className="truncate font-display text-lg font-bold leading-tight text-ink-800">{pageTitle}</h1>
-            <p className="mt-0.5 hidden text-[11px] leading-none text-ink-500 sm:block">{todayLabel}</p>
+          {/* Left side - Selected Menu Item & Mode */}
+          <div className="flex min-w-0 items-center gap-3 lg:hidden">
+            <div className="flex flex-col justify-center min-w-0">
+              <h1 className="truncate font-display font-bold leading-tight text-ink-800 text-sm">{pageTitle}</h1>
+              <p className="mt-0.5 hidden text-[10px] leading-none text-ink-500 sm:block">{todayLabel}</p>
+            </div>
           </div>
 
-          <div className="pointer-events-none absolute left-1/2 hidden w-[420px] max-w-[46vw] -translate-x-1/2 flex-col items-center justify-center lg:flex">
-            <h1 className="w-full truncate text-center font-display text-lg font-bold leading-tight text-ink-800">{pageTitle}</h1>
-            <p className="mt-0.5 w-full truncate text-center text-[11px] leading-none text-ink-500">{todayLabel}</p>
+          {/* Center - Left on Desktop */}
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="flex flex-col">
+              <h1 className="font-display text-base font-bold text-ink-800">{pageTitle}</h1>
+              <p className="text-[11px] leading-none text-ink-500">{todayLabel}</p>
+            </div>
+            <div className="hidden items-center rounded-xl border border-ink-100 bg-white p-1 xl:inline-flex ml-6">
+              <button
+                type="button"
+                onClick={() => setDashboardMode('professional')}
+                className={`min-h-[32px] rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                  dashboardMode === 'professional'
+                    ? 'bg-sage-500 text-white'
+                    : 'text-ink-500 hover:bg-sage-50'
+                }`}
+              >
+                Professional
+              </button>
+              <button
+                type="button"
+                onClick={() => setDashboardMode('practice')}
+                className={`min-h-[32px] rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                  dashboardMode === 'practice'
+                    ? 'bg-sky-600 text-white'
+                    : 'text-ink-500 hover:bg-sky-50'
+                }`}
+              >
+                Self
+              </button>
+            </div>
           </div>
 
-          <div className="ml-4 hidden items-center rounded-xl border border-ink-100 bg-white p-1 md:inline-flex">
-            <button
-              type="button"
-              onClick={() => setDashboardMode('professional')}
-              className={`min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                dashboardMode === 'professional'
-                  ? 'bg-sage-500 text-white'
-                  : 'text-ink-500 hover:bg-sage-50'
-              }`}
-            >
-              Professional Mode
-            </button>
-            <button
-              type="button"
-              onClick={() => setDashboardMode('practice')}
-              className={`min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                dashboardMode === 'practice'
-                  ? 'bg-sky-600 text-white'
-                  : 'text-ink-500 hover:bg-sky-50'
-              }`}
-            >
-              Self Mode
-            </button>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2 sm:gap-4">
-            <div className="hidden items-center gap-2 rounded-lg bg-ink-100 px-3 py-2 lg:flex lg:w-52">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <div className="hidden items-center gap-2 rounded-lg bg-ink-100 px-3 py-2 lg:flex lg:w-48">
               <Search className="h-4 w-4 text-ink-500" />
               <input
                 type="text"
@@ -653,12 +659,12 @@ export default function TherapistDashboardLayout() {
             </div>
 
             <label className={`hidden items-center gap-2 rounded-lg border border-ink-100 bg-white px-2 py-1 md:flex ${isPsychologist ? '' : dashboardMode === 'professional' ? '' : 'md:hidden'}`} htmlFor="provider-patient-select">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">Select Patient</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">Patient</span>
               <select
                 id="provider-patient-select"
                 value={selectedPatientId}
                 onChange={(event) => setSelectedPatientId(event.target.value)}
-                className="min-w-[180px] border-0 bg-transparent py-1 pl-2 pr-6 text-sm text-ink-800 focus:ring-0"
+                className="min-w-[140px] border-0 bg-transparent py-1 pl-2 pr-6 text-sm text-ink-800 focus:ring-0"
               >
                 <option value="">All Patients</option>
                 {filteredPatients.map((patient) => (
@@ -669,9 +675,25 @@ export default function TherapistDashboardLayout() {
               </select>
             </label>
 
-            <div className="hidden items-center gap-2 rounded-full bg-sage-50 px-3 py-1.5 text-xs font-medium text-sage-500 sm:flex">
-              <span className="h-2 w-2 rounded-full bg-sage-500" />
-              Online
+            {/* Online Toggle Section */}
+            <div className="flex items-center gap-2 rounded-lg border border-ink-100 bg-white px-2 py-1.5 h-9">
+              <button
+                type="button"
+                onClick={() => setIsOnline(!isOnline)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
+                  isOnline ? 'bg-sage-500' : 'bg-ink-300'
+                }`}
+                aria-label={`Toggle ${isOnline ? 'offline' : 'online'}`}
+              >
+                <span
+                  className={`inline-flex h-4 w-4 transform rounded-full bg-white transition ${
+                    isOnline ? 'translate-x-4' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+              <span className={`text-xs font-semibold ${isOnline ? 'text-sage-600' : 'text-ink-500'}`}>
+                {isOnline ? 'Online' : 'Away'}
+              </span>
             </div>
 
             <button type="button" className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100" aria-label="Notifications">
@@ -682,7 +704,7 @@ export default function TherapistDashboardLayout() {
             <button
               type="button"
               onClick={() => setProfileMenuOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg p-1 pr-3 hover:bg-ink-100"
+              className="inline-flex items-center gap-2 rounded-lg p-1 pr-2 hover:bg-ink-100"
               aria-label="Open profile menu"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sage-50 font-display text-xs font-bold text-sage-500">{initials}</div>

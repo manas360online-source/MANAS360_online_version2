@@ -123,19 +123,23 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({ data }) => {
               active:translate-y-0
               flex items-center justify-center gap-2
             ">
-              <span>🔵</span> Consult Doctor
+              Book a session
             </button>
             
-            <button className="
-              group flex-1 min-h-[3rem] px-6
-              bg-white border-2 border-gentle-blue text-gentle-blue
-              rounded-full font-sans font-semibold text-base md:text-lg
-              transition-smooth
-              hover:bg-gentle-blue hover:text-white hover:shadow-soft-md hover:-translate-y-0.5
-              active:translate-y-0
-              flex items-center justify-center gap-2
-            ">
-              <span>🩺</span> Full Health Assessment
+            <button
+              onClick={() => navigate('/auth/signup?next=/patient/assessments')}
+              className={`
+                group flex-1 min-h-[3rem] px-6
+                bg-white border-2 border-gentle-blue text-gentle-blue
+                rounded-full font-sans font-semibold text-base md:text-lg
+                transition-smooth
+                hover:bg-gentle-blue hover:text-white hover:shadow-soft-md hover:-translate-y-0.5
+                active:translate-y-0
+                flex items-center justify-center gap-2
+              `}
+            >
+              <span>🩺</span>
+              Full Health Assessment
             </button>
           </div>
           

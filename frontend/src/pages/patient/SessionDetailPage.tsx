@@ -94,7 +94,7 @@ export default function SessionDetailPage() {
   return (
     <div className="space-y-5 pb-20 lg:pb-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-serif text-3xl font-light md:text-4xl">Session Details</h1>
+        <h1 className="text-3xl font-semibold text-charcoal md:text-4xl">Session Details</h1>
         <Link
           to="/patient/sessions"
           className="inline-flex min-h-[38px] items-center rounded-full border border-calm-sage/25 px-4 text-sm font-medium text-charcoal/75"

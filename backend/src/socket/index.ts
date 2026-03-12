@@ -8,6 +8,7 @@ import { env } from '../config/env';
 import { prisma } from '../config/db';
 import client from 'prom-client';
 import os from 'os';
+import { sendDirectMessage, markConversationRead } from '../services/messaging.service';
 
 type JwtPayload = {
   sub: string;
@@ -294,8 +295,121 @@ export async function initSocket(server: http.Server) {
       }
     });
 
+    // ── Direct Messaging Events ─────────────────────────────────────────────
+    // Patients join their personal inbox room on connect so they receive
+    // new_message events pushed by providers in real time.
+    socket.on('join_inbox', async () => {
+      try {
+        const inboxRoom = `inbox:${user.id}`;
+        await socket.join(inboxRoom);
+
+        // Track online presence in Redis (TTL 60s, refreshed on heartbeat)
+        if (redisAvailable) {
+          await pubClient.setEx(`presence:user:${user.id}`, 60, JSON.stringify({ userId: user.id, role: user.role, ts: Date.now() }));
+        }
+        socket.emit('inbox_joined', { room: inboxRoom });
+      } catch (err) {
+        socket.emit('error', { code: 'JOIN_INBOX_FAIL', message: String(err) });
+      }
+    });
+
+    // Heartbeat to keep presence alive
+    socket.on('presence_heartbeat', async () => {
+      try {
+        if (redisAvailable) {
+          await pubClient.setEx(`presence:user:${user.id}`, 60, JSON.stringify({ userId: user.id, role: user.role, ts: Date.now() }));
+        }
+      } catch { /* noop */ }
+    });
+
+    // Query whether a specific user is currently online
+    socket.on('check_presence', async (payload: { userId: string }) => {
+      try {
+        if (!redisAvailable) return socket.emit('presence_status', { userId: payload.userId, online: false });
+        const raw = await pubClient.get(`presence:user:${payload.userId}`);
+        if (!raw) return socket.emit('presence_status', { userId: payload.userId, online: false });
+        const data = JSON.parse(raw);
+        const staleSecs = (Date.now() - data.ts) / 1000;
+        socket.emit('presence_status', { userId: payload.userId, online: staleSecs < 55 });
+      } catch {
+        socket.emit('presence_status', { userId: payload.userId, online: false });
+      }
+    });
+
+    // Join a specific conversation room to get typing indicators
+    socket.on('join_conversation', async (payload: { conversationId: string }) => {
+      try {
+        if (!(await (socket as any).allowEvent(1))) return socket.emit('error', { code: 'RATE_LIMIT' });
+        const { conversationId } = payload;
+
+        // Verify participant
+        const conv = await prisma.directConversation.findUnique({ where: { id: conversationId } });
+        if (!conv) return socket.emit('error', { code: 'CONVERSATION_NOT_FOUND' });
+        const isParticipant = conv.patientId === user.id || conv.providerId === user.id;
+        if (!isParticipant) return socket.emit('error', { code: 'NOT_AUTHORIZED' });
+
+        await socket.join(`conv:${conversationId}`);
+        socket.emit('conversation_joined', { conversationId });
+      } catch (err) {
+        socket.emit('error', { code: 'JOIN_CONV_FAIL', message: String(err) });
+      }
+    });
+
+    // Typing indicator — broadcast to conversation room (except sender)
+    socket.on('dm_typing', (payload: { conversationId: string; isTyping: boolean }) => {
+      socket.to(`conv:${payload.conversationId}`).emit('dm_typing', {
+        userId: user.id,
+        role: user.role,
+        conversationId: payload.conversationId,
+        isTyping: payload.isTyping,
+      });
+    });
+
+    // Send direct message via socket (in addition to REST endpoint)
+    socket.on('dm_send', async (payload: { conversationId: string; content: string; clientMsgId?: string }) => {
+      if (!(await (socket as any).allowEvent(1))) return socket.emit('error', { code: 'RATE_LIMIT' });
+      try {
+        const senderRole = user.role === 'patient' ? 'patient' : 'provider';
+        const msg = await sendDirectMessage(payload.conversationId, user.id, senderRole, payload.content);
+
+        // Emit to all participants in the conversation room
+        io.to(`conv:${payload.conversationId}`).emit('new_message', { ...msg, clientMsgId: payload.clientMsgId });
+
+        // Also push to the recipient's inbox room for notification
+        const conv = await prisma.directConversation.findUnique({ where: { id: payload.conversationId } });
+        if (conv) {
+          const recipientId = senderRole === 'patient' ? conv.providerId : conv.patientId;
+          io.to(`inbox:${recipientId}`).emit('new_message_notification', {
+            conversationId: payload.conversationId,
+            message: msg,
+          });
+        }
+      } catch (err) {
+        socket.emit('dm_error', { code: 'SEND_FAIL', message: String(err), clientMsgId: payload.clientMsgId });
+      }
+    });
+
+    // Mark messages as read
+    socket.on('dm_mark_read', async (payload: { conversationId: string }) => {
+      try {
+        await markConversationRead(payload.conversationId, user.id);
+        // Notify sender that messages were read (for double-tick UX)
+        socket.to(`conv:${payload.conversationId}`).emit('messages_read', {
+          conversationId: payload.conversationId,
+          readBy: user.id,
+          readAt: new Date().toISOString(),
+        });
+      } catch { /* noop */ }
+    });
+    // ── End Direct Messaging Events ─────────────────────────────────────────
+
     socket.on('disconnecting', () => {
-      // optionally emit presence changes after disconnect
+      // clean up presence for direct messaging rooms
+      for (const room of socket.rooms) {
+        if (room.startsWith('inbox:')) {
+          // nothing special needed - just let the room empty
+        }
+      }
     });
     socket.on('disconnect', (reason) => {
       try { activeConnections.labels(os.hostname()).dec(); } catch (e) {}

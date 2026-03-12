@@ -20,7 +20,12 @@ import {
 	getLatestJourneyRecommendation,
 	getPatientPaymentMethod,
 	getPatientReports,
+	getCompleteHealthSummaryData,
+	createSecureRecordToken,
+	resolveClinicalRecord,
+	verifySecureRecordToken,
 	getPatientSubscription,
+	logWellnessLibraryActivity,
 	getProviderById,
 	getSessionDocumentPayload,
 	getSessionDetail,
@@ -41,6 +46,7 @@ import {
 	reactivatePatientSubscription,
 	setPatientSubscriptionAutoRenew,
 	submitAssessment,
+	submitPHQ9Assessment,
 	updatePatientPaymentMethod,
 	updatePatientSubscriptionPlan,
 	verifySessionPaymentAndCreateSession,
@@ -107,6 +113,129 @@ export const getPatientInsightsController = async (req: Request, res: Response):
 export const getPatientReportsController = async (req: Request, res: Response): Promise<void> => {
 	const data = await getPatientReports(authUserId(req));
 	sendSuccess(res, data, 'Patient reports fetched');
+};
+
+export const generateCompleteHealthSummaryController = async (req: Request, res: Response): Promise<void> => {
+	const data = await getCompleteHealthSummaryData(authUserId(req));
+	const pdf = await renderPdfBuffer((doc) => {
+		doc.fontSize(20).font('Helvetica-Bold').text('MANAS360 Complete Health Summary', { align: 'center' });
+		doc.moveDown(0.7);
+		doc.fontSize(10).font('Helvetica').fillColor('#444').text(`Generated: ${new Date(data.generatedAt).toLocaleString()}`, { align: 'right' });
+		doc.fillColor('#000');
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Patient Profile');
+		doc.fontSize(10).font('Helvetica').text(`Name: ${data.patientName}`);
+		doc.text(`Sessions completed (last 30 days): ${data.sessionsCompletedLast30Days}`);
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Latest Clinical Scores');
+		doc.fontSize(10).font('Helvetica');
+		doc.text(data.latestPhq9 ? `PHQ-9: ${data.latestPhq9.totalScore}/27 (${data.latestPhq9.severityLevel})` : 'PHQ-9: Not available');
+		doc.text(data.latestGad7 ? `GAD-7: ${data.latestGad7.totalScore}/21 (${data.latestGad7.severityLevel})` : 'GAD-7: Not available');
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('Active Care Team');
+		doc.fontSize(10).font('Helvetica');
+		if (Array.isArray(data.careTeam) && data.careTeam.length) {
+			for (const provider of data.careTeam.slice(0, 8)) {
+				doc.text(`• ${provider.name} (${provider.role || 'Provider'})`);
+			}
+		} else {
+			doc.text('No active care team assignments yet.');
+		}
+
+		doc.moveDown(0.8);
+		doc.fontSize(12).font('Helvetica-Bold').text('30-Day Mood Trend');
+		doc.fontSize(10).font('Helvetica');
+		if (Array.isArray(data.recentMoodRows) && data.recentMoodRows.length) {
+			for (const row of data.recentMoodRows) {
+				const label = new Date(row.date).toLocaleDateString();
+				const bars = '█'.repeat(Math.max(1, Math.min(5, Number(row.mood || 0))));
+				doc.text(`${label}: ${bars} (${row.mood}/5)`);
+			}
+		} else {
+			doc.text('No mood entries in the last 30 days.');
+		}
+	});
+
+	res.setHeader('Content-Type', 'application/pdf');
+	res.setHeader('Content-Disposition', 'attachment; filename="manas360-complete-health-summary.pdf"');
+	res.status(200).send(pdf);
+};
+
+export const getPatientRecordSecureUrlController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const recordId = String(req.params.id || '').trim();
+	if (!recordId) throw new AppError('record id is required', 422);
+
+	await resolveClinicalRecord(userId, recordId);
+	const { token, expiresAt } = createSecureRecordToken(userId, recordId, 'view', 60);
+	const baseUrl = `${req.protocol}://${req.get('host')}`;
+	const secureUrl = `${baseUrl}/api/v1/patient/records/shared/${encodeURIComponent(token)}`;
+
+	sendSuccess(
+		res,
+		{ recordId, secureUrl, expiresAt, expiresInSeconds: 60 },
+		'Secure record URL generated',
+	);
+};
+
+export const createPatientRecordShareLinkController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const recordId = String(req.params.id || '').trim();
+	if (!recordId) throw new AppError('record id is required', 422);
+
+	await resolveClinicalRecord(userId, recordId);
+	const { token, expiresAt } = createSecureRecordToken(userId, recordId, 'share', 48 * 60 * 60);
+	const pin = String(Math.floor(100000 + Math.random() * 900000));
+	const baseUrl = `${req.protocol}://${req.get('host')}`;
+	const shareUrl = `${baseUrl}/api/v1/patient/records/shared/${encodeURIComponent(token)}?pin=${pin}`;
+
+	sendSuccess(
+		res,
+		{ recordId, shareUrl, pin, expiresAt, expiresInHours: 48 },
+		'Secure share link generated',
+	);
+};
+
+export const streamSharedPatientRecordController = async (req: Request, res: Response): Promise<void> => {
+	const token = String(req.params.token || '').trim();
+	if (!token) throw new AppError('token is required', 422);
+
+	const decoded = verifySecureRecordToken(token);
+	const record = await resolveClinicalRecord(decoded.userId, decoded.recordId);
+
+	if (record.kind === 'session') {
+		const payload = await getSessionDocumentPayload(decoded.userId, record.sessionId);
+		const pdf = await renderPdfBuffer((doc) => {
+			doc.fontSize(20).font('Helvetica-Bold').text('MANAS360 Session Summary', { align: 'center' });
+			doc.moveDown(0.8);
+			doc.fontSize(10).font('Helvetica').text(`Session ID: ${payload.sessionId}`);
+			doc.text(`Date: ${new Date(payload.scheduledAt).toLocaleString()}`);
+			doc.text(`Provider: ${payload.therapist.name}`);
+			doc.moveDown(0.6);
+			doc.text(payload.notes || 'No therapist notes are available for this session yet.');
+		});
+		res.setHeader('Content-Type', 'application/pdf');
+		res.setHeader('Content-Disposition', `inline; filename="session-${record.sessionId}.pdf"`);
+		res.status(200).send(pdf);
+		return;
+	}
+
+	const pdf = await renderPdfBuffer((doc) => {
+		doc.fontSize(20).font('Helvetica-Bold').text('MANAS360 Clinical Assessment Record', { align: 'center' });
+		doc.moveDown(0.8);
+		doc.fontSize(10).font('Helvetica');
+		doc.text(`Assessment: ${record.type}`);
+		doc.text(`Score: ${record.totalScore}`);
+		doc.text(`Severity: ${record.severityLevel}`);
+		doc.text(`Recorded on: ${new Date(record.date).toLocaleString()}`);
+	});
+
+	res.setHeader('Content-Type', 'application/pdf');
+	res.setHeader('Content-Disposition', `inline; filename="assessment-${record.assessmentId}.pdf"`);
+	res.status(200).send(pdf);
 };
 
 export const getMyCareTeamController = async (req: Request, res: Response): Promise<void> => {
@@ -278,6 +407,16 @@ export const submitAssessmentController = async (req: Request, res: Response): P
 	sendSuccess(res, result, 'Assessment submitted', 201);
 };
 
+export const submitPHQ9AssessmentController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const answers = req.body?.answers;
+	if (!Array.isArray(answers) || answers.length !== 9) {
+		throw new AppError('answers must be an array of exactly 9 integers', 422);
+	}
+	const result = await submitPHQ9Assessment(userId, answers.map(Number));
+	sendSuccess(res, result, 'PHQ-9 submitted successfully', 201);
+};
+
 export const getJourneyRecommendationController = async (req: Request, res: Response): Promise<void> => {
 	const data = await getLatestJourneyRecommendation(authUserId(req));
 	sendSuccess(res, data, 'Journey recommendation fetched');
@@ -297,7 +436,14 @@ export const completeTreatmentPlanTaskController = async (req: Request, res: Res
 
 export const createMoodController = async (req: Request, res: Response): Promise<void> => {
 	const userId = authUserId(req);
-	const result = await createMoodLog(userId, { mood: Number(req.body.mood), note: req.body.note ? String(req.body.note) : undefined });
+	const result = await createMoodLog(userId, {
+		mood: Number(req.body.mood),
+		note: req.body.note ? String(req.body.note) : undefined,
+		intensity: req.body.intensity !== undefined ? Number(req.body.intensity) : undefined,
+		tags: Array.isArray(req.body.tags) ? req.body.tags.map((tag: any) => String(tag || '')) : undefined,
+		energy: req.body.energy ? String(req.body.energy) : undefined,
+		sleepHours: req.body.sleepHours ? String(req.body.sleepHours) : undefined,
+	});
 	sendSuccess(res, result, 'Mood logged', 201);
 };
 
@@ -498,7 +644,14 @@ export const getPatientProgressController = async (req: Request, res: Response):
 
 export const createPatientMoodController = async (req: Request, res: Response): Promise<void> => {
 	const userId = authUserId(req);
-	const result = await createMoodLog(userId, { mood: Number(req.body.mood), note: req.body.note ? String(req.body.note) : undefined });
+	const result = await createMoodLog(userId, {
+		mood: Number(req.body.mood),
+		note: req.body.note ? String(req.body.note) : undefined,
+		intensity: req.body.intensity !== undefined ? Number(req.body.intensity) : undefined,
+		tags: Array.isArray(req.body.tags) ? req.body.tags.map((tag: any) => String(tag || '')) : undefined,
+		energy: req.body.energy ? String(req.body.energy) : undefined,
+		sleepHours: req.body.sleepHours ? String(req.body.sleepHours) : undefined,
+	});
 	sendSuccess(res, result, 'Mood logged', 201);
 };
 
@@ -512,4 +665,15 @@ export const completePatientExerciseController = async (req: Request, res: Respo
 	if (!id) throw new AppError('exercise id is required', 422);
 	const data = await completePatientExercise(authUserId(req), id);
 	sendSuccess(res, data, 'Exercise marked as completed');
+};
+
+export const logWellnessLibraryActivityController = async (req: Request, res: Response): Promise<void> => {
+	const userId = authUserId(req);
+	const data = await logWellnessLibraryActivity(userId, {
+		title: String(req.body?.title || ''),
+		duration: req.body?.duration !== undefined ? Number(req.body.duration) : undefined,
+		category: req.body?.category ? String(req.body.category) : undefined,
+		kind: req.body?.kind ? String(req.body.kind) : undefined,
+	});
+	sendSuccess(res, data, 'Wellness activity logged', 201);
 };

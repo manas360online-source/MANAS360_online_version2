@@ -130,7 +130,7 @@ export default function AssessmentReportsPage() {
 
   return (
     <div className="space-y-5 pb-20 lg:pb-6">
-      <h1 className="font-serif text-3xl font-light md:text-4xl">Assessment Reports & Analytics</h1>
+      <h1 className="text-3xl font-semibold text-charcoal md:text-4xl">Assessment Reports & Analytics</h1>
       <p className="text-sm text-charcoal/65">Track your assessment progress and identify patterns over time.</p>
 
       {/* Filters */}

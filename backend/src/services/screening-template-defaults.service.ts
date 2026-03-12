@@ -137,7 +137,7 @@ const DEFAULT_SCREENING_TEMPLATES: Record<string, ScreeningTemplateDefault> = {
 		key: PHQ9_SCREENING_TEMPLATE_KEY,
 		title: 'PHQ-9: PATIENT HEALTH QUESTIONNAIRE (DEPRESSION ASSESSMENT)',
 		description:
-			'9 Questions | Validated Clinical Tool | 3-5 minutes | Paid Assessment\n\nInstructions: Over the last 2 weeks, how often have you been bothered by any of the following problems?\n\nCritical suicide risk escalation: if Question 9 is scored 1, 2, or 3, immediate clinical assessment is required. Provide crisis hotline 9152987821 (AASRA) and escalate urgently if risk is imminent.',
+			'PHQ-9 depression screening questionnaire.',
 		estimatedMinutes: 5,
 		isPublic: false,
 		randomizeOrder: false,
@@ -205,7 +205,7 @@ const DEFAULT_SCREENING_TEMPLATES: Record<string, ScreeningTemplateDefault> = {
 		key: GAD7_SCREENING_TEMPLATE_KEY,
 		title: 'GAD-7: GENERALIZED ANXIETY DISORDER ASSESSMENT',
 		description:
-			'7 Questions | Validated Clinical Tool | 2-4 minutes | Paid Assessment\n\nInstructions: Over the last 2 weeks, how often have you been bothered by the following problems?\n\nFurther assessment indicators: scores >= 10 should prompt screening for panic disorder, social anxiety disorder, specific phobias, OCD, and PTSD. Comorbidity note: 50-60% of patients with anxiety also have depression, so PHQ-9 screening should be considered.',
+			'GAD-7 anxiety screening questionnaire.',
 		estimatedMinutes: 4,
 		isPublic: false,
 		randomizeOrder: false,

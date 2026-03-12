@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
-import { requireRole } from '../middleware/rbac.middleware';
+import { requireRole, requirePermission } from '../middleware/rbac.middleware';
 import {
 	validateAdminListUsersQuery,
 	validateAdminGetUserIdParam,
@@ -51,7 +51,7 @@ const router = Router();
  *   - page: pagination page number (default: 1)
  *   - limit: items per page (default: 10, max: 50)
  */
-router.get('/users', requireAuth, requireRole('admin'), ...validateAdminListUsersQuery, asyncHandler(listUsersController));
+router.get('/users', requireAuth, requireRole('admin'), requirePermission('manage_users'), ...validateAdminListUsersQuery, asyncHandler(listUsersController));
 
 /**
  * GET /api/v1/admin/users/:id
@@ -59,7 +59,7 @@ router.get('/users', requireAuth, requireRole('admin'), ...validateAdminListUser
  * Route parameters:
  *   - id: user identifier
  */
-router.get('/users/:id', requireAuth, requireRole('admin'), ...validateAdminGetUserIdParam, asyncHandler(getUserController));
+router.get('/users/:id', requireAuth, requireRole('admin'), requirePermission('read_all_profiles'), ...validateAdminGetUserIdParam, asyncHandler(getUserController));
 
 /**
  * PATCH /api/v1/admin/therapists/:id/verify
@@ -73,6 +73,7 @@ router.patch(
 	'/therapists/:id/verify',
 	requireAuth,
 	requireRole('admin'),
+	requirePermission('manage_therapists'),
 	...validateTherapistProfileIdParam,
 	asyncHandler(verifyTherapistController),
 );
@@ -89,7 +90,7 @@ router.patch(
  *   - totalRevenue: Sum of all transaction amounts
  *   - activeSubscriptions: Count of therapists with active patients
  */
-router.get('/metrics', requireAuth, requireRole('admin'), asyncHandler(getMetricsController));
+router.get('/metrics', requireAuth, requireRole('admin'), requirePermission('view_analytics'), asyncHandler(getMetricsController));
 
 /**
  * GET /api/v1/admin/subscriptions
@@ -138,7 +139,7 @@ router.get('/modules/:module/summary', requireAuth, requireRole('admin'), asyncH
  *   - organizationKey: bigint (required)
  *   - therapistId: string (optional)
  */
-router.get('/analytics/summary', requireAuth, requireRole('admin'), asyncHandler(getAdminAnalyticsSummaryController));
+router.get('/analytics/summary', requireAuth, requireRole('admin'), requirePermission('view_analytics'), asyncHandler(getAdminAnalyticsSummaryController));
 
 /**
  * GET /api/v1/admin/analytics/templates
@@ -174,7 +175,7 @@ router.get('/analytics/utilization', requireAuth, requireRole('admin'), asyncHan
  *   - includeChartsSnapshot?: boolean
  *   - chartSnapshots?: string[] (data URL images; optional)
  */
-router.post('/analytics/export', requireAuth, requireRole('admin'), adminAnalyticsExportRateLimiter, asyncHandler(exportAdminAnalyticsReportController));
+router.post('/analytics/export', requireAuth, requireRole('admin'), requirePermission('view_analytics'), adminAnalyticsExportRateLimiter, asyncHandler(exportAdminAnalyticsReportController));
 
 /**
  * POST /api/v1/admin/analytics/export/async

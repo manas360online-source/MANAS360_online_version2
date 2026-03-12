@@ -81,6 +81,10 @@ import {
 	listProviderExtraQuestionsController,
 	listProviderQuestionAssignmentsController,
 } from '../controllers/free-screening-provider.controller';
+import {
+	acceptAppointmentController,
+	rejectAppointmentController,
+} from '../controllers/smart-match.controller';
 
 const router = Router();
 
@@ -127,6 +131,9 @@ router.post('/me/sessions/:id/actions/cancel', requireAuth, requireTherapistRole
 router.post('/me/sessions/:id/actions/remind', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(sendReminderController));
 router.post('/me/sessions/:id/actions/start-live', requireAuth, requireTherapistRole, ...validateSessionIdParam, asyncHandler(startLiveSessionController));
 router.post('/me/appointments/propose-slot', requireAuth, requireTherapistRole, asyncHandler(therapistProposeAppointmentSlotController));
+// Smart Match appointment booking
+router.post('/me/appointments/accept', requireAuth, requireTherapistRole, asyncHandler(acceptAppointmentController));
+router.post('/me/appointments/reject', requireAuth, requireTherapistRole, asyncHandler(rejectAppointmentController));
 // Analytics
 router.get('/me/analytics/summary', requireAuth, requireTherapistRole, asyncHandler(analyticsController.getSummary.bind(analyticsController)));
 router.get('/me/analytics/sessions', requireAuth, requireTherapistRole, asyncHandler(analyticsController.getTimeSeries.bind(analyticsController)));

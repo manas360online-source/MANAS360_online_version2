@@ -211,6 +211,8 @@ export const patientApi = {
     (await http.get(`/v1/sessions/${encodeURIComponent(id)}/documents/invoice`, { responseType: 'blob' })).data,
   submitAssessment: async (payload: { type: string; score?: number; answers?: number[] }) =>
     (await http.post('/v1/assessments/submit', payload)).data,
+	submitPHQ9: async (answers: number[]) =>
+		(await http.post('/v1/assessments/phq9', { answers })).data,
   submitQuickScreeningJourney: async (payload: JourneyQuickScreeningRequest): Promise<JourneyRecommendationResponse> =>
     (await http.post('/v1/patient-journey/quick-screening', payload)).data,
   submitClinicalJourney: async (payload: JourneyClinicalRequest): Promise<JourneyRecommendationResponse> =>
@@ -268,7 +270,8 @@ export const patientApi = {
         };
       },
     ),
-  addMoodLog: async (payload: { mood: number; note?: string }) => (await http.post('/patient/mood', payload)).data,
+  addMoodLog: async (payload: { mood: number; note?: string; intensity?: number; tags?: string[]; energy?: 'low' | 'medium' | 'high'; sleepHours?: string }) =>
+    (await http.post('/patient/mood', payload)).data,
   getProgress: async () =>
     withFallbackChain([
       async () => (await http.get('/patient/progress')).data,
@@ -315,6 +318,11 @@ export const patientApi = {
   downloadInvoice: async (id: string) =>
     (await http.get(`/patient/invoices/${encodeURIComponent(id)}/download`, { responseType: 'blob' })).data,
   getExercises: async () => (await http.get('/patient/exercises')).data,
+  logWellnessLibraryActivity: async (payload: { title: string; duration?: number; category?: string; kind?: 'audio' | 'interactive' }) =>
+    withV1Fallback(
+      async () => (await http.post('/patient/exercises/library', payload)).data,
+      async () => (await http.post('/v1/exercises/library', payload)).data,
+    ),
   completeExercise: async (id: string) => (await http.patch(`/patient/exercises/${encodeURIComponent(id)}/complete`)).data,
   getTherapyPlan: async () => (await http.get('/v1/therapy-plan')).data,
   completeTherapyPlanTask: async (id: string) => (await http.patch(`/v1/therapy-plan/tasks/${encodeURIComponent(id)}/complete`)).data,
@@ -343,6 +351,21 @@ export const patientApi = {
       withFallbackChain([
         async () => (await http.get('/v1/patient/reports')).data,
         async () => (await http.get('/patient/reports')).data,
+      ]),
+    generateCompleteHealthSummary: async () =>
+      withFallbackChain([
+        async () => (await http.post('/v1/patient/reports/health-summary', {}, { responseType: 'blob' })).data,
+        async () => (await http.post('/patient/reports/health-summary', {}, { responseType: 'blob' })).data,
+      ]),
+    getRecordSecureUrl: async (id: string) =>
+      withFallbackChain([
+        async () => (await http.get(`/v1/patient/records/${encodeURIComponent(id)}/url`)).data,
+        async () => (await http.get(`/patient/records/${encodeURIComponent(id)}/url`)).data,
+      ]),
+    createRecordShareLink: async (id: string) =>
+      withFallbackChain([
+        async () => (await http.post(`/v1/patient/records/${encodeURIComponent(id)}/share`)).data,
+        async () => (await http.post(`/patient/records/${encodeURIComponent(id)}/share`)).data,
       ]),
     // Care Team
     getMyProviders: async () =>
@@ -390,4 +413,53 @@ export const patientApi = {
         async () => (await http.post('/v1/patient/messages', payload)).data,
         async () => (await http.post('/patient/messages', payload)).data,
       ]),
-};
+      startConversation: async (payload: { providerId: string }) =>
+        withFallbackChain([
+          async () => (await http.post('/v1/patient/messages/start', payload)).data,
+          async () => (await http.post('/patient/messages/start', payload)).data,
+        ]),
+      markMessagesRead: async (conversationId: string) =>
+        withFallbackChain([
+          async () =>
+            (await http.post(`/v1/patient/messages/${encodeURIComponent(conversationId)}/read`, {})).data,
+          async () =>
+            (await http.post(`/patient/messages/${encodeURIComponent(conversationId)}/read`, {})).data,
+        ]),
+
+  // Smart Match Appointment Booking
+  getAvailableProvidersForSmartMatch: async (
+    availabilityPrefs: {
+      daysOfWeek: number[];
+      timeSlots: Array<{ startMinute: number; endMinute: number }>;
+    },
+    providerType?: string,
+  ) => {
+    const query = new URLSearchParams();
+    availabilityPrefs.daysOfWeek.forEach((day) => {
+      query.append('daysOfWeek', String(day));
+    });
+    availabilityPrefs.timeSlots.forEach((slot) => {
+      query.append(`timeSlots`, `${slot.startMinute}-${slot.endMinute}`);
+    });
+    if (providerType && providerType !== 'ALL') {
+      query.append('providerType', providerType);
+    }
+    return (await http.get(`/v1/patient/providers/smart-match?${query}`)).data;
+  },
+
+  createAppointmentRequest: async (payload: {
+    availabilityPrefs: {
+      daysOfWeek: number[];
+      timeSlots: Array<{ startMinute: number; endMinute: number }>;
+    };
+    providerIds: string[];
+    preferredSpecialization?: string;
+    durationMinutes?: number;
+  }) => (await http.post('/v1/patient/appointments/smart-match', payload)).data,
+
+  getPendingAppointmentRequests: async () =>
+    (await http.get('/v1/patient/appointments/requests/pending')).data,
+
+  getPaymentPendingRequest: async () =>
+    (await http.get('/v1/patient/appointments/payment-pending')).data,
+  };

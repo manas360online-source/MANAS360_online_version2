@@ -59,12 +59,6 @@ export default function SignupPage() {
 							{success}
 						</p>
 					)}
-					<p className="mt-4 text-center text-sm text-wellness-muted">
-						Already registered?{' '}
-						<Link to={loginHref} className="text-calm-sage underline underline-offset-2 hover:text-wellness-text">
-							Go to login
-						</Link>
-					</p>
 					<p className="mt-2 text-center text-xs text-wellness-muted">
 						Want to go back to the landing page?{' '}
 						<Link to="/" className="text-calm-sage underline underline-offset-2 hover:text-wellness-text">

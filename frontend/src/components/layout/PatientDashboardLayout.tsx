@@ -23,37 +23,29 @@ import { useAuth } from '../../context/AuthContext';
 const mainNavItems = [
   { to: '/patient/dashboard', label: 'Dashboard', icon: Home },
   { to: '/patient/therapy-plan', label: 'My Therapy Plan', icon: ClipboardList },
-  { to: '/patient/sessions', label: 'Sessions', icon: CalendarDays, badge: '1 upcoming' },
-  { to: '/patient/care-team', label: 'Care Team', icon: User },
-  { to: '/patient/assessments', label: 'Assessments', icon: HeartPulse },
+  { to: '/patient/sessions', label: 'My Care', icon: CalendarDays, badge: '1 upcoming' },
 ];
 
 const selfCareNavItems = [
-  { to: '/patient/messages', label: 'AI Support (Dr. Meera)', icon: MessageSquare, badge: 'AI' },
-  { to: '/patient/exercises', label: 'Exercises', icon: FileText },
-  { to: '/patient/mood', label: 'Mood Tracker', icon: HeartPulse },
-  { to: '/patient/sound-therapy', label: 'Sound Therapy', icon: Sparkles },
+  { to: '/patient/messages', label: 'Dr. Meera (AI)', icon: MessageSquare, badge: 'AI' },
+  { to: '/patient/mood', label: 'Daily Check-in', icon: HeartPulse },
+  { to: '/patient/sound-therapy', label: 'Wellness Library', icon: Sparkles },
 ];
 
 const progressNavItems = [
-  { to: '/patient/insights', label: 'Progress Insights', icon: Sparkles },
-  { to: '/patient/timeline', label: 'Patient Timeline', icon: CalendarDays },
-  { to: '/patient/assessment-reports', label: 'Assessment Analytics', icon: FileText },
-  { to: '/patient/reports', label: 'Reports', icon: FileText },
-  { to: '/patient/progress', label: 'Progress & Analytics', icon: BarChart3 },
-  { to: '/patient/pricing', label: 'Pricing & Plans', icon: Settings2 },
+  { to: '/patient/progress', label: 'My Progress', icon: BarChart3 },
+  { to: '/patient/reports', label: 'Clinical Records', icon: FileText },
 ];
 
 const supportNavItems = [
   { to: '/patient/provider-messages', label: 'Messages', icon: MessageSquare },
   { to: '/patient/support', label: 'Help Center', icon: LifeBuoy },
-  { to: '/crisis', label: 'Crisis Support', icon: LifeBuoy },
 ];
 
 const bottomNavItems = [
   { to: '/patient/dashboard', label: 'Home', icon: Home },
-  { to: '/patient/mood', label: 'Mood', icon: HeartPulse },
-  { to: '/patient/assessments', label: 'Check-In', icon: ClipboardList },
+  { to: '/patient/mood', label: 'Check-in', icon: HeartPulse },
+  { to: '/patient/sessions', label: 'My Care', icon: CalendarDays },
   { to: '/patient/messages', label: 'Support', icon: MessageSquare },
   { to: '/patient/settings', label: 'Account', icon: Settings2 },
 ];
@@ -107,21 +99,21 @@ export default function PatientDashboardLayout() {
     '/patient/therapy-plan': 'My Therapy Plan',
     '/patient/sessions': 'Sessions',
     '/patient/care-team': 'Care Team',
-    '/patient/assessments': 'Assessments',
+    '/patient/assessments': 'Clinical Assessments',
     '/patient/messages': 'AI Support',
-    '/patient/exercises': 'Exercises',
-    '/patient/mood': 'Mood Tracker',
-    '/patient/insights': 'Progress Insights',
+    '/patient/exercises': 'Wellness Library',
+    '/patient/mood': 'Daily Check-in',
+    '/patient/insights': 'My Progress',
     '/patient/timeline': 'Patient Timeline',
-    '/patient/assessment-reports': 'Assessment Analytics',
-    '/patient/reports': 'Reports',
-    '/patient/pricing': 'Pricing & Plans',
+    '/patient/assessment-reports': 'My Progress',
+    '/patient/reports': 'Clinical Records',
+  
     '/patient/support': 'Help Center',
     '/patient/settings': 'Settings',
     '/patient/profile': 'Profile',
-    '/patient/sound-therapy': 'Sound Therapy',
+    '/patient/sound-therapy': 'Wellness Library',
     '/patient/notifications': 'Notifications',
-    '/patient/progress': 'Progress & Analytics',
+    '/patient/progress': 'My Progress',
     '/patient/provider-messages': 'Messages',
   };
   const pageTitle = Object.entries(pageTitleMap).find(([path]) => location.pathname.startsWith(path))?.[1] || 'Dashboard';
@@ -158,7 +150,7 @@ export default function PatientDashboardLayout() {
 
   const renderNavSection = (heading: string, items: NavItem[]) => (
     <div>
-      <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-ink-400">{heading}</p>
+      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400">{heading}</p>
       <div className="space-y-1">
         {items.map((item) => {
           const Icon = item.icon;
@@ -169,17 +161,17 @@ export default function PatientDashboardLayout() {
               key={`${heading}-${item.to}-${item.label}`}
               to={item.to}
               onClick={() => setMobileSidebarOpen(false)}
-              className={`flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+              className={`flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] transition ${
                 active
-                  ? 'bg-[#E8EFE6] font-semibold text-sage-700'
+                  ? 'bg-[#E8EFE6] font-semibold text-sage-700 shadow-[inset_0_0_0_1px_rgba(76,115,98,0.15)]'
                   : 'text-ink-600 hover:bg-surface-hover hover:text-ink-700'
               }`}
             >
-              <Icon className={`h-[18px] w-[18px] ${active ? 'text-sage-500' : 'text-ink-400'}`} />
+              <Icon className={`h-[19px] w-[19px] ${active ? 'text-sage-500' : 'text-ink-400'}`} />
               <span>{item.label}</span>
               {item.badge && (
                 <span
-                  className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                     item.badge === 'AI'
                       ? 'bg-calm-sage text-white'
                       : item.badge === 'Premium'
@@ -198,7 +190,7 @@ export default function PatientDashboardLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-charcoal">
+    <div className="patient-shell-bg min-h-screen text-charcoal">
       {mobileSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -209,7 +201,7 @@ export default function PatientDashboardLayout() {
 
       <div className="mx-auto flex w-full max-w-[1600px] items-start">
         <aside
-          className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-calm-sage/15 bg-[#F5F3F0] transition-transform duration-300 lg:sticky lg:top-0 lg:self-start lg:z-20 lg:h-screen lg:translate-x-0 ${
+          className={`fixed left-0 top-0 z-50 flex h-full w-72 flex-col border-r border-calm-sage/15 bg-[#F5F3F0]/95 backdrop-blur-sm transition-transform duration-300 lg:sticky lg:top-0 lg:self-start lg:z-20 lg:h-screen lg:translate-x-0 ${
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -262,11 +254,11 @@ export default function PatientDashboardLayout() {
         </aside>
 
         <div className="flex min-h-screen w-full flex-1 flex-col lg:ml-0">
-          <header className="sticky top-0 z-30 flex h-16 items-center border-b border-ink-100 bg-white/80 px-3 backdrop-blur-lg sm:px-4 lg:px-6">
+          <header className="sticky top-0 z-30 flex h-16 items-center border-b border-white/20 bg-white/60 px-3 backdrop-blur-xl sm:px-4 lg:px-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] supports-[backdrop-filter]:bg-white/40">
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-charcoal/70 hover:bg-calm-sage/10 lg:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-charcoal/70 transition-colors hover:bg-calm-sage/15 active:bg-calm-sage/25 lg:hidden"
                 onClick={() => setMobileSidebarOpen(true)}
                 aria-label="Open sidebar"
               >
@@ -274,8 +266,8 @@ export default function PatientDashboardLayout() {
               </button>
 
               <div className="flex items-center gap-2">
-                <p className="font-display text-lg font-bold leading-none text-ink-800">{pageTitle}</p>
-                <p className="-mt-0.5 hidden text-[11px] leading-none text-ink-400 sm:block">{todayLabel}</p>
+                <p className="font-display text-xl font-semibold leading-none text-ink-800 tracking-tight">{pageTitle}</p>
+                <p className="-mt-0.5 hidden text-xs leading-none text-ink-400 sm:block tracking-wide">{todayLabel}</p>
               </div>
             </div>
 
@@ -327,12 +319,14 @@ export default function PatientDashboardLayout() {
           </header>
 
           <main className="w-full flex-1 px-3 py-4 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
-            <Outlet />
+            <div className="patient-content-shell">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-calm-sage/20 bg-[#FAFAF8]/98 px-2 py-1.5 lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-calm-sage/20 bg-[#FAFAF8]/95 px-2 py-1.5 backdrop-blur-md lg:hidden">
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
@@ -341,8 +335,8 @@ export default function PatientDashboardLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`inline-flex min-h-[46px] flex-col items-center justify-center rounded-lg px-1 text-[10px] font-medium ${
-                  active ? 'bg-calm-sage/20 text-charcoal' : 'text-charcoal/70'
+                className={`inline-flex min-h-[46px] flex-col items-center justify-center rounded-lg px-1 text-[11px] font-medium ${
+                  active ? 'bg-calm-sage/20 text-charcoal' : 'text-charcoal/70 hover:bg-white/60'
                 }`}
               >
                 <Icon className="mb-0.5 h-4 w-4" />
