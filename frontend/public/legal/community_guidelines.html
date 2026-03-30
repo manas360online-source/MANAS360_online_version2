@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MANAS360 — Community Guidelines</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal-dark:  #0D3D3D;
+    --teal:       #1A7A7A;
+    --teal-mid:   #2ABFBF;
+    --teal-light: #E8F5F5;
+    --teal-pale:  #F2FAFA;
+    --text:       #1A1A2E;
+    --muted:      #5A6A7A;
+    --rule:       #C8DEDE;
+    --white:      #FFFFFF;
+    --shadow:     0 4px 32px rgba(26,122,122,.13);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(145deg, #EAF6F6 0%, #F7FDFB 60%, #E0F4F4 100%);
+    min-height: 100vh;
+    display: flex; justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+    color: var(--text);
+  }
+
+  .shell { width: 100%; max-width: 820px; display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .page-header {
+    background: var(--teal-dark); border-radius: 18px 18px 0 0;
+    padding: 2rem 2.5rem 1.6rem;
+    display: flex; align-items: center; gap: 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.22) 0%, transparent 70%);
+  }
+  .page-header::after {
+    content: ''; position: absolute; right: 80px; bottom: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.12) 0%, transparent 70%);
+  }
+  .logo-mark {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 2px 16px rgba(42,191,191,.4);
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif; font-size: 1.7rem;
+    color: #fff; letter-spacing: -.02em; line-height: 1.1;
+  }
+  .header-text p {
+    font-size: .8rem; color: var(--teal-mid); letter-spacing: .08em;
+    text-transform: uppercase; margin-top: .25rem; font-weight: 500;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(42,191,191,.15); border: 1px solid rgba(42,191,191,.35);
+    color: var(--teal-mid); font-size: .72rem; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: .35rem .9rem; border-radius: 30px; white-space: nowrap;
+  }
+
+  /* META BAR */
+  .meta-bar {
+    background: var(--teal-light);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    padding: .7rem 2.5rem; display: flex; gap: 2rem; flex-wrap: wrap;
+    font-size: .82rem; color: var(--muted); font-weight: 500;
+  }
+  .meta-bar span b { color: var(--teal-dark); }
+
+  /* CONTENT CARD */
+  .content-card {
+    background: var(--white);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    border-bottom: 4px solid var(--teal); border-radius: 0 0 18px 18px;
+    padding: 2rem 2.5rem 2.5rem; box-shadow: var(--shadow);
+  }
+
+  /* SECTION HEADS */
+  .section-head {
+    background: var(--teal-dark); color: #fff;
+    font-size: .82rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; padding: .5rem 1rem; border-radius: 6px;
+    margin-bottom: .75rem; margin-top: 1.8rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-head .num {
+    background: var(--teal-mid); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700; flex-shrink: 0;
+  }
+  .tos-section:first-of-type .section-head { margin-top: 0; }
+
+  /* CLAUSES */
+  .clause {
+    display: flex; gap: .7rem; margin-bottom: .65rem;
+    font-size: .9rem; line-height: 1.65; color: var(--text); text-align: justify;
+  }
+  .clause-ref {
+    font-weight: 700; color: var(--teal); min-width: 32px;
+    padding-top: .02em; flex-shrink: 0; font-size: .85rem;
+  }
+
+  /* PURPOSE BANNER */
+  .purpose-banner {
+    background: var(--teal-pale); border-left: 4px solid var(--teal);
+    border-radius: 0 10px 10px 0; padding: 1rem 1.3rem;
+    font-size: .9rem; line-height: 1.72; color: var(--text); margin-bottom: .5rem;
+  }
+  .purpose-banner strong { color: var(--teal-dark); }
+
+  /* VALUES GRID */
+  .values-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin: .75rem 0;
+  }
+  .value-card {
+    background: var(--teal-pale); border: 1px solid var(--rule);
+    border-radius: 10px; padding: .9rem 1rem; text-align: center;
+  }
+  .value-card .v-icon { font-size: 1.5rem; margin-bottom: .35rem; display: block; }
+  .value-card h4 { font-size: .83rem; font-weight: 700; color: var(--teal-dark); }
+
+  /* GUIDELINES CARDS */
+  .guidelines-list { display: flex; flex-direction: column; gap: .65rem; margin: .7rem 0; }
+  .guideline-card {
+    display: flex; gap: .9rem; align-items: flex-start;
+    border-radius: 10px; padding: .9rem 1.1rem;
+    border: 1.5px solid var(--rule);
+  }
+  .guideline-card.green  { background: #F0FDF4; border-color: #86EFAC; }
+  .guideline-card.blue   { background: #EEF6FF; border-color: #93C5FD; }
+  .guideline-card.purple { background: #F5F3FF; border-color: #C4B5FD; }
+  .guideline-card.amber  { background: #FFFBEB; border-color: #FCD34D; }
+  .guideline-card.red    { background: #FEF2F2; border-color: #FCA5A5; }
+  .guideline-card.teal   { background: var(--teal-pale); border-color: var(--rule); }
+
+  .g-icon {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    margin-top: .05rem;
+  }
+  .green  .g-icon { background: #DCFCE7; }
+  .blue   .g-icon { background: #DBEAFE; }
+  .purple .g-icon { background: #EDE9FE; }
+  .amber  .g-icon { background: #FEF3C7; }
+  .red    .g-icon { background: #FEE2E2; }
+  .teal   .g-icon { background: var(--teal-light); }
+
+  .g-ref  {
+    font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: .18rem;
+  }
+  .green  .g-ref  { color: #15803D; }
+  .blue   .g-ref  { color: #1D4ED8; }
+  .purple .g-ref  { color: #6D28D9; }
+  .amber  .g-ref  { color: #B45309; }
+  .red    .g-ref  { color: #B91C1C; }
+  .teal   .g-ref  { color: var(--teal); }
+
+  .g-title {
+    font-size: .88rem; font-weight: 700; margin-bottom: .25rem;
+  }
+  .green  .g-title { color: #14532D; }
+  .blue   .g-title { color: #1E3A8A; }
+  .purple .g-title { color: #4C1D95; }
+  .amber  .g-title { color: #92400E; }
+  .red    .g-title { color: #991B1B; }
+  .teal   .g-title { color: var(--teal-dark); }
+
+  .guideline-card p { font-size: .85rem; line-height: 1.58; color: var(--muted); }
+
+  /* MODERATION TABLE */
+  .mod-table {
+    width: 100%; border-collapse: collapse; font-size: .87rem; margin: .6rem 0 .8rem;
+  }
+  .mod-table th {
+    background: var(--teal-dark); color: #fff; padding: .55rem .85rem;
+    text-align: left; font-weight: 600; font-size: .78rem;
+    letter-spacing: .05em; text-transform: uppercase;
+  }
+  .mod-table td {
+    padding: .52rem .85rem; border-bottom: 1px solid var(--rule);
+    vertical-align: middle; line-height: 1.55;
+  }
+  .mod-table tr:nth-child(odd) td { background: var(--teal-pale); }
+  .mod-table tr:last-child td { border-bottom: none; }
+  .mod-table td:first-child { font-weight: 600; color: var(--teal-dark); width: 28%; }
+
+  .mod-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .72rem; font-weight: 700; padding: .18rem .6rem;
+    border-radius: 20px; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .mod-ai     { background: #EEF6FF; color: #1D4ED8; border: 1px solid #93C5FD; }
+  .mod-human  { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; }
+  .mod-both   { background: #F5F3FF; color: #6D28D9; border: 1px solid #C4B5FD; }
+
+  /* CALLOUT BOXES */
+  .warn-box {
+    background: #FFF9EC; border: 1.5px solid #E6B800;
+    border-radius: 8px; padding: .85rem 1.1rem;
+    font-size: .87rem; line-height: 1.65; margin: .6rem 0; color: #5A4500;
+  }
+  .info-box {
+    background: #EEF6FF; border-left: 3px solid #3B82F6;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0 .8rem; color: #1e3a5f;
+  }
+  .deny-box {
+    background: #FEF2F2; border-left: 3px solid #EF4444;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0; color: #7F1D1D;
+  }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 2rem; padding-top: 1rem;
+    border-top: 1.5px solid var(--rule);
+    font-size: .8rem; color: var(--muted); text-align: center; line-height: 1.7;
+  }
+  .doc-footer a { color: var(--teal); text-decoration: none; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .page-header { padding: 1.4rem 1.2rem; }
+    .badge { display: none; }
+    .meta-bar { padding: .7rem 1.2rem; }
+    .content-card { padding: 1.2rem 1.2rem 1.8rem; }
+    .values-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" stroke="white" stroke-width="1.5" stroke-opacity=".4"/>
+        <path d="M7 14C7 10.134 10.134 7 14 7C17.866 7 21 10.134 21 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 17.5C10.5 15.5 12 14 14 14C16 14 17.5 15.5 18 17.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="14" cy="11.5" r="1.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>MANAS360</h1>
+      <p>Mental Wellness Platform</p>
+    </div>
+    <div class="badge">Community Guidelines</div>
+  </div>
+
+  <!-- META BAR -->
+  <div class="meta-bar">
+    <span><b>Document:</b> Community Guidelines (A6)</span>
+    <span><b>Applies to:</b> Group Sessions, Forums &amp; Community Features</span>
+    <span><b>Governed by:</b> Laws of India</span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-card">
+
+    <!-- 1. PURPOSE & APPLICABILITY -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">1</span> Purpose &amp; Applicability</div>
+      <div class="purpose-banner">
+        These Community Guidelines govern all <strong>Users and Providers</strong> who access or participate in group therapy sessions, peer-support forums, moderated discussions, or any other interactive community feature made available on the MANAS360 Platform. These Guidelines operate in addition to, and shall be read together with, the <strong>Terms of Service, Acceptable Use Policy, and Privacy Policy</strong>; in the event of any inconsistency, the <strong>stricter provision shall prevail</strong>.<br/><br/>
+        Participation in community features is a <strong>privilege and not an inherent right</strong>, and MANAS360 reserves the sole discretion and authority to restrict, suspend, or revoke access where necessary to preserve therapeutic integrity, community safety, and compliance with applicable standards.
+      </div>
+    </div>
+
+    <!-- 2. COMMUNITY VALUES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">2</span> Our Community Values</div>
+      <div class="clause">
+        <span class="clause-ref">2.1</span>
+        <span>MANAS360 community spaces are founded upon the following core principles. All Users and Providers are expected to uphold these values in every interaction:</span>
+      </div>
+      <div class="values-grid">
+        <div class="value-card"><span class="v-icon">🤝</span><h4>Empathy</h4></div>
+        <div class="value-card"><span class="v-icon">🙏</span><h4>Respect</h4></div>
+        <div class="value-card"><span class="v-icon">🛡️</span><h4>Psychological Safety</h4></div>
+        <div class="value-card"><span class="v-icon">⚖️</span><h4>Non-Judgment</h4></div>
+        <div class="value-card"><span class="v-icon">🔒</span><h4>Confidentiality</h4></div>
+        <div class="value-card"><span class="v-icon">🌿</span><h4>Ethical Conduct</h4></div>
+      </div>
+    </div>
+
+    <!-- 3. GUIDELINES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">3</span> Guidelines</div>
+
+      <div class="guidelines-list">
+
+        <div class="guideline-card green">
+          <div class="g-icon">🤝</div>
+          <div>
+            <div class="g-ref">Guideline 3.1</div>
+            <div class="g-title">Be Respectful</div>
+            <p>Treat every member with dignity and respect. Diverse backgrounds, experiences, identities, and perspectives are welcomed and valued.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card blue">
+          <div class="g-icon">🔒</div>
+          <div>
+            <div class="g-ref">Guideline 3.2</div>
+            <div class="g-title">Maintain Confidentiality</div>
+            <p>What is shared in group sessions stays in group sessions. Do not share other members' personal stories, identities, or health information outside the group. Unauthorised disclosure may constitute a violation of applicable data protection laws.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card purple">
+          <div class="g-icon">💬</div>
+          <div>
+            <div class="g-ref">Guideline 3.3</div>
+            <div class="g-title">Use Supportive Language</div>
+            <p>Avoid judgment, criticism, or unsolicited advice. Use "I" statements when sharing personal experiences to keep communication grounded and non-blaming.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card teal">
+          <div class="g-icon">🚧</div>
+          <div>
+            <div class="g-ref">Guideline 3.4</div>
+            <div class="g-title">Respect Boundaries</div>
+            <p>If someone does not wish to share, respect their choice. Do not pressure, interrogate, or coerce others into disclosure of personal information.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card amber">
+          <div class="g-icon">🚫</div>
+          <div>
+            <div class="g-ref">Guideline 3.5</div>
+            <div class="g-title">No Promotion or Solicitation</div>
+            <p>Do not promote or solicit products, services, alternative treatments, financial schemes, religious campaigns, or political ideologies within any community space.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card red">
+          <div class="g-icon">🚨</div>
+          <div>
+            <div class="g-ref">Guideline 3.6</div>
+            <div class="g-title">Crisis Protocol</div>
+            <p>If a member expresses suicidal thoughts or imminent danger, alert the session facilitator immediately. <strong>Do not attempt to manage a crisis independently.</strong> Facilitators may activate internal escalation protocols where required.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card green">
+          <div class="g-icon">🎙️</div>
+          <div>
+            <div class="g-ref">Guideline 3.7</div>
+            <div class="g-title">One Voice at a Time</div>
+            <p>In group sessions, allow each person to speak without interruption. Active, patient listening is as important as sharing.</p>
+          </div>
+        </div>
+
+        <div class="guideline-card red">
+          <div class="g-icon">⏺️</div>
+          <div>
+            <div class="g-ref">Guideline 3.8</div>
+            <div class="g-title">No Recording</div>
+            <p>Audio recording, video recording, livestreaming, screenshot capture, transcription, or external broadcasting of sessions or forums is <strong>strictly prohibited</strong>.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 4. MODERATION -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">4</span> Moderation</div>
+
+      <table class="mod-table">
+        <thead><tr><th>Community Feature</th><th>Moderated By</th><th>Method</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Group Therapy Sessions</td>
+            <td>Licensed therapists or trained coaches</td>
+            <td><span class="mod-badge mod-human">👤 Human Facilitator</span></td>
+          </tr>
+          <tr>
+            <td>Peer-Support Forums</td>
+            <td>AI moderation + human review team</td>
+            <td><span class="mod-badge mod-both">🤖 + 👤 Hybrid</span></td>
+          </tr>
+          <tr>
+            <td>Moderated Discussions</td>
+            <td>Trained moderators</td>
+            <td><span class="mod-badge mod-human">👤 Human Moderator</span></td>
+          </tr>
+          <tr>
+            <td>Community Posts &amp; Replies</td>
+            <td>AI moderation (first pass)</td>
+            <td><span class="mod-badge mod-ai">🤖 AI Review</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="clause">
+        <span class="clause-ref">4.3</span>
+        <span>Violations of these Guidelines may result in immediate removal from the session or forum, and may trigger further account-level action in accordance with the Acceptable Use Policy (Document A5).</span>
+      </div>
+
+      <div class="warn-box">
+        ⚠️ MANAS360 reserves the right to remove any content or participant from a community space at any time, without prior notice, where necessary to protect the safety, privacy, or therapeutic integrity of other participants.
+      </div>
+    </div>
+
+    <!-- 5. DISCLAIMER -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">5</span> Disclaimer</div>
+      <div class="deny-box">
+        🚫 <strong>5.1</strong> &nbsp;Community forums and peer discussions are <strong>not substitutes</strong> for individualised clinical diagnosis, professional therapy, or emergency medical care.
+      </div>
+      <div class="info-box">
+        ℹ️ <strong>5.2</strong> &nbsp;Views expressed by participants (other than designated facilitators) are personal opinions and do <strong>not</strong> represent the views, positions, or recommendations of MANAS360.
+      </div>
+    </div>
+
+    <!-- 6. CHANGES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">6</span> Changes to This Policy</div>
+      <div class="clause">
+        <span class="clause-ref">6.1</span>
+        <span>We may update this Policy periodically to reflect legal, technical, or operational changes. Material changes will be notified via email and in-app notification. Continued accessing or using the Platform after notification constitutes acceptance of the revised Policy.</span>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <strong>MANAS360 Mental Wellness Pvt. Ltd.</strong> · 6, MLV, Talaghatpura, Kanakapura Road, Bengaluru 560062, Karnataka, India<br/>
+      CIN: U86900KA2026PTC215013 · GSTIN: 29AAUCM4417GIZ1 · DPIIT: DIPP244635 · UDHYAM: KR-03-0654344<br/>
+      <a href="mailto:Legal@manas360.com">Legal@manas360.com</a> · +91-80 6940 9284 · +91-8944 944 2180<br/><br/>
+      This document is confidential and intended solely for the use of MANAS360 platform users.<br/>
+      © 2026 MANAS360 Mental Wellness Pvt. Ltd. All rights reserved.
+    </div>
+
+  </div><!-- /content-card -->
+</div><!-- /shell -->
+</body>
+</html>

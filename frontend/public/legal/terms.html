@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MANAS360 — Terms of Service</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal-dark:  #0D3D3D;
+    --teal:       #1A7A7A;
+    --teal-mid:   #2ABFBF;
+    --teal-light: #E8F5F5;
+    --teal-pale:  #F2FAFA;
+    --text:       #1A1A2E;
+    --muted:      #5A6A7A;
+    --rule:       #C8DEDE;
+    --warn-bg:    #FFF9EC;
+    --warn-border:#E6B800;
+    --white:      #FFFFFF;
+    --shadow:     0 4px 32px rgba(26,122,122,.13);
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(145deg, #EAF6F6 0%, #F7FDFB 60%, #E0F4F4 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+    color: var(--text);
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 820px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    background: var(--teal-dark);
+    border-radius: 18px 18px 0 0;
+    padding: 2rem 2.5rem 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.25) 0%, transparent 70%);
+  }
+  .logo-mark {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 16px rgba(42,191,191,.4);
+  }
+  .logo-mark svg { width: 28px; height: 28px; }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: #fff;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+  }
+  .header-text p {
+    font-size: .8rem;
+    color: var(--teal-mid);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-top: .25rem;
+    font-weight: 500;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(42,191,191,.15);
+    border: 1px solid rgba(42,191,191,.35);
+    color: var(--teal-mid);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: .35rem .9rem;
+    border-radius: 30px;
+    white-space: nowrap;
+  }
+
+  /* ── META BAR ── */
+  .meta-bar {
+    background: var(--teal-light);
+    border-left: 4px solid var(--teal);
+    border-right: 4px solid var(--teal);
+    padding: .7rem 2.5rem;
+    display: flex;
+    gap: 2.5rem;
+    font-size: .82rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .meta-bar span b { color: var(--teal-dark); }
+
+  /* ── SCROLL BOX ── */
+  .scroll-wrapper {
+    background: var(--white);
+    border-left: 4px solid var(--teal);
+    border-right: 4px solid var(--teal);
+    border-bottom: 4px solid var(--teal);
+    border-radius: 0 0 18px 18px;
+    position: relative;
+  }
+  .scroll-fade-top, .scroll-fade-bot {
+    display: none;
+  }
+  .scroll-fade-top {
+    top: 0;
+    background: linear-gradient(to bottom, #fff 20%, transparent);
+  }
+  .scroll-fade-bot {
+    bottom: 0;
+    background: linear-gradient(to top, #fff 20%, transparent);
+  }
+  .scroll-box {
+    height: auto;
+    overflow: visible;
+    padding: 0 2.5rem 2rem;
+    scroll-behavior: smooth;
+  }
+  .scroll-box::-webkit-scrollbar { width: 6px; }
+  .scroll-box::-webkit-scrollbar-track { background: var(--teal-pale); }
+  .scroll-box::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 4px; }
+
+  /* ── CONTENT ── */
+  .tos-section { margin-bottom: 1.4rem; }
+
+  .section-head {
+    background: var(--teal-dark);
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .5rem 1rem;
+    border-radius: 6px;
+    margin-bottom: .7rem;
+    margin-top: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .section-head .num {
+    background: var(--teal-mid);
+    color: #fff;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .clause {
+    display: flex;
+    gap: .7rem;
+    margin-bottom: .6rem;
+    font-size: .9rem;
+    line-height: 1.65;
+    color: var(--text);
+    text-align: justify;
+  }
+  .clause-ref {
+    font-weight: 700;
+    color: var(--teal);
+    min-width: 32px;
+    padding-top: .02em;
+    flex-shrink: 0;
+    font-size: .85rem;
+  }
+
+  .sub-item {
+    display: flex;
+    gap: .6rem;
+    margin: .25rem 0 .25rem 2rem;
+    font-size: .88rem;
+    line-height: 1.6;
+    color: #3A4A5A;
+  }
+  .sub-ref {
+    font-weight: 600;
+    color: var(--teal-mid);
+    min-width: 22px;
+    flex-shrink: 0;
+  }
+
+  .caps-clause {
+    background: #FFF3F3;
+    border-left: 3px solid #C0392B;
+    border-radius: 0 6px 6px 0;
+    padding: .65rem 1rem;
+    font-size: .83rem;
+    font-weight: 700;
+    color: #7B2D2D;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .6rem;
+  }
+  .crisis-box {
+    background: var(--warn-bg);
+    border: 1.5px solid var(--warn-border);
+    border-radius: 8px;
+    padding: .85rem 1.1rem;
+    font-size: .87rem;
+    line-height: 1.65;
+    margin: .6rem 0;
+    color: #5A4500;
+  }
+  .crisis-box b { color: #3D2E00; }
+
+  .tier-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .87rem;
+    margin: .5rem 0;
+  }
+  .tier-table th {
+    background: var(--teal-dark);
+    color: #fff;
+    padding: .55rem .85rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: .8rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .tier-table td {
+    padding: .5rem .85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .tier-table tr:nth-child(odd) td { background: var(--teal-pale); }
+  .tier-table tr:last-child td { border-bottom: none; }
+  .tier-price { font-weight: 700; color: var(--teal-dark); white-space: nowrap; }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    background: var(--teal-dark);
+    border-left: 4px solid var(--teal);
+    border-right: 4px solid var(--teal);
+    padding: .65rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .progress-label { font-size: .78rem; color: var(--teal-mid); font-weight: 600; white-space: nowrap; }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,.12);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--teal-mid), #5EEDED);
+    border-radius: 4px;
+    transition: width .3s ease;
+  }
+  .progress-pct { font-size: .78rem; color: #fff; font-weight: 700; min-width: 36px; text-align: right; }
+
+  /* ── ACCEPTANCE PANEL ── */
+  .acceptance-panel {
+    background: var(--white);
+    border-left: 4px solid var(--teal);
+    border-right: 4px solid var(--teal);
+    border-bottom: 4px solid var(--teal);
+    border-radius: 0 0 18px 18px;
+    padding: 1.6rem 2.5rem 2rem;
+    box-shadow: var(--shadow);
+  }
+
+  .checkboxes { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 1.3rem; }
+  .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .check-row input[type="checkbox"] { display: none; }
+  .check-box {
+    width: 20px; height: 20px;
+    border: 2px solid var(--rule);
+    border-radius: 5px;
+    flex-shrink: 0;
+    margin-top: .1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+    background: #fff;
+  }
+  .check-row input:checked ~ .check-label .check-box,
+  .check-row.checked .check-box {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+  .check-mark {
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .check-row.checked .check-mark { opacity: 1; }
+  .check-text {
+    font-size: .88rem;
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .check-text a { color: var(--teal); text-decoration: underline; cursor: pointer; }
+
+  .action-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .75rem 1.8rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .02em;
+  }
+  .btn-primary {
+    background: var(--teal-dark);
+    color: #fff;
+    flex: 1;
+    opacity: .4;
+    pointer-events: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary.active {
+    opacity: 1;
+    pointer-events: all;
+    background: linear-gradient(135deg, var(--teal-dark), var(--teal));
+    box-shadow: 0 4px 18px rgba(26,122,122,.35);
+  }
+  .btn-primary.active:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(26,122,122,.45); }
+  .btn-primary.active:active { transform: translateY(0); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid var(--rule);
+    padding: .75rem 1.2rem;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-pale); }
+
+  .download-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .9rem;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+  .download-row a {
+    color: var(--teal);
+    font-weight: 600;
+    text-decoration: none;
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .download-row a:hover { text-decoration: underline; }
+
+  /* ── SUCCESS STATE ── */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,61,61,.7);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .success-overlay.show { display: flex; }
+  .success-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: pop .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop {
+    from { transform: scale(.85); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .success-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+    box-shadow: 0 6px 24px rgba(42,191,191,.45);
+  }
+  .success-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--teal-dark);
+    margin-bottom: .5rem;
+  }
+  .success-card p {
+    font-size: .9rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 1.4rem;
+  }
+  .success-meta {
+    background: var(--teal-pale);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    font-size: .82rem;
+    color: var(--teal-dark);
+    margin-bottom: 1.4rem;
+    text-align: left;
+  }
+  .success-meta div { display: flex; justify-content: space-between; padding: .15rem 0; }
+  .success-meta span:first-child { color: var(--muted); }
+  .success-meta span:last-child { font-weight: 600; }
+  .btn-close-success {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .75rem 2rem;
+    border-radius: 10px;
+    border: none;
+    background: var(--teal-dark);
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    transition: background .2s;
+  }
+  .btn-close-success:hover { background: var(--teal); }
+
+  @media (max-width: 540px) {
+    .meta-bar { flex-wrap: wrap; gap: .6rem; padding: .7rem 1.2rem; }
+    .scroll-box { padding: 0 1.2rem 1rem; }
+    .acceptance-panel { padding: 1.2rem 1.2rem 1.5rem; }
+    .page-header { padding: 1.4rem 1.2rem; }
+    .badge { display: none; }
+    .progress-wrap { padding: .65rem 1.2rem; }
+    .action-row { flex-direction: column; }
+    .btn-secondary { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="13" stroke="white" stroke-width="1.5" stroke-opacity=".4"/>
+        <path d="M7 14C7 10.134 10.134 7 14 7C17.866 7 21 10.134 21 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 17.5C10.5 15.5 12 14 14 14C16 14 17.5 15.5 18 17.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="14" cy="11.5" r="1.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>MANAS360</h1>
+      <p>Mental Wellness Platform</p>
+    </div>
+    <div class="badge">Terms of Service</div>
+  </div>
+
+  <!-- META BAR -->
+  <div class="meta-bar">
+    <span><b>Effective Date:</b> [To be confirmed]</span>
+    <span><b>Last Updated:</b> February 2026</span>
+    <span><b>Governed by:</b> Laws of India</span>
+  </div>
+
+  <!-- SCROLL BOX -->
+  <div class="scroll-wrapper">
+    <div class="scroll-fade-top"></div>
+    <div class="scroll-box" id="scrollBox">
+
+      <!-- 1. ACCEPTANCE -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">1</span> Acceptance of Terms</div>
+        <div class="clause"><span class="clause-ref">1.1</span><span>These Terms of Service ("Terms") constitute a legally binding electronic agreement between you ("User," "you," or "your") and <strong>MANAS360 Mental Wellness Pvt. Ltd.</strong>, a company incorporated under the Companies Act, 2013, having its registered office at 6, MLV, Talaghatpura, Kanakapura Road, Bengaluru 560062, Karnataka, India ("MANAS360," "we," "us," or "our").</span></div>
+        <div class="clause"><span class="clause-ref">1.2</span><span>By accessing, browsing, registering on or otherwise using the MANAS360 platform, including the website (www.manas360.com), mobile application, IVR system, WhatsApp bot, or any associated services (collectively, the "Platform"), you acknowledge that you have read, understood, and agree to be bound by these Terms, the Privacy Policy, and all applicable laws and regulations.</span></div>
+        <div class="clause"><span class="clause-ref">1.3</span><span>If you do not agree to these Terms, you must not access or use the Platform.</span></div>
+        <div class="clause"><span class="clause-ref">1.4</span><span>MANAS360 reserves the right to revise or update these Terms from time to time. Any such revisions shall become effective upon publication on the Platform. Continued access or use after such publication shall constitute deemed acceptance of the revised Terms.</span></div>
+      </div>
+
+      <!-- 2. ELIGIBILITY -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">2</span> Eligibility</div>
+        <div class="clause"><span class="clause-ref">2.1</span><span>You must be at least 18 years of age to use or access the Platform independently. Users between 13 and 18 years may access the Platform solely upon obtaining verifiable consent from a parent or lawful guardian.</span></div>
+        <div class="clause"><span class="clause-ref">2.2</span><span>By using the Platform, you represent that you have the legal capacity to enter into a binding agreement under the Indian Contract Act, 1872.</span></div>
+        <div class="clause"><span class="clause-ref">2.3</span><span>Users are required to furnish true, accurate, up-to-date, and complete information at registration and to promptly update such information as required.</span></div>
+      </div>
+
+      <!-- 3. SERVICES -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">3</span> Description of Services</div>
+        <div class="clause"><span class="clause-ref">3.1</span><span>MANAS360 is a technology-enabled digital mental wellness platform that provides:</span></div>
+        <div class="sub-item"><span class="sub-ref">(a)</span><span>AI-enabled mental health support available 24/7 in multiple languages (Hindi, English, Kannada, Tamil, Telugu);</span></div>
+        <div class="sub-item"><span class="sub-ref">(b)</span><span>Scheduling and access to licensed therapists, psychiatrists, psychologists, and mental health coaches for teleconsultations via video, audio, or chat;</span></div>
+        <div class="sub-item"><span class="sub-ref">(c)</span><span>Digital self-assessment tools including PHQ-9 and GAD-7 screening instruments and culturally adapted wellness assessments;</span></div>
+        <div class="sub-item"><span class="sub-ref">(d)</span><span>Structured CBT-based learning modules and guided therapeutic exercises;</span></div>
+        <div class="sub-item"><span class="sub-ref">(e)</span><span>Sound therapy, mindfulness, and wellness content;</span></div>
+        <div class="sub-item"><span class="sub-ref">(f)</span><span>Corporate, institutional, and employee wellness solutions;</span></div>
+        <div class="sub-item"><span class="sub-ref">(g)</span><span>Automated risk-flagging tools and referral information to crisis helplines, where appropriate.</span></div>
+        <div class="clause"><span class="clause-ref">3.2</span><span>MANAS360 operates solely as a technology platform and aggregator. MANAS360 does not itself provide medical advice, diagnosis, psychiatric treatment, or clinical care.</span></div>
+        <div class="clause"><span class="clause-ref">3.3</span><span>Any professional engagement initiated through the Platform constitutes a direct and independent relationship between the User and the concerned Provider. MANAS360 does not control, direct, or interfere with the clinical judgment or services rendered by any Provider.</span></div>
+      </div>
+
+      <!-- 4. USER ACCOUNTS -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">4</span> User Accounts</div>
+        <div class="clause"><span class="clause-ref">4.1</span><span>You are solely responsible for maintaining the confidentiality and security of your login credentials. You agree to immediately notify MANAS360 of any actual or suspected unauthorized access or security breach.</span></div>
+        <div class="clause"><span class="clause-ref">4.2</span><span>You shall not share your account with any other person, create multiple accounts, or use another person's account.</span></div>
+        <div class="clause"><span class="clause-ref">4.3</span><span>MANAS360 may suspend or terminate your right to access the Platform if you violate these Terms or for security, compliance, or operational reasons.</span></div>
+      </div>
+
+      <!-- 5. SUBSCRIPTION -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">5</span> Subscription Plans &amp; Fees</div>
+        <div class="clause"><span class="clause-ref">5.1</span><span>MANAS360 offers the following subscription tiers:</span></div>
+        <table class="tier-table">
+          <thead><tr><th>Tier</th><th>Price</th><th>Features</th></tr></thead>
+          <tbody>
+            <tr><td>Free Tier</td><td class="tier-price">₹0</td><td>Up to 3 AI chat sessions/day, basic mood tracking, PHQ-9 assessment access</td></tr>
+            <tr><td>Premium</td><td class="tier-price">₹299/month</td><td>Unlimited AI chat, sound therapy, progress reports, priority booking</td></tr>
+            <tr><td>Annual Premium</td><td class="tier-price">₹2,999/year</td><td>All Premium features + 2 complimentary therapy sessions + AR therapy access</td></tr>
+          </tbody>
+        </table>
+        <div class="clause"><span class="clause-ref">5.2</span><span>Fees for professional consultations are determined independently by Providers and displayed at booking. Standard sessions range from <strong>₹300 to ₹2,000</strong> per session.</span></div>
+        <div class="clause"><span class="clause-ref">5.3</span><span>All fees are in Indian Rupees (₹) and inclusive of applicable GST unless stated otherwise.</span></div>
+        <div class="clause"><span class="clause-ref">5.4</span><span>Payments are processed through PhonePe and accepted via UPI, debit/credit cards, net banking, or digital wallets. MANAS360 shall not be liable for payment gateway failures beyond its reasonable control.</span></div>
+      </div>
+
+      <!-- 6. PLATFORM LIMITATIONS -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">6</span> Platform Role &amp; Limitations</div>
+        <div class="clause"><span class="clause-ref">6.1</span><span>MANAS360 is <strong>NOT</strong> a healthcare provider, hospital, psychiatric establishment, or medical institution. We are a technology intermediary platform that facilitates access to independent mental health professionals.</span></div>
+        <div class="clause"><span class="clause-ref">6.2</span><span>The Platform does not provide medical advice, diagnosis, prescription, or treatment. Any clinical decisions are solely those of the concerned Provider.</span></div>
+        <div class="clause"><span class="clause-ref">6.3</span><span>MANAS360 does not guarantee specific mental health outcomes or results.</span></div>
+        <div class="clause"><span class="clause-ref">6.4</span><span>In case of a medical or psychiatric emergency, call <strong>112</strong> (India Emergency Services) or proceed to the nearest hospital immediately. The Platform is not a substitute for emergency medical services.</span></div>
+        <div class="crisis-box">
+          <strong>⚠ Crisis Helplines</strong> — For informational purposes only. MANAS360 is not affiliated with these services.<br/>
+          • iCall: <strong>9152987821</strong><br/>
+          • Vandrevala Foundation: <strong>1860-2662-345</strong><br/>
+          • AASRA: <strong>9820466726</strong>
+        </div>
+      </div>
+
+      <!-- 7. IP -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">7</span> Intellectual Property</div>
+        <div class="clause"><span class="clause-ref">7.1</span><span>All content, materials, features, software, AI models, text, graphics, logos, trademarks, audio, video, assessments, and therapeutic modules on the Platform are the exclusive property of MANAS360 or its licensors, protected under the Copyright Act, 1957 and applicable IP laws. Nothing herein transfers any ownership rights to Users.</span></div>
+        <div class="clause"><span class="clause-ref">7.2</span><span>MANAS360 grants Users a limited, revocable, non-exclusive, non-transferable license to access and use the Platform solely for personal, lawful, and non-commercial purposes.</span></div>
+        <div class="clause"><span class="clause-ref">7.3</span><span>Users shall not copy, reproduce, distribute, modify, or create derivative works from any Platform Content without prior written consent.</span></div>
+      </div>
+
+      <!-- 8. USER CONDUCT -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">8</span> User Conduct</div>
+        <div class="clause"><span class="clause-ref">8.1</span><span>Users agree not to:</span></div>
+        <div class="sub-item"><span class="sub-ref">(a)</span><span>Use the Platform for unlawful, fraudulent, or abusive purpose;</span></div>
+        <div class="sub-item"><span class="sub-ref">(b)</span><span>Impersonate any individual or entity;</span></div>
+        <div class="sub-item"><span class="sub-ref">(c)</span><span>Upload harmful, malicious or defamatory content;</span></div>
+        <div class="sub-item"><span class="sub-ref">(d)</span><span>Attempt to gain unauthorized access to Platform systems, servers, or databases;</span></div>
+        <div class="sub-item"><span class="sub-ref">(e)</span><span>Interfere with the Platform's operation;</span></div>
+        <div class="sub-item"><span class="sub-ref">(f)</span><span>Share Provider contact information outside the Platform;</span></div>
+        <div class="sub-item"><span class="sub-ref">(g)</span><span>Record therapy sessions without Provider consent;</span></div>
+        <div class="sub-item"><span class="sub-ref">(h)</span><span>Upload or transmit viruses, malware, or harmful code.</span></div>
+      </div>
+
+      <!-- 9. LIABILITY -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">9</span> Limitation of Liability</div>
+        <div class="caps-clause">9.1 — TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, MANAS360 SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OR ACCESS OF THE PLATFORM.</div>
+        <div class="clause"><span class="clause-ref">9.2</span><span>MANAS360's aggregate liability for all claims shall not exceed the total amount paid by the User to MANAS360 in the twelve (12) months preceding the event giving rise to the claim.</span></div>
+        <div class="clause"><span class="clause-ref">9.3</span><span>MANAS360 shall not be liable for the acts, omissions, negligence, misconduct, or treatment decisions of independent Providers.</span></div>
+      </div>
+
+      <!-- 10. INDEMNIFICATION -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">10</span> Indemnification</div>
+        <div class="clause"><span class="clause-ref">10.1</span><span>You agree to indemnify and hold harmless MANAS360 and its directors, officers, employees, and agents from any claims, liabilities, damages, losses, or expenses arising from: (a) your violation of these Terms; (b) your misuse of the Platform; (c) your violation of any third-party rights; (d) breach of applicable laws.</span></div>
+      </div>
+
+      <!-- 11. DISPUTE -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">11</span> Dispute Resolution</div>
+        <div class="clause"><span class="clause-ref">11.1</span><span>Any dispute arising from these Terms shall first be resolved through good-faith negotiation for a period of <strong>30 days</strong>.</span></div>
+        <div class="clause"><span class="clause-ref">11.2</span><span>Unresolved disputes shall be referred to arbitration under the <strong>Arbitration and Conciliation Act, 1996</strong>, with a sole arbitrator appointed mutually. The seat of arbitration shall be <strong>Bengaluru, Karnataka</strong>.</span></div>
+        <div class="clause"><span class="clause-ref">11.3</span><span>The arbitration shall be conducted in English and the award shall be final and binding.</span></div>
+      </div>
+
+      <!-- 12. GOVERNING LAW -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">12</span> Governing Law &amp; Jurisdiction</div>
+        <div class="clause"><span class="clause-ref">12.1</span><span>These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>.</span></div>
+        <div class="clause"><span class="clause-ref">12.2</span><span>Subject to the arbitration clause above, the courts of <strong>Bengaluru, Karnataka</strong> shall have exclusive jurisdiction.</span></div>
+      </div>
+
+      <!-- 13. SEVERABILITY -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">13</span> Severability</div>
+        <div class="clause"><span class="clause-ref">13.1</span><span>If any provision is held invalid or unenforceable, such provision shall be severed to the minimum extent necessary and the remaining provisions shall continue in full force and effect.</span></div>
+      </div>
+
+      <!-- 14. ENTIRE AGREEMENT -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">14</span> Entire Agreement</div>
+        <div class="clause"><span class="clause-ref">14.1</span><span>These Terms, together with the Privacy Policy and other referenced policies, constitute the complete agreement between you and MANAS360 and supersede all prior understandings.</span></div>
+      </div>
+
+      <!-- 15. CONTACT -->
+      <div class="tos-section">
+        <div class="section-head"><span class="num">15</span> Contact Information</div>
+        <div class="clause"><span class="clause-ref"></span><span>
+          <strong>MANAS360 Mental Wellness Pvt. Ltd.</strong><br/>
+          6, MLV, Talaghatpura, Kanakapura Road,<br/>
+          Bengaluru 560062, Karnataka, India<br/>
+          Email: <a href="mailto:Legal@manas360.com">Legal@manas360.com</a><br/>
+          Phone: +91-80 6940 9284 &nbsp;|&nbsp; +91-8944 944 2180<br/>
+          CIN: U86900KA2026PTC215013 &nbsp;|&nbsp; GSTIN: 29AAUCM4417GIZ1<br/>
+          DPIIT No.: DIPP244635 &nbsp;|&nbsp; UDHYAM: KR-03-0654344<br/>
+          Grievance Officer: Legal@manas360.com
+        </span></div>
+      </div>
+
+    </div><!-- /scroll-box -->
+    <div class="scroll-fade-bot"></div>
+  </div>
+
+</div><!-- /shell -->
+</body>
+</html>

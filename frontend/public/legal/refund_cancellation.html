@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MANAS360 — Refund & Cancellation Policy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal-dark:  #0D3D3D;
+    --teal:       #1A7A7A;
+    --teal-mid:   #2ABFBF;
+    --teal-light: #E8F5F5;
+    --teal-pale:  #F2FAFA;
+    --text:       #1A1A2E;
+    --muted:      #5A6A7A;
+    --rule:       #C8DEDE;
+    --white:      #FFFFFF;
+    --shadow:     0 4px 32px rgba(26,122,122,.13);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(145deg, #EAF6F6 0%, #F7FDFB 60%, #E0F4F4 100%);
+    min-height: 100vh;
+    display: flex; justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+    color: var(--text);
+  }
+
+  .shell { width: 100%; max-width: 820px; display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .page-header {
+    background: var(--teal-dark); border-radius: 18px 18px 0 0;
+    padding: 2rem 2.5rem 1.6rem;
+    display: flex; align-items: center; gap: 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.22) 0%, transparent 70%);
+  }
+  .page-header::after {
+    content: ''; position: absolute; right: 80px; bottom: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.12) 0%, transparent 70%);
+  }
+  .logo-mark {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 2px 16px rgba(42,191,191,.4);
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif; font-size: 1.7rem;
+    color: #fff; letter-spacing: -.02em; line-height: 1.1;
+  }
+  .header-text p {
+    font-size: .8rem; color: var(--teal-mid); letter-spacing: .08em;
+    text-transform: uppercase; margin-top: .25rem; font-weight: 500;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(42,191,191,.15); border: 1px solid rgba(42,191,191,.35);
+    color: var(--teal-mid); font-size: .72rem; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: .35rem .9rem; border-radius: 30px; white-space: nowrap;
+  }
+
+  /* META BAR */
+  .meta-bar {
+    background: var(--teal-light);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    padding: .7rem 2.5rem; display: flex; gap: 2rem; flex-wrap: wrap;
+    font-size: .82rem; color: var(--muted); font-weight: 500;
+  }
+  .meta-bar span b { color: var(--teal-dark); }
+
+  /* CONTENT CARD */
+  .content-card {
+    background: var(--white);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    border-bottom: 4px solid var(--teal); border-radius: 0 0 18px 18px;
+    padding: 2rem 2.5rem 2.5rem; box-shadow: var(--shadow);
+  }
+
+  /* SECTION HEADS */
+  .section-head {
+    background: var(--teal-dark); color: #fff;
+    font-size: .82rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; padding: .5rem 1rem; border-radius: 6px;
+    margin-bottom: .75rem; margin-top: 1.8rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-head .num {
+    background: var(--teal-mid); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700; flex-shrink: 0;
+  }
+  .tos-section:first-of-type .section-head { margin-top: 0; }
+
+  /* CLAUSES */
+  .clause {
+    display: flex; gap: .7rem; margin-bottom: .65rem;
+    font-size: .9rem; line-height: 1.65; color: var(--text); text-align: justify;
+  }
+  .clause-ref {
+    font-weight: 700; color: var(--teal); min-width: 32px;
+    padding-top: .02em; flex-shrink: 0; font-size: .85rem;
+  }
+
+  /* PURPOSE BANNER */
+  .purpose-banner {
+    background: var(--teal-pale); border-left: 4px solid var(--teal);
+    border-radius: 0 10px 10px 0; padding: 1rem 1.3rem;
+    font-size: .9rem; line-height: 1.7; color: var(--text); margin-bottom: .5rem;
+  }
+  .purpose-banner strong { color: var(--teal-dark); }
+
+  /* CANCELLATION TIMELINE */
+  .timeline { display: flex; flex-direction: column; gap: 0; margin: .75rem 0; position: relative; }
+  .timeline::before {
+    content: ''; position: absolute; left: 17px; top: 20px;
+    width: 2px; bottom: 20px;
+    background: linear-gradient(to bottom, #22C55E, #F59E0B, #EF4444, #7C3AED, var(--teal), #3B82F6);
+  }
+  .timeline-item {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: .75rem .75rem .75rem 0; position: relative;
+  }
+  .tl-dot {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem; position: relative; z-index: 1;
+    border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  }
+  .tl-dot.green  { background: #DCFCE7; }
+  .tl-dot.amber  { background: #FEF3C7; }
+  .tl-dot.orange { background: #FEF0E7; }
+  .tl-dot.red    { background: #FEE2E2; }
+  .tl-dot.teal   { background: var(--teal-light); }
+  .tl-dot.blue   { background: #DBEAFE; }
+
+  .tl-body {
+    flex: 1; background: #fff; border: 1.5px solid var(--rule);
+    border-radius: 10px; padding: .75rem 1rem; margin-top: .1rem;
+  }
+  .tl-body.green  { border-color: #86EFAC; background: #F0FDF4; }
+  .tl-body.amber  { border-color: #FCD34D; background: #FFFBEB; }
+  .tl-body.orange { border-color: #FDB897; background: #FFF7F0; }
+  .tl-body.red    { border-color: #FCA5A5; background: #FEF2F2; }
+  .tl-body.teal   { border-color: var(--rule); background: var(--teal-pale); }
+  .tl-body.blue   { border-color: #93C5FD; background: #EEF6FF; }
+
+  .tl-trigger {
+    font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: .2rem;
+  }
+  .green  .tl-trigger { color: #15803D; }
+  .amber  .tl-trigger { color: #92400E; }
+  .orange .tl-trigger { color: #C2410C; }
+  .red    .tl-trigger { color: #991B1B; }
+  .teal   .tl-trigger { color: var(--teal); }
+  .blue   .tl-trigger { color: #1D4ED8; }
+
+  .tl-title { font-size: .88rem; font-weight: 700; margin-bottom: .2rem; color: var(--text); }
+  .tl-body p { font-size: .84rem; line-height: 1.55; color: var(--muted); }
+
+  .outcome-pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .45rem; }
+  .pill {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .73rem; font-weight: 700; padding: .2rem .65rem;
+    border-radius: 20px; letter-spacing: .03em;
+  }
+  .pill.full-refund  { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+  .pill.half-refund  { background: #FEF9C3; color: #854D0E; border: 1px solid #FDE68A; }
+  .pill.wallet       { background: #DBEAFE; color: #1E3A8A; border: 1px solid #93C5FD; }
+  .pill.no-refund    { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+  .pill.reschedule   { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; }
+
+  /* SUBSCRIPTION TABLE */
+  .sub-table {
+    width: 100%; border-collapse: collapse; font-size: .87rem; margin: .65rem 0 .8rem;
+  }
+  .sub-table th {
+    background: var(--teal-dark); color: #fff; padding: .55rem .85rem;
+    text-align: left; font-weight: 600; font-size: .78rem;
+    letter-spacing: .05em; text-transform: uppercase;
+  }
+  .sub-table td {
+    padding: .52rem .85rem; border-bottom: 1px solid var(--rule);
+    vertical-align: top; line-height: 1.55;
+  }
+  .sub-table tr:nth-child(odd) td { background: var(--teal-pale); }
+  .sub-table tr:last-child td { border-bottom: none; }
+  .sub-table td:first-child { font-weight: 600; color: var(--teal-dark); width: 38%; }
+
+  /* WALLET CARDS */
+  .wallet-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin: .7rem 0;
+  }
+  .wallet-card {
+    background: var(--teal-pale); border: 1px solid var(--rule);
+    border-radius: 10px; padding: .9rem 1rem; text-align: center;
+  }
+  .wallet-card .w-icon { font-size: 1.4rem; margin-bottom: .35rem; display: block; }
+  .wallet-card h4 { font-size: .83rem; font-weight: 700; color: var(--teal-dark); margin-bottom: .25rem; }
+  .wallet-card p { font-size: .8rem; line-height: 1.5; color: var(--muted); }
+
+  /* REFUND PROCESSING GRID */
+  .process-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin: .65rem 0;
+  }
+  .process-card {
+    display: flex; gap: .75rem; align-items: flex-start;
+    background: var(--teal-pale); border: 1px solid var(--rule);
+    border-radius: 9px; padding: .85rem 1rem;
+  }
+  .process-card .pc-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: .95rem;
+  }
+  .process-card h4 { font-size: .84rem; font-weight: 700; color: var(--teal-dark); margin-bottom: .18rem; }
+  .process-card p { font-size: .81rem; line-height: 1.5; color: var(--muted); }
+
+  /* CALLOUT BOXES */
+  .warn-box {
+    background: #FFF9EC; border: 1.5px solid #E6B800;
+    border-radius: 8px; padding: .85rem 1.1rem;
+    font-size: .87rem; line-height: 1.65; margin: .6rem 0; color: #5A4500;
+  }
+  .info-box {
+    background: #EEF6FF; border-left: 3px solid #3B82F6;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0 .8rem; color: #1e3a5f;
+  }
+  .info-box a { color: var(--teal); font-weight: 600; text-decoration: none; }
+  .deny-box {
+    background: #FEF2F2; border-left: 3px solid #EF4444;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0; color: #7F1D1D;
+  }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 2rem; padding-top: 1rem;
+    border-top: 1.5px solid var(--rule);
+    font-size: .8rem; color: var(--muted); text-align: center; line-height: 1.7;
+  }
+  .doc-footer a { color: var(--teal); text-decoration: none; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .page-header { padding: 1.4rem 1.2rem; }
+    .badge { display: none; }
+    .meta-bar { padding: .7rem 1.2rem; }
+    .content-card { padding: 1.2rem 1.2rem 1.8rem; }
+    .wallet-grid { grid-template-columns: 1fr; }
+    .process-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" stroke="white" stroke-width="1.5" stroke-opacity=".4"/>
+        <path d="M7 14C7 10.134 10.134 7 14 7C17.866 7 21 10.134 21 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 17.5C10.5 15.5 12 14 14 14C16 14 17.5 15.5 18 17.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="14" cy="11.5" r="1.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>MANAS360</h1>
+      <p>Mental Wellness Platform</p>
+    </div>
+    <div class="badge">Refund &amp; Cancellation Policy</div>
+  </div>
+
+  <!-- META BAR -->
+  <div class="meta-bar">
+    <span><b>Document:</b> Refund &amp; Cancellation Policy (A7)</span>
+    <span><b>Applies to:</b> All Paid Services</span>
+    <span><b>Governed by:</b> Laws of India</span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-card">
+
+    <!-- 1. PURPOSE & SCOPE -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">1</span> Purpose &amp; Scope</div>
+      <div class="purpose-banner">
+        <strong>1.1</strong>&nbsp;&nbsp;This Refund &amp; Cancellation Policy governs all payments made by Users while accessing or using the MANAS360 Platform, including <strong>therapy sessions, subscriptions, assessments, digital programs, and other paid services</strong>.<br/><br/>
+        <strong>1.2</strong>&nbsp;&nbsp;By booking a session, purchasing a subscription, or making any payment on the Platform, the User agrees to be bound by this Policy.
+      </div>
+    </div>
+
+    <!-- 2. SESSION CANCELLATIONS -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">2</span> Session Cancellations</div>
+
+      <div class="timeline">
+
+        <div class="timeline-item">
+          <div class="tl-dot green">✅</div>
+          <div class="tl-body green">
+            <div class="tl-trigger">Clause 2.1 · By Patient</div>
+            <div class="tl-title">More than 24 hours before session</div>
+            <p>Full refund to original payment method within 5–7 business days.</p>
+            <div class="outcome-pills">
+              <span class="pill full-refund">💚 Full Refund</span>
+              <span class="pill">⏱ 5–7 Business Days</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-dot amber">⚡</div>
+          <div class="tl-body amber">
+            <div class="tl-trigger">Clause 2.2 · By Patient</div>
+            <div class="tl-title">12 to 24 hours before session</div>
+            <p>50% refund to original payment method. Remaining 50% credited as MANAS360 wallet balance.</p>
+            <div class="outcome-pills">
+              <span class="pill half-refund">💛 50% Refund</span>
+              <span class="pill wallet">💙 50% Wallet Credit</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-dot orange">⏰</div>
+          <div class="tl-body orange">
+            <div class="tl-trigger">Clause 2.3 · By Patient</div>
+            <div class="tl-title">Less than 12 hours before session</div>
+            <p>No refund. Full amount credited as MANAS360 wallet balance, valid for 90 days.</p>
+            <div class="outcome-pills">
+              <span class="pill no-refund">❌ No Refund</span>
+              <span class="pill wallet">💙 100% Wallet Credit (90 days)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-dot red">🚫</div>
+          <div class="tl-body red">
+            <div class="tl-trigger">Clause 2.4 · By Patient</div>
+            <div class="tl-title">No-show (no cancellation made)</div>
+            <p>No refund. Provider receives full session fee as compensation for reserved time.</p>
+            <div class="outcome-pills">
+              <span class="pill no-refund">❌ No Refund</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-dot teal">👤</div>
+          <div class="tl-body teal">
+            <div class="tl-trigger">Clause 2.5 · By Provider</div>
+            <div class="tl-title">Provider cancels session</div>
+            <p>Full refund to patient's original payment method. Provider's reliability score may be affected.</p>
+            <div class="outcome-pills">
+              <span class="pill full-refund">💚 Full Refund to Patient</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-dot blue">⚙️</div>
+          <div class="tl-body blue">
+            <div class="tl-trigger">Clause 2.6 · Technical Failure</div>
+            <div class="tl-title">Platform-side technical failure</div>
+            <p>Full refund or complimentary rescheduled session — at patient's choice.</p>
+            <div class="outcome-pills">
+              <span class="pill full-refund">💚 Full Refund</span>
+              <span class="pill reschedule">🔄 Free Reschedule</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3. SUBSCRIPTION CANCELLATIONS -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">3</span> Subscription Cancellations</div>
+
+      <table class="sub-table">
+        <thead><tr><th>Scenario</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Cancel at any time</td>
+            <td>Subscription remains active until end of current billing period. No prorated refund for unused days.</td>
+          </tr>
+          <tr>
+            <td>Annual plan — cancel within first 14 days</td>
+            <td>Full refund minus the cost of any sessions attended during that period.</td>
+          </tr>
+          <tr>
+            <td>Annual plan — cancel after 14 days</td>
+            <td>No refund. Access continues until billing period end.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        ⚙️ To cancel your subscription, navigate to <strong>Settings &gt; Subscription &gt; Cancel</strong> within the Platform.
+      </div>
+    </div>
+
+    <!-- 4. REFUND PROCESSING -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">4</span> Refund Processing</div>
+
+      <div class="process-grid">
+        <div class="process-card">
+          <div class="pc-icon">💳</div>
+          <div>
+            <h4>Payment Method</h4>
+            <p>Refunds are processed via the original payment method — UPI, card, or net banking.</p>
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="pc-icon">⏱</div>
+          <div>
+            <h4>Processing Time</h4>
+            <p>5–7 business days for bank refunds. Instant for MANAS360 wallet credits.</p>
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="pc-icon">📱</div>
+          <div>
+            <h4>Payment Gateway</h4>
+            <p>PhonePe transaction fees are <strong>non-refundable</strong> in all cases.</p>
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="pc-icon">🧾</div>
+          <div>
+            <h4>Refund Confirmation</h4>
+            <p>An email confirmation is sent once a refund is initiated from the Platform.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. WALLET CREDITS -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">5</span> Wallet Credits</div>
+
+      <div class="wallet-grid">
+        <div class="wallet-card">
+          <span class="w-icon">🛒</span>
+          <h4>Usable For</h4>
+          <p>Sessions, subscriptions, and premium content on MANAS360.</p>
+        </div>
+        <div class="wallet-card">
+          <span class="w-icon">⏳</span>
+          <h4>Expiry</h4>
+          <p>Wallet credits expire <strong>90 days</strong> from the date of issuance.</p>
+        </div>
+        <div class="wallet-card">
+          <span class="w-icon">🔒</span>
+          <h4>Restrictions</h4>
+          <p>Non-transferable. Cannot be redeemed for cash under any circumstance.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. FRAUD PREVENTION -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">6</span> Fraud Prevention</div>
+      <div class="clause">
+        <span class="clause-ref">6.1</span>
+        <span>MANAS360 reserves the right to withhold refunds where:</span>
+      </div>
+      <div class="deny-box">
+        🚫 <strong>Fraudulent activity</strong> is suspected in connection with the booking or payment; or<br/>
+        🚫 <strong>Repeated refund abuse</strong> is detected based on historical transaction patterns.
+      </div>
+      <div class="warn-box">
+        ⚠️ Users found to be engaging in fraudulent refund activity may have their accounts suspended or permanently banned, and may be reported to law enforcement in accordance with applicable laws.
+      </div>
+    </div>
+
+    <!-- 7. DISPUTES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">7</span> Disputes</div>
+      <div class="clause">
+        <span class="clause-ref">7.1</span>
+        <span>Refund disputes may be raised within <strong>30 days</strong> of the transaction date by contacting our support team.</span>
+      </div>
+      <div class="clause">
+        <span class="clause-ref">7.2</span>
+        <span>MANAS360's decision on refund disputes shall be final, subject to the dispute resolution mechanisms set out in the Terms of Service (Document A1).</span>
+      </div>
+      <div class="info-box">
+        📧 To raise a dispute, email <a href="mailto:support@manas360.com">support@manas360.com</a> with your transaction ID, booking details, and reason for dispute within 30 days of the transaction.
+      </div>
+    </div>
+
+    <!-- 8. CHANGES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">8</span> Changes to This Policy</div>
+      <div class="clause">
+        <span class="clause-ref">8.1</span>
+        <span>We may update this Policy periodically to reflect legal, technical, or operational changes. Material changes will be notified via email and in-app notification. Continued accessing or using the Platform after notification constitutes acceptance of the revised Policy.</span>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <strong>MANAS360 Mental Wellness Pvt. Ltd.</strong> · 6, MLV, Talaghatpura, Kanakapura Road, Bengaluru 560062, Karnataka, India<br/>
+      CIN: U86900KA2026PTC215013 · GSTIN: 29AAUCM4417GIZ1 · DPIIT: DIPP244635 · UDHYAM: KR-03-0654344<br/>
+      <a href="mailto:Legal@manas360.com">Legal@manas360.com</a> · +91-80 6940 9284 · +91-8944 944 2180<br/><br/>
+      This document is confidential and intended solely for the use of MANAS360 platform users.<br/>
+      © 2026 MANAS360 Mental Wellness Pvt. Ltd. All rights reserved.
+    </div>
+
+  </div><!-- /content-card -->
+</div><!-- /shell -->
+</body>
+</html>

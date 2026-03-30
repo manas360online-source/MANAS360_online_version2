@@ -1,7 +1,8 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, UIEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import Modal from '../ui/Modal';
 
 type PublicSignupRole = 'patient' | 'therapist' | 'psychiatrist' | 'coach';
 
@@ -14,6 +15,8 @@ type RegisterFormProps = {
 	error?: string | null;
 };
 
+const TERMS_ACCEPTED_KEY = 'termsAccepted';
+
 export default function RegisterForm({ onSubmit, loading = false, error = null }: RegisterFormProps) {
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
@@ -24,8 +27,18 @@ export default function RegisterForm({ onSubmit, loading = false, error = null }
 	const [paymentMethod, setPaymentMethod] = useState<string>('UPI');
 	const [step, setStep] = useState<RegistrationStep>(1);
 	const [localError, setLocalError] = useState<string | null>(null);
+	const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+	const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+	const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+	const [checkboxChecked, setCheckboxChecked] = useState(false);
+	const [termsAccepted, setTermsAccepted] = useState(false);
+	const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
 	const formError = useMemo(() => localError ?? error, [localError, error]);
+
+	useEffect(() => {
+		setTermsAccepted(localStorage.getItem(TERMS_ACCEPTED_KEY) === 'true');
+	}, []);
 
 	const validateAccountFields = (): boolean => {
 		if (!name.trim() || !email.trim() || !password.trim()) {
@@ -63,11 +76,59 @@ export default function RegisterForm({ onSubmit, loading = false, error = null }
 		});
 	};
 
+	const openTermsModal = () => {
+		setHasScrolledToBottom(false);
+		setCheckboxChecked(false);
+		setIsTermsModalOpen(true);
+	};
+
+	const closeTermsModal = () => {
+		setIsTermsModalOpen(false);
+	};
+
+	const onPdfScroll = (event: UIEvent<HTMLDivElement>) => {
+		const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
+		if (scrollTop + clientHeight >= scrollHeight - 5) {
+			setHasScrolledToBottom(true);
+		}
+	};
+
+	const acceptTerms = () => {
+		setTermsAccepted(true);
+		localStorage.setItem(TERMS_ACCEPTED_KEY, 'true');
+		setLocalError(null);
+		setIsTermsModalOpen(false);
+	};
+
+	const openPrivacyModal = () => {
+		setIsPrivacyModalOpen(true);
+	};
+
+	const closePrivacyModal = () => {
+		setIsPrivacyModalOpen(false);
+	};
+
+	const ensureTermsAccepted = (): boolean => {
+		if (termsAccepted) return true;
+		setLocalError('Please accept the Terms & Conditions before registering.');
+		openTermsModal();
+		return false;
+	};
+
+	const ensurePrivacyAccepted = (): boolean => {
+		if (privacyAccepted) return true;
+		setLocalError('Please accept Privacy Policy before registering.');
+		openTermsModal();
+		return false;
+	};
+
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setLocalError(null);
 
 		if (role !== 'patient') {
+			if (!ensureTermsAccepted()) return;
+			if (!ensurePrivacyAccepted()) return;
 			await submitRegistration();
 			return;
 		}
@@ -87,6 +148,8 @@ export default function RegisterForm({ onSubmit, loading = false, error = null }
 			return;
 		}
 
+		if (!ensureTermsAccepted()) return;
+		if (!ensurePrivacyAccepted()) return;
 		await submitRegistration();
 	};
 
@@ -347,6 +410,17 @@ export default function RegisterForm({ onSubmit, loading = false, error = null }
 				</Button>
 			)}
 
+			<p className="text-center text-xs text-wellness-muted">
+				By continuing, you agree to the{' '}
+				<button
+					type="button"
+					onClick={openTermsModal}
+					className="font-medium text-calm-sage underline underline-offset-2 transition-smooth hover:text-wellness-text"
+				>
+					Terms & Conditions
+				</button>
+			</p>
+
 			<div className="text-sm text-wellness-muted">
 				Already have an account?{' '}
 				<Link to="/auth/login" className="text-calm-sage underline underline-offset-2 hover:text-wellness-text">
@@ -359,6 +433,89 @@ export default function RegisterForm({ onSubmit, loading = false, error = null }
 					{formError}
 				</p>
 			)}
+
+			<Modal isOpen={isTermsModalOpen} onClose={closeTermsModal} title="Terms & Conditions" size="lg">
+				<p className="mb-4 text-sm text-wellness-muted">Please review the document fully before accepting.</p>
+				<div
+					className="h-[460px] overflow-y-auto rounded-2xl border border-calm-sage/20 bg-white"
+					onScroll={onPdfScroll}
+				>
+					<iframe
+  title="MANAS360 Terms of Service"
+  src="/legal/terms.html"
+  className="h-[500px] w-full"
+/>
+				</div>
+
+				<p className={`mt-3 text-xs ${hasScrolledToBottom ? 'text-emerald-700' : 'text-wellness-muted'}`}>
+					{hasScrolledToBottom
+						? 'You have reached the end. You can now accept the Terms & Conditions.'
+						: 'Please scroll to the bottom to enable acceptance'}
+				</p>
+
+				<label
+					className={`mt-3 flex items-start gap-3 rounded-xl border p-3 transition-smooth ${
+						hasScrolledToBottom
+							? 'border-calm-sage/60 bg-calm-sage/10 ring-1 ring-calm-sage/30'
+							: 'border-calm-sage/20 bg-wellness-surface/80 opacity-80'
+					}`}
+				>
+					<input
+						type="checkbox"
+						disabled={!hasScrolledToBottom}
+						checked={checkboxChecked}
+						onChange={(event) => setCheckboxChecked(event.target.checked)}
+						className="mt-1 h-4 w-4 rounded border-calm-sage text-calm-sage focus:ring-calm-sage disabled:cursor-not-allowed"
+					/>
+					<span className="text-sm text-wellness-text">I have read and agree to the Terms & Conditions</span>
+				</label>
+
+				<label className="mt-2 flex items-start gap-3 rounded-xl border border-calm-sage/20 bg-white p-3 transition-smooth">
+					<input
+						type="checkbox"
+						checked={privacyAccepted}
+						onChange={(event) => setPrivacyAccepted(event.target.checked)}
+						className="mt-1 h-4 w-4 rounded border-calm-sage text-calm-sage focus:ring-calm-sage"
+					/>
+					<span className="text-xs text-wellness-text">
+						I agree to the{' '}
+						<button
+							type="button"
+							onClick={openPrivacyModal}
+							className="font-medium text-calm-sage underline underline-offset-2 hover:text-wellness-text"
+						>
+							Privacy Policy
+						</button>
+					</span>
+				</label>
+
+				<div className="mt-4 flex justify-end gap-3">
+					<Button type="button" variant="secondary" onClick={closeTermsModal}>
+						Cancel
+					</Button>
+					<Button
+						type="button"
+						onClick={acceptTerms}
+						disabled={!checkboxChecked}
+						className={checkboxChecked
+							? 'bg-none bg-emerald-600 text-white hover:bg-emerald-700'
+							: 'bg-none bg-slate-300 text-white hover:bg-slate-300 hover:shadow-none hover:-translate-y-0'}
+					>
+						Accept & Continue
+					</Button>
+				</div>
+			</Modal>
+
+			<Modal isOpen={isPrivacyModalOpen} onClose={closePrivacyModal} title="Privacy Policy" size="lg">
+				<p className="mb-3 text-sm text-wellness-muted">Please review our privacy policy document.</p>
+				<div className="h-[460px] overflow-y-auto rounded-2xl border border-calm-sage/20 bg-white">
+					<iframe
+  title="MANAS360 Privacy Policy"
+	src="/legal/policy.html"
+  className="h-[500px] w-full"
+/>
+				</div>
+			</Modal>
 		</form>
 	);
 }

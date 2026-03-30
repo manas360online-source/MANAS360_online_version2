@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -7,9 +7,10 @@ type LoginFormProps = {
 	onSubmit: (identifier: string, password: string) => Promise<void>;
 	loading?: boolean;
 	error?: string | null;
+	afterSubmitContent?: ReactNode;
 };
 
-export default function LoginForm({ onSubmit, loading = false, error = null }: LoginFormProps) {
+export default function LoginForm({ onSubmit, loading = false, error = null, afterSubmitContent }: LoginFormProps) {
 	const [identifier, setIdentifier] = useState('');
 	const [password, setPassword] = useState('');
 
@@ -50,6 +51,7 @@ export default function LoginForm({ onSubmit, loading = false, error = null }: L
 			<Button type="submit" fullWidth loading={loading} className="min-h-[48px]">
 				{loading ? 'Signing in...' : 'Login'}
 			</Button>
+			{afterSubmitContent}
 			<div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
 				<Link to="/auth/forgot-password" className="text-calm-sage underline underline-offset-2 hover:text-wellness-text">
 					Forgot password?
