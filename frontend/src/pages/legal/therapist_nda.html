@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MANAS360 — Therapist Non-Disclosure Agreement</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal-dark:  #0D3D3D;
+    --teal:       #1A7A7A;
+    --teal-mid:   #2ABFBF;
+    --teal-light: #E8F5F5;
+    --teal-pale:  #F2FAFA;
+    --text:       #1A1A2E;
+    --muted:      #5A6A7A;
+    --rule:       #C8DEDE;
+    --white:      #FFFFFF;
+    --shadow:     0 4px 32px rgba(26,122,122,.13);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(145deg, #EAF6F6 0%, #F7FDFB 60%, #E0F4F4 100%);
+    min-height: 100vh;
+    display: flex; justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+    color: var(--text);
+  }
+
+  .shell { width: 100%; max-width: 820px; display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .page-header {
+    background: var(--teal-dark); border-radius: 18px 18px 0 0;
+    padding: 2rem 2.5rem 1.6rem;
+    display: flex; align-items: center; gap: 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.22) 0%, transparent 70%);
+  }
+  .page-header::after {
+    content: ''; position: absolute; right: 80px; bottom: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,191,191,.12) 0%, transparent 70%);
+  }
+  .logo-mark {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 2px 16px rgba(42,191,191,.4);
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif; font-size: 1.7rem;
+    color: #fff; letter-spacing: -.02em; line-height: 1.1;
+  }
+  .header-text p {
+    font-size: .8rem; color: var(--teal-mid); letter-spacing: .08em;
+    text-transform: uppercase; margin-top: .25rem; font-weight: 500;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(42,191,191,.15); border: 1px solid rgba(42,191,191,.35);
+    color: var(--teal-mid); font-size: .72rem; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: .35rem .9rem; border-radius: 30px; white-space: nowrap;
+  }
+
+  /* META BAR */
+  .meta-bar {
+    background: var(--teal-light);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    padding: .7rem 2.5rem; display: flex; gap: 2rem; flex-wrap: wrap;
+    font-size: .82rem; color: var(--muted); font-weight: 500;
+  }
+  .meta-bar span b { color: var(--teal-dark); }
+
+  /* CONTENT CARD */
+  .content-card {
+    background: var(--white);
+    border-left: 4px solid var(--teal); border-right: 4px solid var(--teal);
+    border-bottom: 4px solid var(--teal); border-radius: 0 0 18px 18px;
+    padding: 2rem 2.5rem 2.5rem; box-shadow: var(--shadow);
+  }
+
+  /* DOC META TABLE */
+  .doc-meta {
+    width: 100%; border-collapse: collapse; font-size: .88rem; margin-bottom: 1.4rem;
+  }
+  .doc-meta td { padding: .5rem .9rem; border: 1px solid var(--rule); line-height: 1.5; }
+  .doc-meta tr:nth-child(odd) td:first-child  { background: var(--teal-light); font-weight: 600; color: var(--teal-dark); width: 35%; }
+  .doc-meta tr:nth-child(even) td:first-child { background: var(--teal-pale); font-weight: 600; color: var(--teal-dark); }
+  .doc-meta tr:nth-child(odd) td:last-child   { background: #fff; }
+  .doc-meta tr:nth-child(even) td:last-child  { background: #FAFEFE; }
+
+  /* SECTION HEADS */
+  .section-head {
+    background: var(--teal-dark); color: #fff;
+    font-size: .82rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; padding: .5rem 1rem; border-radius: 6px;
+    margin-bottom: .75rem; margin-top: 1.8rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-head .num {
+    background: var(--teal-mid); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700; flex-shrink: 0;
+  }
+  .tos-section:first-of-type .section-head { margin-top: 0; }
+
+  /* CLAUSES */
+  .clause {
+    display: flex; gap: .7rem; margin-bottom: .65rem;
+    font-size: .9rem; line-height: 1.65; color: var(--text); text-align: justify;
+  }
+  .clause-ref { font-weight: 700; color: var(--teal); min-width: 32px; padding-top: .02em; flex-shrink: 0; font-size: .85rem; }
+  .sub-item {
+    display: flex; gap: .6rem; margin: .28rem 0 .28rem 2rem;
+    font-size: .88rem; line-height: 1.6; color: #3A4A5A;
+  }
+  .sub-ref { font-weight: 600; color: var(--teal-mid); min-width: 22px; flex-shrink: 0; }
+
+  /* CONFIDENTIAL INFO GRID */
+  .ci-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin: .7rem 0; }
+  .ci-card {
+    border-radius: 10px; padding: .9rem 1rem;
+    border: 1.5px solid var(--rule);
+    display: flex; gap: .75rem; align-items: flex-start;
+  }
+  .ci-card.red    { background: #FEF2F2; border-color: #FCA5A5; }
+  .ci-card.blue   { background: #EEF6FF; border-color: #93C5FD; }
+  .ci-card.amber  { background: #FFFBEB; border-color: #FCD34D; }
+  .ci-card.purple { background: #F5F3FF; border-color: #C4B5FD; }
+  .ci-icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  }
+  .red    .ci-icon { background: #FEE2E2; }
+  .blue   .ci-icon { background: #DBEAFE; }
+  .amber  .ci-icon { background: #FEF3C7; }
+  .purple .ci-icon { background: #EDE9FE; }
+  .ci-card .ci-ref { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: .18rem; }
+  .red    .ci-ref  { color: #B91C1C; }
+  .blue   .ci-ref  { color: #1D4ED8; }
+  .amber  .ci-ref  { color: #B45309; }
+  .purple .ci-ref  { color: #6D28D9; }
+  .ci-card h4 { font-size: .85rem; font-weight: 700; margin-bottom: .2rem; }
+  .red    h4  { color: #991B1B; }
+  .blue   h4  { color: #1E3A8A; }
+  .amber  h4  { color: #92400E; }
+  .purple h4  { color: #4C1D95; }
+  .ci-card p  { font-size: .81rem; line-height: 1.5; color: var(--muted); }
+
+  /* OBLIGATIONS COLUMNS */
+  .ob-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: .7rem 0; }
+  .ob-col-head {
+    font-size: .78rem; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; padding: .45rem .85rem; border-radius: 6px;
+    margin-bottom: .5rem; text-align: center;
+  }
+  .ob-col-head.must { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+  .ob-col-head.mustnot { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+  .ob-item-sm {
+    display: flex; gap: .6rem; align-items: flex-start;
+    padding: .55rem .75rem; border-radius: 7px; font-size: .84rem;
+    line-height: 1.5; margin-bottom: .4rem;
+  }
+  .ob-item-sm.green  { background: #F0FDF4; border: 1px solid #86EFAC; color: #14532D; }
+  .ob-item-sm.red    { background: #FEF2F2; border: 1px solid #FCA5A5; color: #7F1D1D; }
+  .ob-item-sm .sm-ref { font-weight: 700; min-width: 20px; flex-shrink: 0; font-size: .78rem; padding-top: .05rem; }
+  .green .sm-ref { color: #16A34A; }
+  .red   .sm-ref { color: #DC2626; }
+
+  /* DATA HANDLING RULES */
+  .data-rules { display: flex; flex-direction: column; gap: .55rem; margin: .65rem 0; }
+  .data-rule {
+    display: flex; gap: .8rem; align-items: flex-start;
+    border-radius: 8px; padding: .75rem 1rem; font-size: .88rem; line-height: 1.55;
+  }
+  .data-rule.red   { background: #FEF2F2; border: 1px solid #FCA5A5; color: #7F1D1D; }
+  .data-rule.amber { background: #FFFBEB; border: 1px solid #FCD34D; color: #78350F; }
+  .data-rule.teal  { background: var(--teal-pale); border: 1px solid var(--rule); color: var(--text); }
+  .data-rule .dr-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+  .data-rule .dr-ref { font-weight: 700; min-width: 30px; flex-shrink: 0; font-size: .82rem; color: inherit; padding-top: .04rem; }
+
+  /* EXCEPTIONS LIST */
+  .exc-list { display: flex; flex-direction: column; gap: .5rem; margin: .6rem 0; }
+  .exc-item {
+    display: flex; gap: .75rem; align-items: flex-start;
+    background: #F0FDF4; border: 1px solid #86EFAC;
+    border-radius: 8px; padding: .7rem 1rem;
+    font-size: .88rem; line-height: 1.55; color: #14532D;
+  }
+  .exc-item .e-ref { font-weight: 700; color: #16A34A; min-width: 22px; flex-shrink: 0; font-size: .8rem; padding-top: .05rem; }
+
+  /* SURVIVAL BANNER */
+  .survival-banner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: .65rem 0;
+  }
+  .surv-card {
+    border-radius: 10px; padding: 1.1rem 1.2rem; text-align: center;
+  }
+  .surv-card.years { background: linear-gradient(135deg, #1A3A5C, #2563EB); }
+  .surv-card.indef { background: linear-gradient(135deg, #0D3D3D, #1A7A7A); }
+  .surv-card .surv-num {
+    font-family: 'DM Serif Display', serif; font-size: 2.4rem;
+    color: #fff; line-height: 1; margin-bottom: .3rem;
+  }
+  .surv-card h4 { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: .35rem; }
+  .surv-card p  { font-size: .8rem; color: rgba(255,255,255,.55); line-height: 1.4; }
+
+  /* PENALTY BOX */
+  .penalty-box {
+    background: #3B0764; border-radius: 10px; padding: 1rem 1.3rem; margin: .6rem 0;
+  }
+  .penalty-box h4 { font-size: .8rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #E9D5FF; margin-bottom: .5rem; }
+  .penalty-row { display: flex; justify-content: space-between; align-items: center; padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .penalty-row:last-child { border-bottom: none; }
+  .penalty-row span:first-child { font-size: .85rem; color: rgba(255,255,255,.75); }
+  .penalty-row span:last-child  { font-size: .88rem; font-weight: 700; color: #F0ABFC; }
+
+  /* CALLOUT BOXES */
+  .warn-box {
+    background: #FFF9EC; border: 1.5px solid #E6B800;
+    border-radius: 8px; padding: .85rem 1.1rem;
+    font-size: .87rem; line-height: 1.65; margin: .6rem 0; color: #5A4500;
+  }
+  .info-box {
+    background: #EEF6FF; border-left: 3px solid #3B82F6;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0 .8rem; color: #1e3a5f;
+  }
+  .deny-box {
+    background: #FEF2F2; border-left: 3px solid #EF4444;
+    border-radius: 0 8px 8px 0; padding: .75rem 1rem;
+    font-size: .87rem; line-height: 1.65; margin: .5rem 0; color: #7F1D1D;
+  }
+
+  /* ACCEPTANCE BLOCK */
+  .ack-block {
+    background: var(--teal-pale); border: 1.5px solid var(--rule);
+    border-radius: 10px; padding: 1.2rem 1.4rem; margin: .7rem 0;
+  }
+  .ack-block p { font-size: .9rem; line-height: 1.7; color: var(--text); margin-bottom: 1rem; }
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .5rem; }
+  .sig-field label {
+    display: block; font-size: .78rem; font-weight: 700; color: var(--teal-dark);
+    letter-spacing: .05em; text-transform: uppercase; margin-bottom: .35rem;
+  }
+  .sig-line { border-bottom: 1.5px solid var(--teal); padding: .4rem 0; font-size: .88rem; color: var(--muted); min-height: 28px; }
+  .sig-static { padding: .4rem 0; font-size: .88rem; color: var(--text); font-weight: 500; border-bottom: 1px solid var(--rule); }
+  .otp-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-top: 1rem; padding-top: .85rem; border-top: 1px dashed var(--rule);
+  }
+  .otp-checkbox {
+    width: 20px; height: 20px; border: 2px solid var(--teal);
+    border-radius: 5px; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; background: #fff;
+  }
+  .otp-label { font-size: .88rem; color: var(--text); font-weight: 500; }
+  .otp-label span { color: var(--teal); font-weight: 700; }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 2rem; padding-top: 1rem;
+    border-top: 1.5px solid var(--rule);
+    font-size: .8rem; color: var(--muted); text-align: center; line-height: 1.7;
+  }
+  .doc-footer a { color: var(--teal); text-decoration: none; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .page-header { padding: 1.4rem 1.2rem; }
+    .badge { display: none; }
+    .meta-bar { padding: .7rem 1.2rem; }
+    .content-card { padding: 1.2rem 1.2rem 1.8rem; }
+    .ci-grid { grid-template-columns: 1fr; }
+    .ob-cols { grid-template-columns: 1fr; }
+    .survival-banner { grid-template-columns: 1fr; }
+    .sig-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" stroke="white" stroke-width="1.5" stroke-opacity=".4"/>
+        <path d="M7 14C7 10.134 10.134 7 14 7C17.866 7 21 10.134 21 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 17.5C10.5 15.5 12 14 14 14C16 14 17.5 15.5 18 17.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="14" cy="11.5" r="1.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>MANAS360</h1>
+      <p>Mental Wellness Platform</p>
+    </div>
+    <div class="badge">Therapist NDA</div>
+  </div>
+
+  <!-- META BAR -->
+  <div class="meta-bar">
+    <span><b>Document:</b> Therapist Non-Disclosure Agreement (B2)</span>
+    <span><b>Last Updated:</b> February 2026</span>
+    <span><b>Governed by:</b> Laws of India</span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-card">
+
+    <!-- DOC META TABLE -->
+    <table class="doc-meta">
+      <tr><td>Document</td><td>Therapist / Provider Non-Disclosure Agreement</td></tr>
+      <tr><td>Between</td><td>MANAS360 Mental Wellness Pvt. Ltd. and the Therapist / Provider</td></tr>
+      <tr><td>Survival Period</td><td>5 years post-termination (patient health data: indefinite)</td></tr>
+      <tr><td>Seat of Arbitration</td><td>Bengaluru, Karnataka, India</td></tr>
+      <tr><td>Governing Law</td><td>Laws of India · Arbitration &amp; Conciliation Act, 1996</td></tr>
+    </table>
+
+    <!-- 1. CONFIDENTIAL INFORMATION -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">1</span> Confidential Information</div>
+      <div class="clause">
+        <span class="clause-ref">1.1</span>
+        <span>"Confidential Information" includes all of the following categories:</span>
+      </div>
+
+      <div class="ci-grid">
+        <div class="ci-card red">
+          <div class="ci-icon">🏥</div>
+          <div>
+            <div class="ci-ref">Category (a)</div>
+            <h4>Patient Data</h4>
+            <p>All patient data, health records, assessment scores, session notes, and personal information.</p>
+          </div>
+        </div>
+        <div class="ci-card blue">
+          <div class="ci-icon">💼</div>
+          <div>
+            <div class="ci-ref">Category (b)</div>
+            <h4>Business Information</h4>
+            <p>MANAS360 business plans, commercial strategies, technology, algorithms, pricing, and strategies.</p>
+          </div>
+        </div>
+        <div class="ci-card amber">
+          <div class="ci-icon">👥</div>
+          <div>
+            <div class="ci-ref">Category (c)</div>
+            <h4>Provider Network Data</h4>
+            <p>Provider network data including other Providers' identities and performance metrics.</p>
+          </div>
+        </div>
+        <div class="ci-card purple">
+          <div class="ci-icon">🔒</div>
+          <div>
+            <div class="ci-ref">Category (d)</div>
+            <h4>Any Other Sensitive Info</h4>
+            <p>Any information marked as confidential or that a reasonable person would understand to be confidential.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. OBLIGATIONS -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">2</span> Obligations</div>
+
+      <div class="ob-cols">
+        <div>
+          <div class="ob-col-head must">✅ Provider SHALL</div>
+          <div class="ob-item-sm green">
+            <span class="sm-ref">(a)</span>
+            <span>Keep all Confidential Information <strong>strictly confidential</strong> at all times.</span>
+          </div>
+          <div class="ob-item-sm green">
+            <span class="sm-ref">(b)</span>
+            <span>Use Confidential Information <strong>solely</strong> for providing professional services through the MANAS360 Platform.</span>
+          </div>
+          <div class="ob-item-sm green">
+            <span class="sm-ref">(c)</span>
+            <span>Not disclose Confidential Information to any third party <strong>without prior written consent</strong>.</span>
+          </div>
+          <div class="ob-item-sm green">
+            <span class="sm-ref">(d)</span>
+            <span>Implement <strong>reasonable and industry-standard security measures</strong> to protect Confidential Information.</span>
+          </div>
+        </div>
+        <div>
+          <div class="ob-col-head mustnot">🚫 Provider SHALL NOT</div>
+          <div class="ob-item-sm red">
+            <span class="sm-ref">(a)</span>
+            <span>Download, export, copy, store, or transmit patient data to <strong>personal devices or external systems</strong>.</span>
+          </div>
+          <div class="ob-item-sm red">
+            <span class="sm-ref">(b)</span>
+            <span>Discuss patient cases with <strong>persons not involved</strong> in the patient's care.</span>
+          </div>
+          <div class="ob-item-sm red">
+            <span class="sm-ref">(c)</span>
+            <span>Use patient data for <strong>research, publication, or teaching</strong> without explicit written consent and institutional ethics approval.</span>
+          </div>
+          <div class="ob-item-sm red">
+            <span class="sm-ref">(d)</span>
+            <span><strong>Retain patient data</strong> after termination of this Agreement.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. EXCEPTIONS -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">3</span> Exceptions</div>
+      <div class="clause">
+        <span class="clause-ref">3.1</span>
+        <span>Confidentiality obligations do <strong>not apply</strong> to information that meets any of the following criteria:</span>
+      </div>
+      <div class="exc-list">
+        <div class="exc-item">
+          <span class="e-ref">(a)</span>
+          <span>Is or becomes publicly available through <strong>no fault of the Provider</strong>;</span>
+        </div>
+        <div class="exc-item">
+          <span class="e-ref">(b)</span>
+          <span>Was <strong>known to the Provider</strong> prior to disclosure by MANAS360;</span>
+        </div>
+        <div class="exc-item">
+          <span class="e-ref">(c)</span>
+          <span>Is <strong>independently developed</strong> by the Provider without reference to any Confidential Information;</span>
+        </div>
+        <div class="exc-item">
+          <span class="e-ref">(d)</span>
+          <span>Is required to be disclosed by <strong>law, court order, or regulatory authority</strong> — provided the Provider gives MANAS360 prompt written notice before disclosure.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. PATIENT DATA HANDLING -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">4</span> Patient Data Handling</div>
+
+      <div class="data-rules">
+        <div class="data-rule red">
+          <span class="dr-icon">🖥️</span>
+          <span class="dr-ref">4.1</span>
+          <span>All patient data must be accessed <strong>exclusively through the MANAS360 Platform</strong>. Downloading, exporting, or screen-capturing patient data is <strong>strictly prohibited</strong> unless explicitly authorised.</span>
+        </div>
+        <div class="data-rule amber">
+          <span class="dr-icon">📝</span>
+          <span class="dr-ref">4.2</span>
+          <span>Session notes must be entered <strong>directly into the MANAS360 Platform</strong> and must <strong>not be stored locally</strong> on any personal or external device.</span>
+        </div>
+        <div class="data-rule teal">
+          <span class="dr-icon">🔐</span>
+          <span class="dr-ref">4.3</span>
+          <span>All video/audio sessions are <strong>encrypted end-to-end</strong>. The Provider shall <strong>not use any recording software</strong> during sessions under any circumstances.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. SURVIVAL -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">5</span> Survival</div>
+      <div class="clause">
+        <span class="clause-ref">5.1</span>
+        <span>Confidentiality obligations survive termination of the Provider relationship for the following periods:</span>
+      </div>
+      <div class="survival-banner">
+        <div class="surv-card years">
+          <h4>General Confidential Information</h4>
+          <div class="surv-num">5 Years</div>
+          <p>Post-termination of the Provider relationship</p>
+        </div>
+        <div class="surv-card indef">
+          <h4>Patient Health Data</h4>
+          <div class="surv-num">Indefinite</div>
+          <p>Patient health data remains confidential with no expiry</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. REMEDIES -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">6</span> Remedies</div>
+      <div class="clause">
+        <span class="clause-ref">6.1</span>
+        <span>The Provider acknowledges that any breach or threatened breach of this Agreement may result in <strong>irreparable harm</strong> to MANAS360 and/or affected patients, for which monetary damages may be an inadequate remedy. Accordingly, MANAS360 shall be entitled to seek <strong>immediate injunctive or equitable relief</strong>, in addition to any other rights or remedies available under law.</span>
+      </div>
+
+      <div class="clause">
+        <span class="clause-ref">6.2</span>
+        <span>The Provider acknowledges that any unauthorised disclosure, misuse, or breach of patient data may attract <strong>statutory penalties</strong> under applicable laws, including:</span>
+      </div>
+
+      <div class="penalty-box">
+        <h4>⚠️ Statutory Penalties — Applicable Laws</h4>
+        <div class="penalty-row">
+          <span>Digital Personal Data Protection Act, 2023 (DPDPA)</span>
+          <span>Up to ₹250 crore</span>
+        </div>
+        <div class="penalty-row">
+          <span>Information Technology Act, 2000</span>
+          <span>Civil &amp; Criminal liability</span>
+        </div>
+        <div class="penalty-row">
+          <span>Other applicable laws</span>
+          <span>Regulatory &amp; Criminal consequences</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. GOVERNING LAW -->
+    <div class="tos-section">
+      <div class="section-head"><span class="num">7</span> Governing Law</div>
+      <div class="clause">
+        <span class="clause-ref">7.1</span>
+        <span>This Agreement shall be governed by and construed in accordance with the laws of <strong>India</strong>. Any dispute arising out of or in connection with this Agreement shall be referred to and finally resolved by arbitration under the <strong>Arbitration and Conciliation Act, 1996</strong>. The seat and venue of arbitration shall be <strong>Bengaluru, Karnataka, India</strong>, and proceedings shall be conducted in the English language.</span>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <strong>MANAS360 Mental Wellness Pvt. Ltd.</strong> · 6, MLV, Talaghatpura, Kanakapura Road, Bengaluru 560062, Karnataka, India<br/>
+      CIN: U86900KA2026PTC215013 · GSTIN: 29AAUCM4417GIZ1 · DPIIT: DIPP244635 · UDHYAM: KR-03-0654344<br/>
+      <a href="mailto:Legal@manas360.com">Legal@manas360.com</a> · +91-80 6940 9284 · +91-8944 944 2180<br/><br/>
+      This document is confidential and intended solely for the use of MANAS360 platform users.<br/>
+      © 2026 MANAS360 Mental Wellness Pvt. Ltd. All rights reserved.
+    </div>
+
+  </div><!-- /content-card -->
+</div><!-- /shell -->
+</body>
+</html>

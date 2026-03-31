@@ -48,6 +48,8 @@ const nowPlusMinutes = (minutes: number): Date => new Date(Date.now() + minutes 
 
 const nowPlusDays = (days: number): Date => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
+const isDevVerificationBypassEnabled = (): boolean => env.allowDevVerificationBypass && env.nodeEnv === 'development';
+
 const toPrismaUserRole = (role: PublicUserRole): 'PATIENT' | 'THERAPIST' | 'PSYCHIATRIST' | 'COACH' => {
 	if (role === 'patient') return 'PATIENT';
 	if (role === 'therapist') return 'THERAPIST';
@@ -351,7 +353,7 @@ export const registerWithPhone = async (input: RegisterPhoneInput) => {
 		throw new AppError('Platform admin accounts must login using email and password', 403);
 	}
 
-	const otp = generateNumericOtp();
+	const otp = isDevVerificationBypassEnabled() ? '123456' : generateNumericOtp();
 	const otpHash = await hashOtp(otp);
 	const role = input.role ? toPrismaUserRole(input.role) : 'PATIENT';
 	const trimmedName = String(input.name || '').trim();
@@ -395,13 +397,15 @@ export const verifyPhoneOtp = async (input: VerifyPhoneOtpInput, meta: RequestMe
 		throw new AppError('Platform admin accounts must login using email and password', 403);
 	}
 
-	if (user.phoneVerificationOtpExpiresAt < new Date()) {
-		throw new AppError('OTP expired', 400);
-	}
+	if (!isDevVerificationBypassEnabled()) {
+		if (user.phoneVerificationOtpExpiresAt < new Date()) {
+			throw new AppError('OTP expired', 400);
+		}
 
-	const validOtp = await verifyOtp(input.otp, user.phoneVerificationOtpHash);
-	if (!validOtp) {
-		throw new AppError('Invalid OTP', 400);
+		const validOtp = await verifyOtp(input.otp, user.phoneVerificationOtpHash);
+		if (!validOtp) {
+			throw new AppError('Invalid OTP', 400);
+		}
 	}
 
 	await db.user.update({

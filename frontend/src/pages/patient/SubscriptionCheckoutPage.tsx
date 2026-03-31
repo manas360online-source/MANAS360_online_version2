@@ -16,6 +16,7 @@ export default function SubscriptionCheckoutPage() {
   const wallet = Number((balance as any)?.total_balance || 0);
   const [cart, setCart] = useState(loadCart());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isRefundAccepted, setIsRefundAccepted] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,6 +45,10 @@ export default function SubscriptionCheckoutPage() {
   const confirmAndPay = async () => {
     if (!acceptedTerms) {
       toast.error('Please accept terms and privacy.');
+      return;
+    }
+    if (!isRefundAccepted) {
+      toast.error('Please accept Refund & Cancellation Policy to proceed.');
       return;
     }
 
@@ -122,12 +127,45 @@ export default function SubscriptionCheckoutPage() {
 
           <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} />
-            <span>I agree to terms and privacy.</span>
+            <span>
+              I agree to the{' '}
+              <a href="/src/pages/legal/Terms_of_Service.html" target="_blank" rel="noopener noreferrer" className="text-teal-600 underline">
+                Terms of Use
+              </a>{' '}
+              and{' '}
+              <a href="/src/pages/legal/Privacy_Policy.html" target="_blank" rel="noopener noreferrer" className="text-teal-600 underline">
+                Privacy Policy
+              </a>
+              .
+            </span>
           </label>
+
+          <div className="mt-4 flex items-start gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              id="refundPolicy"
+              checked={isRefundAccepted}
+              onChange={(e) => setIsRefundAccepted(e.target.checked)}
+            />
+            <label htmlFor="refundPolicy">
+              I agree to the{' '}
+              <a href="/src/pages/legal/refund_policy.html" target="_blank" rel="noopener noreferrer" className="text-teal-600 underline">
+                Refund & Cancellation Policy
+              </a>
+            </label>
+          </div>
+          {!isRefundAccepted && (
+            <p className="mt-1 text-xs text-red-500">Please accept Refund & Cancellation Policy to proceed</p>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => navigate('/plans/addons')} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Back to Add-ons</button>
-            <button type="button" onClick={confirmAndPay} disabled={submitting} className="rounded-xl bg-[#4a6741] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            <button
+              type="button"
+              onClick={confirmAndPay}
+              disabled={submitting || !isRefundAccepted || !acceptedTerms}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold ${submitting || !isRefundAccepted || !acceptedTerms ? 'cursor-not-allowed bg-gray-300 text-gray-600' : 'bg-[#4a6741] text-white'}`}
+            >
               {submitting ? 'Processing...' : `Confirm & Pay INR ${(finalTotalMinor / 100).toFixed(2)}`}
             </button>
           </div>
