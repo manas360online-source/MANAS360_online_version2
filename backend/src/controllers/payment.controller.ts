@@ -640,6 +640,8 @@ export const getRefundStatusController = async (req: Request, res: Response): Pr
 					},
 				});
 
+				// Invoice lifecycle updates intentionally disabled.
+
 				sendSuccess(res, updatedRefund, 'Refund status retrieved', 200);
 				return;
 			}

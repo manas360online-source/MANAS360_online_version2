@@ -115,6 +115,8 @@ export const processOrderCompletedEvent = async (payload: any): Promise<void> =>
 		},
 	});
 
+	// Invoice generation intentionally disabled.
+
 	// ── Provider Platform Access activation ──
 	const paymentMeta = (payment.metadata as any) || {};
 	if (

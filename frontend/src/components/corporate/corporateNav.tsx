@@ -40,6 +40,7 @@ export const corporateNavSections: CorporateNavSection[] = [
       { key: 'directory', label: 'Employee Directory', to: '/corporate/employees/directory', icon: <Users className="h-4 w-4" /> },
       { key: 'enrollment', label: 'Bulk Enrollment', to: '/corporate/employees/enrollment', icon: <UserCog className="h-4 w-4" /> },
       { key: 'allocation', label: 'Session Allocation', to: '/corporate/employees/allocation', icon: <BarChart3 className="h-4 w-4" /> },
+      { key: 'agreement', label: 'Agreement', to: '/corporate/dashboard/agreements', icon: <FileText className="h-4 w-4" /> },
     ],
   },
   {
@@ -53,7 +54,6 @@ export const corporateNavSections: CorporateNavSection[] = [
   {
     title: 'BILLING',
     items: [
-      { key: 'invoices', label: 'Invoices & GST', to: '/corporate/billing/invoices', icon: <FileText className="h-4 w-4" /> },
       { key: 'payments', label: 'Payment Methods', to: '/corporate/billing/payment-methods', icon: <CreditCard className="h-4 w-4" /> },
       { key: 'plan', label: 'Plan & Subscription', to: '/corporate/billing/plan', icon: <Building2 className="h-4 w-4" /> },
     ],

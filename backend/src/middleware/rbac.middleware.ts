@@ -21,6 +21,93 @@ export type UserRole =
 	| 'financemanager'
 	| 'complianceofficer';
 
+export const POLICY_VERSION = 1;
+
+export const ADMIN_POLICIES: Record<string, string[]> = {
+	users: ['manage_users'],
+	'users.view': ['manage_users'],
+	'users.moderate': ['manage_users'],
+	providers: ['manage_therapists'],
+	'providers.verify': ['manage_therapists'],
+	payments: ['manage_payments'],
+	'payments.view': ['view_analytics'],
+	'payments.retry': ['manage_payments'],
+	invoices: ['manage_payments'],
+	'invoices.view': ['manage_payments'],
+	'invoices.manage': ['manage_payments'],
+	'invoices.refund': ['manage_payments'],
+	pricing: ['pricing_edit'],
+	'pricing.manage': ['pricing_edit'],
+	payouts: ['payouts_approve'],
+	'payouts.manage': ['payouts_approve'],
+	'payouts.view': ['payouts_approve'],
+	offers: ['offers_edit'],
+	'offers.manage': ['offers_edit'],
+	qr: ['offers_edit'],
+	'qr.manage': ['offers_edit'],
+	screening: ['manage_therapists'],
+	'screening.manage': ['manage_therapists'],
+	audit: ['view_audit'],
+	'audit.view': ['view_audit'],
+	'audit.export': ['view_audit'],
+	analytics: ['view_analytics'],
+	'analytics.view': ['view_analytics'],
+	feedback: ['view_feedback'],
+	'feedback.manage': ['view_feedback'],
+	config: ['view_analytics'],
+	'config.view': ['view_analytics'],
+	'config.manage': ['manage_compliance'],
+	tickets: ['view_feedback'],
+	'tickets.manage': ['view_feedback'],
+	groups: ['manage_users'],
+	'groups.manage': ['manage_users'],
+	compliance: ['manage_compliance'],
+	'compliance.manage': ['manage_compliance'],
+};
+
+const normalizeRoleName = (value: unknown): UserRole => String(value || '').toLowerCase().replace(/[_\s-]/g, '') as UserRole;
+
+// Safety fallback when `roles` table is empty or not seeded in local/staging.
+// This keeps platform-admin routes usable instead of returning blanket 403s.
+const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+	patient: ['view_own_records', 'book_sessions', 'view_dashboard'],
+	therapist: ['view_patients', 'manage_sessions', 'prescribe_treatments', 'view_dashboard'],
+	psychologist: ['view_patients', 'manage_sessions', 'conduct_assessments', 'view_dashboard'],
+	psychiatrist: ['view_patients', 'manage_sessions', 'prescribe_medications', 'order_labs', 'view_dashboard'],
+	coach: ['view_assigned_patients', 'manage_coaching_sessions', 'view_dashboard'],
+	admin: [
+		'manage_users',
+		'manage_therapists',
+		'view_analytics',
+		'manage_payments',
+		'view_reports',
+		'payouts_approve',
+		'pricing_edit',
+		'offers_edit',
+		'view_feedback',
+		'manage_compliance',
+	],
+	superadmin: [
+		'manage_users',
+		'manage_admins',
+		'manage_therapists',
+		'view_analytics',
+		'manage_payments',
+		'view_reports',
+		'payouts_approve',
+		'pricing_edit',
+		'offers_edit',
+		'system_settings',
+		'manage_roles',
+		'audit_logs',
+		'view_feedback',
+		'manage_compliance',
+	],
+	clinicaldirector: ['view_analytics', 'manage_therapists', 'view_reports', 'clinical_approvals', 'view_dashboard'],
+	financemanager: ['view_analytics', 'manage_payments', 'payouts_approve', 'view_reports', 'financial_exports'],
+	complianceofficer: ['view_analytics', 'view_reports', 'audit_logs', 'compliance_status', 'legal_documents', 'user_acceptances', 'view_feedback', 'manage_compliance'],
+};
+
 /**
  * Role hierarchy for logical grouping
  * Useful for future permission inheritance
@@ -78,12 +165,27 @@ const getRolePermissions = async (roleName: UserRole): Promise<string[]> => {
 		return cached.permissions;
 	}
 
-	const roleData = await db.role.findUnique({
-		where: { name: roleName },
-		select: { permissions: true },
-	});
+	const normalizedRoleName = normalizeRoleName(roleName);
+	const roleDataRows = (await db.$queryRawUnsafe(
+		"SELECT permissions FROM roles WHERE REPLACE(REPLACE(REPLACE(LOWER(name), '_', ''), '-', ''), ' ', '') = $1",
+		normalizedRoleName,
+	)) as Array<{ permissions: string[] | null }>;
 
-	const permissions = roleData?.permissions || [];
+	// Multiple rows may normalize to same role name (e.g. ADMIN/admin).
+	// Merge all matched permissions to avoid nondeterministic 403s.
+	const mergedPermissions = Array.from(
+		new Set(
+			roleDataRows.flatMap((row) => (Array.isArray(row?.permissions) ? row.permissions : [])),
+		),
+	);
+
+	const permissions = mergedPermissions.length > 0
+		? mergedPermissions
+		: (DEFAULT_ROLE_PERMISSIONS[normalizedRoleName] || []);
+
+	if ((roleDataRows.length === 0 || mergedPermissions.length === 0) && permissions.length > 0) {
+		console.warn(`[RBAC] Using fallback permissions for role '${normalizedRoleName}' because roles table entry is missing/empty.`);
+	}
 	
 	permissionsCache.set(roleName, {
 		permissions,
@@ -91,6 +193,21 @@ const getRolePermissions = async (roleName: UserRole): Promise<string[]> => {
 	});
 
 	return permissions;
+};
+
+export const getRolePermissionsForRole = async (roleName: UserRole): Promise<string[]> => getRolePermissions(roleName);
+
+export const requireAdminPolicy = (
+	policyKey: keyof typeof ADMIN_POLICIES,
+): ((req: Request, _res: Response, next: NextFunction) => Promise<void>) => {
+	const required = ADMIN_POLICIES[policyKey];
+	if (!required || required.length === 0) {
+		throw new Error(`Unknown admin policy key: ${String(policyKey)}`);
+	}
+	return requirePermission(required, {
+		policyKey: String(policyKey),
+		policyVersion: POLICY_VERSION,
+	});
 };
 
 /**
@@ -126,7 +243,7 @@ const getUserRole = async (userId: string): Promise<{ role: UserRole; isDeleted:
 	}
 
 	// Cache the result (map super_admin to superadmin for generic convention)
-	const cleanRole = String(user.role).toLowerCase().replace('_', '') as UserRole;
+	const cleanRole = normalizeRoleName(user.role);
 	roleCache.set(userId, {
 		role: cleanRole,
 		timestamp: Date.now(),
@@ -201,7 +318,8 @@ export const requireRole = (
 			}
 
 			// Check if user's role is in allowed roles (NO hierarchy escalation for single-role checks)
-			const isAllowedByExplicitRole = roles.includes(userDetails.role);
+			const isSuperAdminAccessingAdminRoute = userDetails.role === 'superadmin' && roles.includes('admin');
+			const isAllowedByExplicitRole = roles.includes(userDetails.role) || isSuperAdminAccessingAdminRoute;
 			if (!isAllowedByExplicitRole) {
 				// Log unauthorized attempt for security audit
 				console.warn(
@@ -298,8 +416,9 @@ export const requireCorporateMemberAccess = async (
 			return;
 		}
 
-		const role = String(user.role).toLowerCase() as UserRole;
-		if (role === 'admin') {
+		const role = normalizeRoleName(user.role);
+		const isPlatformAdmin = ['admin', 'superadmin', 'clinicaldirector', 'financemanager', 'complianceofficer'].includes(role);
+		if (isPlatformAdmin) {
 			if (!req.auth) {
 				req.auth = { userId: '', sessionId: '', jti: '' };
 			}
@@ -340,6 +459,7 @@ export const requireCorporateMemberAccess = async (
  */
 export const requirePermission = (
 	requiredPermissions: string | string[],
+    options?: { policyKey?: string; policyVersion?: number },
 ): ((req: Request, _res: Response, next: NextFunction) => Promise<void>) => {
 	const permissions = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
 
@@ -387,6 +507,26 @@ export const requirePermission = (
 		const hasPermission = permissions.some(perm => userPermissions.includes(perm));
 
 		if (!hasPermission) {
+			try {
+				await db.auditLog.create({
+					data: {
+						userId,
+						action: 'ACCESS_DENIED',
+						resource: 'System',
+						details: {
+							policy: options?.policyKey || null,
+							policyVersion: options?.policyVersion || POLICY_VERSION,
+							requiredPermissions: permissions,
+							actorRole: userDetails.role,
+							route: req.originalUrl,
+							method: req.method,
+						},
+					},
+				});
+			} catch {
+				// Do not block primary auth flow if denial audit fails.
+			}
+
 			console.warn(
 				`[RBAC] Permission denied - userId: ${userId}, userRole: ${userDetails.role}, requiredPermissions: ${permissions.join(',')}`,
 			);

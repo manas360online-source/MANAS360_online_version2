@@ -1,3 +1,31 @@
+model CorporateAgreementTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  content     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agreements  CorporateAgreement[]
+
+  @@map("corporate_agreement_templates")
+}
+
+model CorporateAgreement {
+  id          String   @id @default(uuid())
+  templateId  String
+  email       String
+  value       String?
+  status      String   @default("Draft")
+  companyKey  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template    CorporateAgreementTemplate @relation(fields: [templateId], references: [id])
+
+  @@map("corporate_agreements")
+}
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
@@ -72,6 +100,8 @@ model User {
   labOrdersAsPatient            LabOrder[]                  @relation("LabOrderPatient")
   labOrdersAsProvider           LabOrder[]                  @relation("LabOrderProvider")
   leadAssignments               LeadAssignment[]
+  legalAcceptances              UserAcceptance[]
+  legalDocumentsUpdated         LegalDocument[]             @relation("LegalDocumentUpdatedBy")
   patientLeads                  Lead[]                      @relation("LeadPatient")
   providerLeads                 Lead[]                      @relation("LeadProvider")
   subscriptions                 MarketplaceSubscription[]   @relation("UserSubscriptions")
@@ -79,12 +109,16 @@ model User {
   moodPredictions               MoodPrediction[]            @relation("UserMoodPredictions")
   notifications                 Notification[]
   patientInvoices               PatientInvoice[]
+  invoices                      Invoice[]                   @relation("UserInvoices")
+  invoiceEventsAsActor          InvoiceEvent[]              @relation("InvoiceEventsActor")
+  payouts                       Payout[]                    @relation("PayoutProvider")
   patient_pathway_state         patient_pathway_state?
   patientPaymentMethod          PatientPaymentMethod?
   patientProfile                PatientProfile?
   patientSubscription           PatientSubscription?
   phq9Assessments               PHQ9Assessment[]            @relation("UserPHQ9Assessments")
   platformAccess                PlatformAccess?
+  platformConfigsUpdated        PlatformConfig[]           @relation("PlatformConfigUpdatedBy")
   prescriptionsAsPatient        Prescription[]              @relation("PrescriptionPatient")
   prescriptionsAsProvider       Prescription[]              @relation("PrescriptionProvider")
   providerExtraQuestionsCreated ProviderExtraQuestion[]
@@ -156,6 +190,12 @@ model Role {
 model QrCode {
   code            String   @id
   redirectUrl     String   @map("redirect_url")
+  qrType          String?  @map("qr_type")
+  destinationUrl  String?  @map("destination_url")
+  ownerId         String?  @map("owner_id")
+  isDynamic       Boolean  @default(true) @map("is_dynamic")
+  expiresAt       DateTime? @map("expires_at")
+  lastScannedAt   DateTime? @map("last_scanned_at")
   templateId      String   @default("classic-black") @map("template_id")
   stylePreset     String   @default("rounded") @map("style_preset")
   foregroundColor String   @default("#0F172A") @map("foreground_color")
@@ -168,10 +208,52 @@ model QrCode {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   createdBy       User?    @relation("QrCodeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  scans           QrScan[]
+  conversions     QrConversion[]
 
   @@index([createdById])
   @@index([createdAt])
+  @@index([qrType])
+  @@index([ownerId])
+  @@index([expiresAt])
   @@map("qr_codes")
+}
+
+model QrScan {
+  id            String   @id @default(uuid())
+  qrCodeCode    String   @map("qr_code_code")
+  scanTimestamp DateTime @default(now()) @map("scan_timestamp")
+  deviceType    String?  @map("device_type")
+  deviceOs      String?  @map("device_os")
+  ipAddress     String?  @map("ip_address")
+  sessionId     String?  @map("session_id")
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at")
+  qrCode        QrCode   @relation(fields: [qrCodeCode], references: [code], onDelete: Cascade)
+  conversions   QrConversion[]
+
+  @@index([qrCodeCode, scanTimestamp])
+  @@index([sessionId])
+  @@map("qr_scans")
+}
+
+model QrConversion {
+  id                String   @id @default(uuid())
+  qrCodeCode        String   @map("qr_code_code")
+  qrScanId          String?  @map("qr_scan_id")
+  sessionId         String?  @map("session_id")
+  conversionType    String   @map("conversion_type")
+  attributedRevenue Decimal  @default(0) @db.Decimal(10, 2) @map("attributed_revenue")
+  conversionData    Json?    @map("conversion_data")
+  conversionAt      DateTime @default(now()) @map("conversion_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  qrCode            QrCode   @relation(fields: [qrCodeCode], references: [code], onDelete: Cascade)
+  qrScan            QrScan?  @relation(fields: [qrScanId], references: [id], onDelete: SetNull)
+
+  @@index([qrCodeCode, conversionType])
+  @@index([sessionId])
+  @@index([conversionAt])
+  @@map("qr_conversions")
 }
 
 model CareTeamAssignment {
@@ -216,6 +298,45 @@ model Consent {
   @@map("consents")
 }
 
+model LegalDocument {
+  id          String   @id @default(uuid())
+  type        String
+  version     Int
+  title       String
+  content     String
+  isActive    Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedBy   User?    @relation("LegalDocumentUpdatedBy", fields: [updatedById], references: [id])
+  acceptances UserAcceptance[]
+
+  @@unique([type, version])
+  @@index([type, isActive])
+  @@index([publishedAt])
+  @@map("legal_documents")
+}
+
+model UserAcceptance {
+  id          String   @id @default(uuid())
+  userId      String
+  documentId  String
+  documentVer Int
+  acceptedAt  DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  source      String   @default("web")
+  createdAt   DateTime @default(now())
+  document    LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@index([userId, acceptedAt])
+  @@index([documentId, acceptedAt])
+  @@map("user_acceptances")
+}
+
 model AuditEvent {
   id         String   @id @default(uuid())
   actorId    String?
@@ -256,6 +377,20 @@ model TenantPolicy {
   @@map("tenant_policies")
 }
 
+model PlatformConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  version     Int      @default(1)
+  updatedById String?  @map("updated_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   User?    @relation("PlatformConfigUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([key])
+  @@map("platform_configs")
+}
+
 model AuthSession {
   id               String    @id @default(uuid())
   userId           String
@@ -291,8 +426,28 @@ model AuthAuditLog {
 
   @@index([userId, createdAt])
   @@index([event, createdAt])
-  @@map("auth_audit_logs")
 }
+
+model ProviderVerification {
+  id          String   @id @default(uuid())
+  userId      String
+  license     String
+  licenseType String
+  status      String
+  checks      Json?
+  flagReasons Json?
+  verifiedAt  DateTime?
+  reviewedBy  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // relation to `User` intentionally omitted to avoid adding inverse field on User model
+
+  @@index([userId])
+  @@map("provider_verifications")
+}
+ 
 
 model PatientProfile {
   id                           String                       @id @default(uuid())
@@ -1146,7 +1301,7 @@ model FinancialSession {
   @@index([patientId, createdAt(sort: Desc)])
   @@index([providerId, createdAt(sort: Desc)])
   @@index([status, createdAt(sort: Desc)])
-  @@index([providerId])  
+  @@index([providerId])
   @@map("financial_sessions")
 }
 
@@ -1222,6 +1377,7 @@ model FinancialPayment {
   refunds               FinancialRefund[]      @relation("PaymentRefunds")
   revenueLedger         RevenueLedger[]        @relation("PaymentRevenueLedger")
   walletTransactions    WalletTransaction[]    @relation("PaymentWalletTransactions")
+  invoice               Invoice?               @relation("PaymentInvoice")
 
   @@index([sessionId, status])
   @@index([providerId, status])
@@ -1342,7 +1498,7 @@ model PayoutRequest {
   providerId             String
   amountMinor            BigInt
   currency               String              @default("INR")
-  status                 PayoutStatus        @default(REQUESTED)
+  status                 PayoutRequestStatus @default(REQUESTED)
   minWithdrawalRuleMinor BigInt              @default(10000)
   requestedAt            DateTime            @default(now())
   approvedAt             DateTime?
@@ -1417,6 +1573,8 @@ model PatientSubscription {
   id                  String    @id @default(uuid())
   userId              String    @unique
   price               Int
+  planVersion         Int       @default(1)
+  priceLocked         Boolean   @default(false)
   status              String
   autoRenew           Boolean   @default(true)
   createdAt           DateTime  @default(now())
@@ -1501,6 +1659,160 @@ model PatientInvoice {
 
   @@index([userId, createdAt])
   @@map("patient_invoices")
+}
+
+model InvoiceSequence {
+  year         Int      @id
+  lastSequence Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("invoice_sequences")
+}
+
+model Invoice {
+  id                   String            @id @default(uuid())
+  tenantId             String?           @map("tenant_id")
+  paymentId            String?           @unique
+  paymentTransactionId String            @unique
+  userId               String
+  invoiceNumber        String            @unique
+  amountMinor          BigInt?           @map("amount_minor")
+  invoiceYear          Int
+  sequenceNumber       Int
+  companyName          String            @default("MANAS360")
+  companyGstin         String?
+  companyAddress       Json?
+  customerName         String
+  customerEmail        String?
+  customerPhone        String?
+  customerGstin        String?
+  billingAddress       Json?
+  currency             String            @default("INR")
+  items                Json
+  subtotalMinor        BigInt
+  gstRate              Int               @default(18)
+  cgstMinor            BigInt
+  sgstMinor            BigInt
+  gstAmountMinor       BigInt
+  totalMinor           BigInt
+  status               String            @default("GENERATED")
+  lifecycleStatus      InvoiceStatus     @default(DRAFT) @map("lifecycle_status")
+  invoiceMethod        InvoiceMethod     @default(PDF) @map("invoice_method")
+  retryCount           Int               @default(0)
+  pdfPath              String?
+  pdfUrl               String?           @map("pdf_url")
+  htmlPath             String?
+  emailedTo            String?
+  emailedAt            DateTime?
+  sentAt               DateTime?
+  paidAt               DateTime?         @map("paid_at")
+  refundedAt           DateTime?         @map("refunded_at")
+  failedAt             DateTime?
+  deliveryError        String?
+  metadata             Json              @default("{}")
+  version              Int               @default(1)
+  issuedAt             DateTime          @default(now())
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  isPaidOut            Boolean           @default(false)
+  payment              FinancialPayment? @relation("PaymentInvoice", fields: [paymentId], references: [id], onDelete: SetNull)
+  customer             User              @relation("UserInvoices", fields: [userId], references: [id], onDelete: Cascade)
+  payoutItem           PayoutItem?       @relation("InvoicePayoutItem")
+  events               InvoiceEvent[]
+
+  @@unique([id, version])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([paymentId])
+  @@index([paymentTransactionId])
+  @@index([isPaidOut])
+  @@map("invoices")
+}
+
+model InvoiceEvent {
+  id             String   @id @default(uuid())
+  invoiceId      String   @map("invoice_id")
+  eventType      String   @map("event_type")
+  invoiceMethod  InvoiceMethod? @map("invoice_method")
+  beforeState    Json?    @map("before_state")
+  afterState     Json?    @map("after_state")
+  actorUserId    String?  @map("actor_user_id")
+  idempotencyKey String?  @map("idempotency_key")
+  createdAt      DateTime @default(now()) @map("created_at")
+  actor          User?    @relation("InvoiceEventsActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([idempotencyKey])
+  @@map("invoice_events")
+}
+
+model Payout {
+  id            String       @id @default(uuid())
+  providerId    String
+  amountMinor   BigInt
+  currency      String       @default("INR")
+  status        PayoutStatus @default(PENDING)
+  method        PayoutMethod @default(BANK)
+  referenceId   String?
+  failureReason String?
+  createdAt     DateTime     @default(now())
+  processedAt   DateTime?
+  version       BigInt       @default(1)
+  provider      User         @relation("PayoutProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  items         PayoutItem[] @relation("PayoutItems")
+
+  @@index([providerId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("payouts")
+}
+
+model PayoutItem {
+  id          String  @id @default(uuid())
+  payoutId    String
+  invoiceId   String  @unique
+  amountMinor BigInt
+  payout      Payout  @relation("PayoutItems", fields: [payoutId], references: [id], onDelete: Cascade)
+  invoice     Invoice @relation("InvoicePayoutItem", fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([payoutId])
+  @@map("payout_items")
+}
+
+model IdempotencyKey {
+  id        String   @id
+  endpoint  String
+  actorId   String   @map("actor_id")
+  requestHash String   @map("request_hash")
+  response  Json
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at") // TTL: default 7 days
+
+  @@unique([id, endpoint, actorId])
+  @@unique([endpoint, actorId, requestHash])
+  @@index([endpoint, actorId])
+  @@index([expiresAt]) // For cleanup queries
+  @@map("idempotency_keys")
+}
+
+model SwipeItemMapping {
+  id             String   @id @default(uuid())
+  serviceId      String   @unique @map("service_id")
+  serviceName    String   @map("service_name")
+  swipeItemId    String   @map("swipe_item_id")
+  baseRateMinor  BigInt   @map("base_rate_minor")
+  sacCode        String?  @map("sac_code")
+  category       String   @map("category")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([serviceId])
+  @@index([swipeItemId])
+  @@index([isActive])
+  @@map("swipe_item_mappings")
 }
 
 model PatientExercise {
@@ -1848,6 +2160,8 @@ model ProviderSubscription {
   providerId          String                    @unique
   plan                ProviderPlan
   price               Int
+  planVersion         Int                       @default(1)
+  priceLocked         Boolean                   @default(false)
   leadsPerWeek        Int
   startDate           DateTime                  @default(now())
   expiryDate          DateTime
@@ -2486,6 +2800,66 @@ model system_settings {
   updated_at DateTime @default(now()) @db.Timestamp(6)
 }
 
+model AgreementTemplate {
+  id                 Int                      @id @default(autoincrement())
+  template_name      String                   @unique
+  template_type      String
+  template_html      String
+  template_variables Json
+  description        String?
+  version            String                   @default("1.0")
+  is_active          Boolean                  @default(true)
+  usage_count        Int                      @default(0)
+  created_at         DateTime                 @default(now())
+  agreements         InstitutionalAgreement[]
+
+  @@map("agreement_templates")
+}
+
+model InstitutionalAgreement {
+  id                    Int                     @id @default(autoincrement())
+  agreement_number      String                  @unique
+  template_id           Int
+  agreement_type        String
+  partner_name          String
+  partner_type          String
+  partner_contact_name  String
+  partner_contact_email String
+  partner_contact_phone String
+  start_date            DateTime
+  end_date              DateTime?
+  annual_value          Float?
+  payment_terms         String?
+  billing_cycle         String?
+  template_data         Json
+  generated_pdf_path    String?
+  signature_status      String                  @default("draft")
+  status                String                  @default("draft")
+  created_at            DateTime                @default(now())
+  template              AgreementTemplate       @relation(fields: [template_id], references: [id], onDelete: Restrict)
+  signature_logs        AgreementSignatureLog[]
+
+  @@index([template_id])
+  @@index([status])
+  @@index([signature_status])
+  @@map("institutional_agreements")
+}
+
+model AgreementSignatureLog {
+  id          Int                    @id @default(autoincrement())
+  agreement_id Int
+  event_type  String
+  actor_type  String
+  actor_name  String
+  event_data  Json?
+  created_at  DateTime               @default(now())
+  agreement   InstitutionalAgreement @relation(fields: [agreement_id], references: [id], onDelete: Cascade)
+
+  @@index([agreement_id])
+  @@index([event_type])
+  @@map("agreement_signature_logs")
+}
+
 enum UserRole {
   PATIENT
   THERAPIST
@@ -2668,7 +3042,7 @@ enum WalletTxnStatus {
   VOIDED
 }
 
-enum PayoutStatus {
+enum PayoutRequestStatus {
   REQUESTED
   APPROVED
   PAID
@@ -2781,4 +3155,29 @@ enum WalletCreditStatus {
   AVAILABLE
   USED
   EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum InvoiceMethod {
+  PDF
+  SWIPE
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PayoutMethod {
+  BANK
+  UPI
 }

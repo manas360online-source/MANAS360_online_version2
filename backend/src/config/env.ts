@@ -38,10 +38,13 @@ const parseNumber = (value: string | undefined, fallback: number): number => {
 
 const parseCorsOrigins = (value: string | undefined): string[] => {
 	const raw = value ?? 'http://localhost:5173';
-	return raw
+	const parsed = raw
 		.split(',')
 		.map((origin) => origin.trim())
-		.filter((origin) => origin.length > 0);
+		.filter((origin) => origin.length > 0)
+		.map((origin) => origin.replace(/\/+$/, ''));
+
+	return Array.from(new Set(parsed));
 };
 
 const parseFrontendUrl = (value: string | undefined, corsOrigins: string[]): string => {
@@ -121,6 +124,11 @@ export interface EnvConfig {
 	allowPhonePeWebhookIpBypass: boolean;
 	subscriptionPaymentBypass: boolean;
 	freesoundApiKey?: string;
+	// Verification / provider checks
+	nmcApiUrl?: string;
+	nmcApiKey?: string;
+	verificationTimeoutMs: number;
+	smcApiMap: Record<string, string>;
 }
 
 const parsedCorsOrigins = parseCorsOrigins(process.env.CORS_ORIGIN);
@@ -176,6 +184,23 @@ export const env: EnvConfig = Object.freeze({
 	allowPhonePeWebhookIpBypass: parseBoolean(process.env.PHONEPE_WEBHOOK_IP_BYPASS, false),
 	subscriptionPaymentBypass: parseBoolean(process.env.SUBSCRIPTION_PAYMENT_BYPASS, false),
 	freesoundApiKey: process.env.FREESOUND_API_KEY,
+	// Verification endpoints and timeouts
+	nmcApiUrl: process.env.NMC_API_URL ?? 'https://www.nmc.org.in/MCIRest/open/getDataFromService?service=searchDoctor',
+	nmcApiKey: process.env.NMC_API_KEY ?? undefined,
+	verificationTimeoutMs: parseNumber(process.env.VERIFICATION_TIMEOUT_MS, 10000),
+	smcApiMap: (() => {
+		const raw = String(process.env.SMC_API_MAP || '').trim();
+		if (!raw) return {} as Record<string, string>;
+		try {
+			return JSON.parse(raw);
+		} catch (e) {
+			return raw.split(',').map(s => s.trim()).filter(Boolean).reduce((acc: Record<string,string>, pair) => {
+				const [k, v] = pair.split('=');
+				if (k && v) acc[k.trim()] = v.trim();
+				return acc;
+			}, {} as Record<string,string>);
+		}
+	})(),
 });
 
 if (

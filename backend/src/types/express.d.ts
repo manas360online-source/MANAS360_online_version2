@@ -55,6 +55,8 @@ interface TherapistMatchQuery {
 interface BookSessionPayload {
 	therapistId: string;
 	dateTime: Date;
+	qrCode?: string;
+	sid?: string;
 }
 
 interface PatientSessionHistoryQuery {
@@ -117,6 +119,8 @@ interface TherapistEarningsQuery {
 interface AdminListUsersQuery {
 	role?: string;
 	status?: string;
+	sortBy?: 'createdAt' | 'email' | 'role';
+	sortOrder?: 'asc' | 'desc';
 	page: number;
 	limit: number;
 }

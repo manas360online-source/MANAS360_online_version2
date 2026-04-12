@@ -330,6 +330,8 @@ const extractValidatedBookSessionPayload = (req: Request, _res: Response, next: 
 	req.validatedBookSessionPayload = {
 		therapistId: String(req.body.therapistId),
 		dateTime: new Date(String(req.body.dateTime)),
+		qrCode: typeof req.body.qrCode === 'string' ? String(req.body.qrCode).trim() : undefined,
+		sid: typeof req.body.sid === 'string' ? String(req.body.sid).trim() : undefined,
 	};
 
 	next();
@@ -338,6 +340,8 @@ const extractValidatedBookSessionPayload = (req: Request, _res: Response, next: 
 export const validateBookSessionRequest: RequestHandler[] = [
 	body('therapistId').isUUID().withMessage('therapistId must be a valid UUID'),
 	body('dateTime').isISO8601().withMessage('dateTime must be a valid ISO8601 date'),
+	body('qrCode').optional().isString().isLength({ min: 2, max: 120 }).withMessage('qrCode must be 2-120 chars'),
+	body('sid').optional().isString().isLength({ min: 2, max: 120 }).withMessage('sid must be 2-120 chars'),
 	body('dateTime').custom((value) => {
 		const date = new Date(String(value));
 		if (Number.isNaN(date.getTime())) {
@@ -718,6 +722,8 @@ const extractValidatedAdminListUsersQuery = (req: Request, _res: Response, next:
 	req.validatedAdminListUsersQuery = {
 		role: typeof req.query.role === 'string' ? req.query.role : undefined,
 		status: typeof req.query.status === 'string' ? req.query.status : undefined,
+		sortBy: typeof req.query.sortBy === 'string' ? (req.query.sortBy as 'createdAt' | 'email' | 'role') : undefined,
+		sortOrder: typeof req.query.sortOrder === 'string' ? (req.query.sortOrder as 'asc' | 'desc') : undefined,
 		page: pagination.page,
 		limit: pagination.limit,
 	};
@@ -736,6 +742,16 @@ export const validateAdminListUsersQuery: RequestHandler[] = [
 		.isString()
 		.isIn(['active', 'deleted'])
 		.withMessage('status must be one of: active, deleted'),
+	query('sortBy')
+		.optional()
+		.isString()
+		.isIn(['createdAt', 'email', 'role'])
+		.withMessage('sortBy must be one of: createdAt, email, role'),
+	query('sortOrder')
+		.optional()
+		.isString()
+		.isIn(['asc', 'desc'])
+		.withMessage('sortOrder must be one of: asc, desc'),
 	query('page').optional().isInt({ min: 1 }).withMessage('page must be a positive integer'),
 	query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('limit must be between 1 and 50'),
 	(req, _res, next) => applyValidationResult(req, next),
