@@ -6,33 +6,6 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { getPostLoginRoute, hasCorporateAccess, useAuth } from '../../context/AuthContext';
 
-type SignupRole = 'patient' | 'therapist' | 'psychiatrist' | 'psychologist' | 'coach';
-
-const VALID_SIGNUP_ROLES = new Set<SignupRole>(['patient', 'therapist', 'psychiatrist', 'psychologist', 'coach']);
-
-const resolveSignupRole = (candidate: unknown): SignupRole | null => {
-	if (typeof candidate !== 'string') {
-		return null;
-	}
-
-	const normalized = candidate.trim().toLowerCase();
-	return VALID_SIGNUP_ROLES.has(normalized as SignupRole) ? (normalized as SignupRole) : null;
-};
-
-const inferSignupRoleFromPath = (path: string | null | undefined): SignupRole | null => {
-	const normalizedPath = String(path || '').trim().toLowerCase();
-	if (!normalizedPath) {
-		return null;
-	}
-
-	if (normalizedPath.startsWith('/psychiatrist')) return 'psychiatrist';
-	if (normalizedPath.startsWith('/psychologist')) return 'psychologist';
-	if (normalizedPath.startsWith('/coach')) return 'coach';
-	if (normalizedPath.startsWith('/therapist') || normalizedPath.startsWith('/provider')) return 'therapist';
-
-	return null;
-};
-
 const isSubscriptionActive = (subscription: any): boolean => {
 	if (!subscription) return false;
 
@@ -47,14 +20,9 @@ export default function LoginPage() {
 	const { user, isAuthenticated, checkAuth } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const locationState = location.state as { from?: string; afterLogin?: string; role?: SignupRole } | null;
-	const from = locationState?.from;
-	const afterLogin = locationState?.afterLogin;
+	const from = (location.state as { from?: string; afterLogin?: string } | null)?.from;
+	const afterLogin = (location.state as { from?: string; afterLogin?: string } | null)?.afterLogin;
 	const next = new URLSearchParams(location.search).get('next');
-	const signupRoleFromQuery = resolveSignupRole(new URLSearchParams(location.search).get('role'));
-	const signupRoleFromState = resolveSignupRole(locationState?.role);
-	const signupRoleFromPath = inferSignupRoleFromPath(from || afterLogin || next);
-	const signupRole = signupRoleFromState || signupRoleFromQuery || signupRoleFromPath;
 
 	const [phone, setPhone] = useState('');
 	const [otp, setOtp] = useState('');
@@ -109,9 +77,6 @@ export default function LoginPage() {
 		}
 
 		const normalizedRole = String(role || '').toLowerCase();
-		if (normalizedRole === 'learner') {
-			return '/provider/dashboard';
-		}
 		const isPricingTarget = candidate.startsWith('/plans');
 		if (normalizedRole !== 'patient' || !isPricingTarget) {
 			return candidate;
@@ -157,92 +122,127 @@ export default function LoginPage() {
 		}
 	};
 
-	const verifyOtp = async () => {
-		setError(null);
-		setLoading(true);
-		try {
-			const guestGameToken = localStorage.getItem('guest_game_token') || undefined;
-			const result = await verifyPhoneSignupOtp(phone.trim(), otp.trim(), undefined, guestGameToken);
-			if (guestGameToken) {
-				localStorage.removeItem('guest_game_token');
-			}
-			// Force a session probe after OTP verify so auth state updates immediately.
-			await checkAuth({ force: true });
+	// const verifyOtp = async () => {
+	// 	setError(null);
+	// 	setLoading(true);
+	// 	try {
+	// 		const guestGameToken = localStorage.getItem('guest_game_token') || undefined;
+	// 		const result = await verifyPhoneSignupOtp(phone.trim(), otp.trim(), undefined, guestGameToken);
+	// 		if (guestGameToken) {
+	// 			localStorage.removeItem('guest_game_token');
+	// 		}
+	// 		// Force a session probe after OTP verify so auth state updates immediately.
+	// 		await checkAuth({ force: true });
 
-			// Use canonical auth user (from /auth/me) for routing, as OTP response may omit corporate flags.
-			let resolvedUser = result.user;
-			if (hasSessionCookieHint()) {
-				try {
-					resolvedUser = await fetchMe();
-				} catch {
-					// Keep OTP response user as fallback.
-				}
-			}
+	// 		// Use canonical auth user (from /auth/me) for routing, as OTP response may omit corporate flags.
+	// 		let resolvedUser = result.user;
+	// 		if (hasSessionCookieHint()) {
+	// 			try {
+	// 				resolvedUser = await fetchMe();
+	// 			} catch {
+	// 				// Keep OTP response user as fallback.
+	// 			}
+	// 		}
 			
-			// Check corporate access first - corporate admins bypass subscription checks
-			if (hasCorporateAccess(resolvedUser)) {
-				navigate('/corporate/dashboard', { replace: true });
-				return;
-			}
+	// 		// Check corporate access first - corporate admins bypass subscription checks
+	// 		if (hasCorporateAccess(resolvedUser)) {
+	// 			navigate('/corporate/dashboard', { replace: true });
+	// 			return;
+	// 		}
 			
-			// Redirect patients without subscription to plans
-			if ((resolvedUser as any)?.requiresSubscription) {
-				let hasActiveSubscription = false;
-				try {
-					const subscriptionResponse = await patientApi.getSubscription();
-					const subscriptionPayload = (subscriptionResponse as any)?.data ?? subscriptionResponse;
-					hasActiveSubscription = isSubscriptionActive(subscriptionPayload);
-				} catch {
-					hasActiveSubscription = false;
-				}
+	// 		// Redirect patients without subscription to plans
+	// 		if ((resolvedUser as any)?.requiresSubscription) {
+	// 			let hasActiveSubscription = false;
+	// 			try {
+	// 				const subscriptionResponse = await patientApi.getSubscription();
+	// 				const subscriptionPayload = (subscriptionResponse as any)?.data ?? subscriptionResponse;
+	// 				hasActiveSubscription = isSubscriptionActive(subscriptionPayload);
+	// 			} catch {
+	// 				hasActiveSubscription = false;
+	// 			}
 
-				if (hasActiveSubscription) {
-					const candidate = from || afterLogin || next || null;
-					const postLoginRoute = await resolvePostLoginRouteWithSubscription(candidate, resolvedUser?.role, resolvedUser);
-					navigate(postLoginRoute, { replace: true });
-					return;
-				}
+	// 			if (hasActiveSubscription) {
+	// 				const candidate = from || afterLogin || next || null;
+	// 				const postLoginRoute = await resolvePostLoginRouteWithSubscription(candidate, resolvedUser?.role, resolvedUser);
+	// 				navigate(postLoginRoute, { replace: true });
+	// 				return;
+	// 			}
 
-				const candidate = from || afterLogin || next || null;
-				const returnTo = candidate || '/';
-				navigate(`/plans?returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
-				return;
-			}
-			const candidate = from || afterLogin || next || null;
-			const postLoginRoute = await resolvePostLoginRouteWithSubscription(candidate, resolvedUser?.role, resolvedUser);
-			navigate(postLoginRoute, { replace: true });
-		} catch (err: any) {
-			const message = String(err?.response?.data?.message || '');
-			if (Number(err?.response?.status) === 422 && message.toLowerCase().includes('accept terms')) {
-				const returnToCandidate = from || afterLogin || next || '/certifications';
-				const params = new URLSearchParams();
-				params.set('phone', phone.trim());
-				params.set('returnTo', returnToCandidate);
-				params.set('reason', 'terms');
-				const requestedUserType = new URLSearchParams(location.search).get('userType');
-				if (requestedUserType) {
-					params.set('userType', requestedUserType);
-				}
-				navigate(`/auth/signup?${params.toString()}`, { replace: true });
-				const searchParams = new URLSearchParams({ phone: phone.trim() });
-				if (signupRole) {
-					searchParams.set('role', signupRole);
-				}
-				navigate(`/auth/signup?${searchParams.toString()}`, {
-					replace: true,
-					state: {
-						from,
-						afterLogin,
-						role: signupRole,
-					},
-				});
-				return;
-			}
-			setError(getApiErrorMessage(err, 'OTP verification failed'));
-		} finally {
-			setLoading(false);
-		}
-	};
+	// 			const candidate = from || afterLogin || next || null;
+	// 			const returnTo = candidate || '/';
+	// 			navigate(`/plans?returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
+	// 			return;
+	// 		}
+	// 		const candidate = from || afterLogin || next || null;
+	// 		const postLoginRoute = await resolvePostLoginRouteWithSubscription(candidate, resolvedUser?.role, resolvedUser);
+	// 		navigate(postLoginRoute, { replace: true });
+	// 	} catch (err: any) {
+	// 		const message = String(err?.response?.data?.message || '');
+	// 		if (Number(err?.response?.status) === 422 && message.toLowerCase().includes('accept terms')) {
+	// 			navigate(`/auth/signup?phone=${encodeURIComponent(phone.trim())}`, { replace: true });
+	// 			return;
+	// 		}
+	// 		setError(getApiErrorMessage(err, 'OTP verification failed'));
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
+
+
+const verifyOtp = async () => {
+  setError(null);
+  setLoading(true);
+
+  try {
+    const guestGameToken = localStorage.getItem('guest_game_token') || undefined;
+
+    const result = await verifyPhoneSignupOtp(
+      phone.trim(),
+      otp.trim(),
+      { acceptedTerms: true },
+      guestGameToken
+    );
+
+    if (guestGameToken) {
+      localStorage.removeItem('guest_game_token');
+    }
+
+    await checkAuth({ force: true });
+
+    let resolvedUser = result.user;
+
+    if (hasSessionCookieHint()) {
+      try {
+        resolvedUser = await fetchMe();
+      } catch {
+        // fallback result.user
+      }
+    }
+
+    const role = String(resolvedUser?.role || '').toLowerCase();
+
+    if (hasCorporateAccess(resolvedUser)) {
+      navigate('/corporate/dashboard', { replace: true });
+      return;
+    }
+
+    if (['therapist', 'psychiatrist', 'psychologist', 'coach'].includes(role)) {
+      navigate('/provider/plans', { replace: true });
+      return;
+    }
+
+    if (role === 'patient') {
+      navigate('/patient/sessions', { replace: true });
+      return;
+    }
+
+    navigate(getPostLoginRoute(resolvedUser), { replace: true });
+  } catch (err: any) {
+    setError(getApiErrorMessage(err, 'OTP verification failed'));
+  } finally {
+    setLoading(false);
+  }
+};
 
 	return (
 		<div className="relative min-h-screen overflow-hidden">
@@ -298,13 +298,13 @@ export default function LoginPage() {
 									id="login-otp"
 									label="One-Time Code"
 									inputMode="numeric"
-									pattern="\\d{4}"
-									maxLength={4}
+									pattern="\\d{6}"
+									maxLength={6}
 									autoComplete="one-time-code"
-									placeholder="4-digit OTP"
+									placeholder="6-digit OTP"
 									helperText="We'll send you a one-time code"
 									value={otp}
-									onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 4))}
+									onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
 									required
 								/>
 							) : null}
@@ -336,11 +336,7 @@ export default function LoginPage() {
 							🔒 Your data is secure and confidential.
 						</p>
 
-						{devOtp ? (
-							<p className="mt-3 text-xs text-wellness-muted">
-								Development OTP: <span className="font-semibold text-wellness-text">{devOtp}</span>
-							</p>
-						) : null}
+						
 
 						{error ? (
 							<p role="alert" aria-live="polite" className="mt-3 text-sm text-red-600">
@@ -350,11 +346,7 @@ export default function LoginPage() {
 
 						<p className="mt-4 text-center text-sm text-wellness-muted">
 							Need to create an account?{' '}
-							<Link
-								to={signupRole ? `/auth/signup?role=${encodeURIComponent(signupRole)}` : '/auth/signup'}
-								state={signupRole ? { role: signupRole } : undefined}
-								className="text-calm-sage underline underline-offset-2 hover:text-wellness-text"
-							>
+							<Link to="/auth/signup" className="text-calm-sage underline underline-offset-2 hover:text-wellness-text">
 								Register here
 							</Link>
 						</p>

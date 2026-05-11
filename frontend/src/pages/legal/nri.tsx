@@ -95,8 +95,8 @@ export default function NriPatch({ onChange, blockSubmitButtons = true }: NriPat
     <>
       <style>{`
         .nri-patch{margin:16px 0;font-family:inherit}
-        .nri-row{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fafafa;cursor:pointer;transition:all .2s}
-        .nri-row:hover{border-color:#C4956A;background:#fffbf5}
+        .nri-row{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .2s}
+        .nri-row:hover{border-color:#C4956A;}
         .nri-row.on{border-color:#E65100;background:#fff3e0}
         .nri-row input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:#E65100;cursor:pointer;flex-shrink:0}
         .nri-lbl{font-size:13px;color:#1a1a1a;line-height:1.5}
@@ -124,6 +124,7 @@ export default function NriPatch({ onChange, blockSubmitButtons = true }: NriPat
         .nri-mf label.disabled{color:#9ca3af}
         .nri-scroll-hint{font-size:10px;color:#9ca3af;text-align:center;padding:4px;background:#f3f4f6;display:none}
         .nri-scroll-hint.show{display:block}
+        
       `}</style>
 
       <div className="nri-patch" id="nriPatch">
@@ -147,13 +148,16 @@ export default function NriPatch({ onChange, blockSubmitButtons = true }: NriPat
             onClick={(e) => e.stopPropagation()}
             onChange={toggleNri}
           />
-          <div className="nri-lbl">
-            <strong>I am an NRI / residing outside India</strong>
-            <span className="sm">
-              If checked, you will need to review and accept NRI-specific Terms of Service. All services are governed
-              by Indian law and Bengaluru jurisdiction.
-            </span>
-          </div>
+       <div className="nri-lbl">
+  <strong className="nri-title">
+    I am an NRI / residing outside India
+  </strong>
+
+  <span className="sm">
+    If checked, you will need to review and accept NRI-specific Terms of Service.
+    All services are governed by Indian law and Bengaluru jurisdiction.
+  </span>
+</div>
         </div>
 
         <div

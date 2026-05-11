@@ -22,19 +22,12 @@ export const getWalletBalanceController = async (req: Request, res: Response): P
   const userId = getAuthUserId(req);
   const wallet = await getOrCreateWallet(userId);
 
-  // Ensure balance is properly typed and safe
-  const totalBalance = Number(wallet.balance || 0);
-  
-  // Log balance retrieval for debugging - include wallet object details
-  // eslint-disable-next-line no-console
-  console.log(`[WALLET] Retrieved balance for user ${userId}: totalBalance=${totalBalance}, wallet.balance=${wallet.balance}, walletId=${wallet.id}`);
-
   sendSuccess(res, {
     user_id: userId,
     // Prisma model `UserWallet` currently stores only the aggregate balance.
     // The frontend wallet widget expects these keys; for now we return 0 for credits
     // that are not represented in the current schema.
-    total_balance: totalBalance,
+    total_balance: wallet.balance ?? 0,
     game_credits: 0,
     referral_credits: 0,
     promo_credits: 0,

@@ -5,7 +5,6 @@ import { sendSuccess } from '../utils/response';
 import { env } from '../config/env';
 import { initiatePhonePePayment } from '../services/phonepe.service';
 import { io } from '../socket';
-import { logger } from '../utils/logger';
 
 const db = prisma as any;
 
@@ -236,7 +235,7 @@ export const publishGroupTherapySessionController = async (req: Request, res: Re
 export const listPublicPublishedGroupTherapySessionsController = async (_req: Request, res: Response): Promise<void> => {
   try {
     const rows = await db.groupTherapySession.findMany({
-      where: { status: { in: ['PUBLISHED', 'LIVE'] } },
+      where: { status: 'PUBLISHED' },
       orderBy: { scheduledAt: 'asc' },
       select: {
         id: true,
@@ -253,42 +252,13 @@ export const listPublicPublishedGroupTherapySessionsController = async (_req: Re
         requiresPayment: true,
         createdAt: true,
         updatedAt: true,
-        hostTherapist: {
-          select: {
-            firstName: true,
-            lastName: true,
-            therapistProfile: {
-              select: {
-                languages: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            enrollments: true,
-          },
-        },
       },
     });
 
-    logger.info('[GroupTherapy] Found sessions:', { count: rows.length });
-    const sessions = rows.map((session) => {
-      try {
-        return {
-          ...session,
-          priceMinor: session.priceMinor.toString(),
-          hostName: `${String(session.hostTherapist?.firstName || '').trim()} ${String(session.hostTherapist?.lastName || '').trim()}`.trim() || 'MANAS360 Expert',
-          language: Array.isArray(session.hostTherapist?.therapistProfile?.languages) && session.hostTherapist?.therapistProfile?.languages?.length
-            ? String(session.hostTherapist.therapistProfile.languages[0])
-            : 'English',
-          joinedCount: Number(session._count?.enrollments || 0),
-        };
-      } catch (err: any) {
-        logger.error('[GroupTherapy] Failed to format session:', { sessionId: session.id, error: err.message });
-        return null;
-      }
-    }).filter(Boolean);
+    const sessions = rows.map((session) => ({
+      ...session,
+      priceMinor: session.priceMinor.toString(),
+    }));
 
     res.status(200).json({
       success: true,
@@ -296,8 +266,7 @@ export const listPublicPublishedGroupTherapySessionsController = async (_req: Re
         items: sessions,
       },
     });
-  } catch (error: any) {
-    logger.error('[GroupTherapy] Global list sessions failure:', { error: error.message, stack: error.stack });
+  } catch (error) {
     // Keep landing usable even if group-therapy tables are not migrated in this environment.
     res.status(200).json({
       success: true,
@@ -405,7 +374,7 @@ export const confirmPublicJoinController = async (req: Request, res: Response): 
   const payment = await db.financialPayment.findUnique({ where: { merchantTransactionId: transactionId } });
   if (!payment) throw new AppError('Payment transaction not found', 404);
 
-  const isPaid = String(payment.status) === 'CAPTURED';
+  const isPaid = String(payment.status) === 'CAPTURED' || String(payment.status) === 'INITIATED';
   if (!isPaid) throw new AppError('Payment is not completed yet', 422);
 
   const enrollment = await db.groupTherapyEnrollment.findFirst({
@@ -680,7 +649,7 @@ export const confirmPrivateInvitePaymentController = async (req: Request, res: R
   const payment = await db.financialPayment.findUnique({ where: { merchantTransactionId: transactionId } });
   if (!payment) throw new AppError('Payment not found', 404);
 
-  const isPaid = String(payment.status) === 'CAPTURED';
+  const isPaid = String(payment.status) === 'CAPTURED' || String(payment.status) === 'INITIATED';
   if (!isPaid) throw new AppError('Payment is not completed yet', 422);
 
   const updated = await db.groupTherapyInvite.update({

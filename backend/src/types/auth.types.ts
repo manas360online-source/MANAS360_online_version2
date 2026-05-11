@@ -17,7 +17,6 @@ export interface VerifyPhoneOtpInput {
 	otp: string;
 	acceptedTerms?: boolean;
 	acceptedDocuments?: string[];
-	guestGameToken?: string;
 	nri_declared?: boolean;
 	nri_tos_accepted?: boolean;
 	nri_tos_accepted_at?: string;
@@ -61,9 +60,6 @@ export interface JwtAccessPayload {
 	type: 'access';
 	sessionId: string;
 	jti: string;
-	clinicId?: string;
-	mdcRole?: 'admin' | 'therapist' | 'patient';
-	loginCode?: string;
 }
 
 export interface JwtRefreshPayload {

@@ -11,7 +11,9 @@ import SlideOverBookingDrawer from '../../components/patient/SlideOverBookingDra
 import SmartMatchFlow from '../../components/patient/SmartMatchFlow';
 import {
   CLINICAL_ASSESSMENT_KEYS,
+  CLINICAL_ASSESSMENT_OPTIONS,
   CLINICAL_ASSESSMENT_TEMPLATE_KEYS,
+  CLINICAL_QUESTION_BANK,
   getClinicalAssessmentMaxScore,
   getClinicalAssessmentSummary,
   severityFromClinicalScore,
@@ -98,17 +100,6 @@ type AssessmentDraft = {
   activeCarePathLabel: string;
 };
 
-type SmartMatchSummary = {
-  selectedDate?: string;
-  selectedTime?: string;
-  preferences?: {
-    concerns?: string[];
-    language?: string;
-    mode?: string;
-    context?: 'Standard' | 'Corporate' | 'Night' | 'Buddy' | 'Crisis';
-  };
-};
-
 export default function SessionsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -148,7 +139,6 @@ export default function SessionsPage() {
   const [activeCarePathLabel, setActiveCarePathLabel] = useState('');
   const [bookingFallbackLoading, setBookingFallbackLoading] = useState(false);
   const [bookingFallbackError, setBookingFallbackError] = useState<string | null>(null);
-  const [smartMatchSummary, setSmartMatchSummary] = useState<SmartMatchSummary | null>(null);
   const [bookingContext, setBookingContext] = useState<{
     fromAssessment: boolean;
     carePath?: 'recommended' | 'direct' | 'urgent';
@@ -393,9 +383,26 @@ export default function SessionsPage() {
   };
 
   const loadStructuredAssessment = async (assessmentType: ClinicalAssessmentKey) => {
-    const response = await patientApi.startStructuredAssessment({
-      templateKey: structuredTemplateKeys[assessmentType],
-    });
+      const questions = CLINICAL_QUESTION_BANK[assessmentType].map((prompt, index) => ({
+      questionId: `${assessmentType}-${index + 1}`,
+      position: index + 1,
+      prompt,
+      sectionKey: assessmentType,
+        options: CLINICAL_ASSESSMENT_OPTIONS,
+    }));
+
+    const response: StructuredAssessmentStartResponse = {
+      attemptId: `${assessmentType}-${Date.now()}`,
+      template: {
+        id: assessmentType,
+        key: structuredTemplateKeys[assessmentType],
+        title: assessmentType,
+        description: `${assessmentType} standard assessment`,
+        estimatedMinutes: assessmentType === 'PHQ-9' ? 4 : 3,
+      },
+      questions,
+    };
+
     setStructuredAttempt(response);
     setStructuredAnswers({});
     setCurrentStructuredQuestionIndex(0);
@@ -583,23 +590,24 @@ export default function SessionsPage() {
     setAssessmentDraft(loadAssessmentDraft());
   }, []);
 
+  // Auto-navigate to provider selection when both PHQ-9 and GAD-7 are completed
   useEffect(() => {
-    const routeState = location.state as { smartMatchSummary?: SmartMatchSummary } | null;
-    const fromRoute = routeState?.smartMatchSummary || null;
-    if (fromRoute) {
-      setSmartMatchSummary(fromRoute);
-      return;
-    }
-
-    try {
-      const stored = window.sessionStorage.getItem('manas360.smartmatch.lastSummary');
-      if (stored) {
-        setSmartMatchSummary(JSON.parse(stored) as SmartMatchSummary);
+    if (isClinicalAssessmentOpen && clinicalFlowPhase === 'next-phase' && clinicalResults.length >= 2) {
+      const hasPhq = clinicalResults.some((r) => r.type === 'PHQ-9');
+      const hasGad = clinicalResults.some((r) => r.type === 'GAD-7');
+      
+      if (hasPhq && hasGad) {
+        // Both assessments are completed - navigate to provider-selection page
+        setIsClinicalAssessmentOpen(false);
+        navigate('/patient/provider-selection', {
+          state: {
+            fromAssessment: true,
+            assessmentResults: clinicalResults,
+          },
+        });
       }
-    } catch {
-      // Ignore malformed stored state and keep the page usable.
     }
-  }, [location.state]);
+  }, [isClinicalAssessmentOpen, clinicalFlowPhase, clinicalResults, navigate]);
 
   useEffect(() => {
     const refreshSessions = () => {
@@ -1342,61 +1350,6 @@ export default function SessionsPage() {
                     We'll first show your previously consulted providers.
                   </p>
                 ) : null}
-              </div>
-            </section>
-          )}
-
-          {smartMatchSummary && (
-            <section className="rounded-3xl border border-teal-200/70 bg-teal-50/80 p-6 shadow-soft-sm">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 text-teal-600">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-teal-900">Confirmed Match Summary</h3>
-                  <p className="text-xs text-teal-700/80">Your platform fee is confirmed. These preferences will drive your provider recommendations.</p>
-                </div>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl bg-white/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700/70">Selected Date & Time</p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
-                    {smartMatchSummary.selectedDate ? new Date(smartMatchSummary.selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'Not captured'}
-                  </p>
-                  <p className="text-sm text-charcoal/70">{smartMatchSummary.selectedTime || 'Not captured'}</p>
-                </div>
-
-                <div className="rounded-2xl bg-white/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700/70">Top Concerns</p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
-                    {(smartMatchSummary.preferences?.concerns || []).length > 0
-                      ? smartMatchSummary.preferences?.concerns?.join(', ')
-                      : 'Not captured'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-white/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700/70">Communication Preference</p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
-                    {smartMatchSummary.preferences?.language || 'Any language'}
-                  </p>
-                  <p className="text-sm text-charcoal/70">{smartMatchSummary.preferences?.mode || 'Any mode'}</p>
-                </div>
-
-                <div className="rounded-2xl bg-white/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700/70">Session Mode</p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
-                    {smartMatchSummary.preferences?.mode || 'Not captured'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-white/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700/70">Matching Context</p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
-                    {smartMatchSummary.preferences?.context || 'Standard'}
-                  </p>
-                </div>
               </div>
             </section>
           )}

@@ -1,6 +1,6 @@
-import { AppError } from '../middleware/error.middleware';
+// import { AppError } from '../middleware/error.middleware';
 import { prisma } from '../config/db';
-import { initiateProviderPlatformPayment } from './provider-subscription-payment.service';
+// import { initiateProviderPlatformPayment } from './provider-subscription-payment.service';
 
 const db = prisma as any;
 
@@ -55,7 +55,7 @@ export const initiatePlatformAccessPayment = async (
 	billingCycle: 'monthly' | 'quarterly',
 ) => {
 	if (!PLATFORM_ACCESS_PRICES[billingCycle]) {
-		throw new AppError('Invalid billing cycle', 422);
+		throw new Error('Invalid billing cycle');
 	}
 
 	const amountMinor = PLATFORM_ACCESS_PRICES[billingCycle];
@@ -104,7 +104,7 @@ export const activatePlatformAccess = async (
 /** Cancel platform access */
 export const cancelPlatformAccess = async (providerId: string) => {
 	const record = await db.platformAccess.findUnique({ where: { providerId } });
-	if (!record) throw new AppError('No platform access record found', 404);
+	if (!record) throw new Error('No platform access record found');
 
 	return db.platformAccess.update({
 		where: { providerId },

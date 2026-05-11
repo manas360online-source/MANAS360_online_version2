@@ -31,7 +31,6 @@ import { logger } from '../utils/logger';
 import { sendPlatformAdminPasswordResetEmail } from './email.service';
 import { NRI_CONSENT_TYPE, getActiveLegalDocuments, hasAcceptedNriTerms, recordUserAcceptances } from './legal-compliance.service';
 import { sendWhatsAppMessage } from './whatsapp.service';
-import { send2FactorOtp } from './otp.service';
 import type { WhatsAppUserType } from './whatsapp.service';
 import { addCredit } from './wallet.service';
 import jwt from 'jsonwebtoken';
@@ -49,6 +48,8 @@ import type {
 	RequestMeta,
 	VerifyPhoneOtpInput,
 } from '../types/auth.types';
+
+import { sendTwoFactorOtp } from "../services/twoFactorOtp.service";
 
 const googleClient = new OAuth2Client(env.googleClientId);
 const db = prisma as any;
@@ -122,13 +123,8 @@ const isPlatformAdminAccount = async (user: { id: string; role?: string | null }
 		return false;
 	}
 
-	try {
-		const companyMeta = await getCompanyAdminMeta(String(user.id));
-		return !companyMeta.company_key && !companyMeta.is_company_admin;
-	} catch (err: any) {
-		logger.error('[Auth] isPlatformAdminAccount check failed:', { userId: user.id, error: err.message });
-		return false;
-	}
+	const companyMeta = await getCompanyAdminMeta(String(user.id));
+	return !companyMeta.company_key && !companyMeta.is_company_admin;
 };
 
 const getEmailDomain = (email?: string | null): string | null => {
@@ -255,7 +251,7 @@ const audit = async (
 	}
 };
 
-export const issueSessionTokens = async (userId: string, meta: RequestMeta) => {
+const issueSessionTokens = async (userId: string, meta: RequestMeta) => {
 	const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
 	const createdSession = await db.authSession.create({
 		data: {
@@ -423,22 +419,28 @@ export const registerProviderProfile = async (userId: string, input: ProviderReg
 				yearsOfExperience: Math.max(0, Number(input.yearsExperience || 0)),
 				hourlyRate: Math.max(0, Number(input.hourlyRate || 0)),
 				consultationFee: Math.max(0, Number(input.hourlyRate || 0)),
-				bankDetails: input.bankDetails || undefined,
+				// bankDetails: input.bankDetails || undefined,
+				bankDetails: input.documents?.length
+  ? {
+      ...(input.bankDetails || {}),
+      credentialDocuments: input.documents,
+    }
+  : input.bankDetails || undefined,
 				tagline: input.tagline?.trim() || undefined,
 				digitalSignature: input.digitalSignature?.trim() || undefined,
 				bio: input.bio?.trim() || undefined,
 				onboardingCompleted: false,
 				isVerified: false,
 				averageRating: 0,
-				documents: input.documents?.length
-					? {
-						create: input.documents.map((document) => ({
-							userId: user.id,
-							documentType: document.documentType,
-							url: String(document.url).trim(),
-						})),
-					}
-					: undefined,
+				// documents: input.documents?.length
+				// 	? {
+				// 		create: input.documents.map((document) => ({
+				// 			userId: user.id,
+				// 			documentType: document.documentType,
+				// 			url: String(document.url).trim(),
+				// 		})),
+				// 	}
+				// 	: undefined,
 			},
 			select: {
 				id: true,
@@ -450,12 +452,12 @@ export const registerProviderProfile = async (userId: string, input: ProviderReg
 				highestQual: true,
 				hourlyRate: true,
 				isVerified: true,
-				documents: {
-					select: {
-						documentType: true,
-						url: true,
-					},
-				},
+				// documents: {
+				// 	select: {
+				// 		documentType: true,
+				// 		url: true,
+				// 	},
+				// },
 				createdAt: true,
 			},
 		});
@@ -503,44 +505,23 @@ export const registerWithPhone = async (input: RegisterPhoneInput) => {
 			role: true,
 		},
 	});
-	logger.info('[Auth] registerWithPhone starting:', { phone: input.phone, hasExisting: !!existing });
 	if (existing?.isDeleted) {
 		throw new AppError('Account is deleted. Contact support to restore access.', 410);
 	}
 	if (existing && (await isPlatformAdminAccount({ id: String(existing.id), role: String(existing.role || '') }))) {
-		logger.warn('[Auth] registerWithPhone blocked: Platform admin attempt', { userId: existing.id });
 		throw new AppError('Platform admin accounts must login using email and password', 403);
 	}
 
 	const otp = generateNumericOtp();
 	const otpHash = await hashOtp(otp);
-	const requestedRole = input.role ? toPrismaUserRole(input.role) : null;
-	const existingRole = String(existing?.role || '').toUpperCase();
-	const role = requestedRole || 'PATIENT';
+	const role = input.role ? toPrismaUserRole(input.role) : 'PATIENT';
 	const trimmedName = String(input.name || '').trim();
-
-	// Role Hierarchy: PATIENT < LEARNER < PROVIDER (therapist, coach, etc.)
-	const getRoleWeight = (r: string): number => {
-		const nr = String(r || '').toUpperCase();
-		if (nr === 'SUPER_ADMIN' || nr === 'ADMIN') return 100;
-		if (['THERAPIST', 'PSYCHOLOGIST', 'COACH', 'PSYCHIATRIST'].includes(nr)) return 30;
-		if (nr === 'LEARNER') return 20;
-		if (nr === 'PATIENT') return 10;
-		return 0;
-	};
-
-	const existingWeight = getRoleWeight(existingRole);
-	const requestedWeight = getRoleWeight(role);
-
-	// Promote role if the requested role is higher than the current one
-	const shouldPromoteExistingRole = existing && requestedWeight > existingWeight;
 	const user = existing
 		? await db.user.update({
 				where: { id: existing.id },
 				data: {
 					phoneVerificationOtpHash: otpHash,
 					phoneVerificationOtpExpiresAt: nowPlusMinutes(env.otpTtlMinutes),
-					...(shouldPromoteExistingRole ? { role: requestedRole as any } : {}),
 				},
 				select: {
 					id: true,
@@ -566,28 +547,35 @@ export const registerWithPhone = async (input: RegisterPhoneInput) => {
 				},
 		  });
 
-	// Send OTP via 2factor.in SMS (non-blocking)
-	const smsTemplate = existing ? 'otp_login' : 'Registration11';
-	send2FactorOtp(input.phone, otp, smsTemplate).catch((err) => {
-		console.error('[Auth] Failed to send 2Factor SMS OTP:', err.message);
-	});
-
 	// Send WhatsApp OTP message (non-blocking)
-	sendWhatsAppMessage({
-		phoneNumber: user.phone,
-		templateType: 'user_otp_login',
-		userType: 'user',
-		templateVariables: { otp },
-		language: 'en',
-		flowEvent: 'USER_REGISTERED',
-		flowRole: String(role || 'PATIENT').toUpperCase(),
-		flowData: {
-			userId: String(user.id),
-			name: trimmedName || 'User',
-		},
-	}).catch((err) => {
-		console.error('[Auth] Failed to send WhatsApp OTP:', err.message);
-	});
+	const otpChannel = String(process.env.OTP_CHANNEL || "both").toLowerCase();
+
+if (otpChannel === "sms" || otpChannel === "both") {
+  sendTwoFactorOtp(user.phone, otp).catch((err) => {
+    console.error("[Auth] Failed to send 2Factor SMS OTP:", err.message);
+  });
+}
+
+
+
+if (otpChannel === "whatsapp" || otpChannel === "both") {
+sendWhatsAppMessage({
+  phoneNumber: user.phone,
+  templateType: 'user_otp_login',
+  userType: 'user',
+ templateVariables: { VAR1: String(otp), otp: String(otp) },
+  language: 'en',
+  flowEvent: 'USER_REGISTERED',
+  flowRole: String(role || 'PATIENT').toUpperCase(),
+  flowData: {
+    userId: String(user.id),
+    name: trimmedName || 'User',
+    otp: String(otp),
+  },
+}).catch((err) => {
+  console.error('[Auth] Failed to send WhatsApp OTP:', err.message);
+});
+}
 
 	return {
 		userId: String(user.id),
@@ -651,7 +639,7 @@ export const verifyPhoneOtp = async (input: VerifyPhoneOtpInput, meta: RequestMe
 
 	const guestGameToken = (input as any).guestGameToken;
 
-	if (guestGameToken) {
+	if (isFirstPhoneVerification && guestGameToken) {
 		try {
 			const decoded = jwt.verify(guestGameToken, env.jwtSecret) as { outcome: string, creditAmount: number };
 
@@ -663,7 +651,7 @@ export const verifyPhoneOtp = async (input: VerifyPhoneOtpInput, meta: RequestMe
 				// ignore logging errors
 			}
 			
-			// Only apply if user hasn't played before (idempotent guest-token claim)
+			// Only apply if user hasn't played before (strictly a signup bonus)
 			const existingPlay = await db.dailyGamePlay.findFirst({ where: { userId: String(user.id) } }).catch(() => null);
 			if (!existingPlay) {
 					const gamePlay = await db.dailyGamePlay.create({

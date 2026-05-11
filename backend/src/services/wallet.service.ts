@@ -69,62 +69,52 @@ export const addCredit = async (input: {
   const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
   const source = sourceRaw.toUpperCase() || 'GAME_WIN';
 
-  try {
-    return await db.$transaction(async (tx: any) => {
-      const wallet = await tx.userWallet.upsert({
-        where: { userId: input.userId },
-        update: {},
-        create: { userId: input.userId },
-      });
-
-      const balanceBefore = Number(wallet.balance || 0);
-      const balanceAfter = balanceBefore + amount;
-
-      await tx.walletCredit.create({
-        data: {
-          walletId: wallet.id,
-          source,
-          amount,
-          status: 'AVAILABLE',
-          expiresAt,
-        },
-      });
-
-      const transaction = await tx.userWalletTransaction.create({
-        data: {
-          walletId: wallet.id,
-          transactionType: 'CREDIT',
-          amount,
-          balanceAfter,
-          referenceId: input.sourceId || null,
-          description: `Earned ${amount} from ${source}`,
-        },
-      });
-
-      await tx.userWallet.update({
-        where: { id: wallet.id },
-        data: {
-          balance: balanceAfter,
-          lastTxnDate: now,
-        },
-      });
-
-      // Log credit transaction for debugging
-      // eslint-disable-next-line no-console
-      console.log(`[WALLET] Credit added for user ${input.userId}: ${amount} from ${source}. Balance: ${balanceBefore} -> ${balanceAfter}. TransactionId: ${transaction.id}`);
-
-      return {
-        transactionId: transaction.id,
-        balanceBefore,
-        balanceAfter,
-        expiresAt,
-      };
+  return db.$transaction(async (tx: any) => {
+    const wallet = await tx.userWallet.upsert({
+      where: { userId: input.userId },
+      update: {},
+      create: { userId: input.userId },
     });
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error(`[WALLET] Error adding credit for user ${input.userId}: ${String((error as any)?.message || '')}`, error);
-    throw error;
-  }
+
+    const balanceBefore = Number(wallet.balance || 0);
+    const balanceAfter = balanceBefore + amount;
+
+    await tx.walletCredit.create({
+      data: {
+        walletId: wallet.id,
+        source,
+        amount,
+        status: 'AVAILABLE',
+        expiresAt,
+      },
+    });
+
+    const transaction = await tx.userWalletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        transactionType: 'CREDIT',
+        amount,
+        balanceAfter,
+        referenceId: input.sourceId || null,
+        description: `Earned ${amount} from ${source}`,
+      },
+    });
+
+    await tx.userWallet.update({
+      where: { id: wallet.id },
+      data: {
+        balance: balanceAfter,
+        lastTxnDate: now,
+      },
+    });
+
+    return {
+      transactionId: transaction.id,
+      balanceBefore,
+      balanceAfter,
+      expiresAt,
+    };
+  });
 };
 
 export const applyCreditsForPayment = async (input: {

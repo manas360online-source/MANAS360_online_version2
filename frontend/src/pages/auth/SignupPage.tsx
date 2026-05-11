@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { getApiErrorMessage, me as fetchMe, signupWithPhone, verifyPhoneSignupOtp } from '../../api/auth';
+import { getApiErrorMessage, signupWithPhone, verifyPhoneSignupOtp , providerRegister} from '../../api/auth';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuth, getPostLoginRoute } from '../../context/AuthContext';
 import NriPatch, { type NriConsentState } from '../legal/nri';
 
-type SignupRole = 'patient' | 'therapist' | 'psychiatrist' | 'psychologist' | 'coach';
+type SignupRole =
+  | 'patient'
+  | 'therapist'
+  | 'corporate'
+  | 'clinic';
+
+  type SignupStep = 1 | 2 | 3 | 4;
+
 type ProviderAgreementKey = 'THERAPIST_IC_AGREEMENT' | 'THERAPIST_NDA' | 'THERAPIST_DATA_PROCESSING_AGREEMENT';
 
 const PROVIDER_AGREEMENTS: Array<{ key: ProviderAgreementKey; label: string; sections: string[] }> = [
@@ -145,62 +151,91 @@ const PATIENT_TERMS_SECTIONS: string[] = [
 
 export default function SignupPage() {
 	const { checkAuth } = useAuth();
-	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const locationState = location.state as { role?: SignupRole } | null;
-	const initialRole = useMemo<SignupRole>(() => {
-		const candidateRole = locationState?.role || new URLSearchParams(location.search).get('role');
-		if (candidateRole === 'therapist' || candidateRole === 'psychiatrist' || candidateRole === 'psychologist' || candidateRole === 'coach') {
-			return candidateRole;
-		}
-
-		return 'patient';
-	}, [location.search, locationState]);
 
 	const [name, setName] = useState('');
 	const [phone, setPhone] = useState('');
-	const [role, setRole] = useState<SignupRole>(initialRole);
+	const [role, setRole] = useState<SignupRole>('patient');
 	const [otp, setOtp] = useState('');
 	const [otpSent, setOtpSent] = useState(false);
 	const [devOtp, setDevOtp] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
-	const [aadhaar, setAadhaar] = useState('');
-	const [otpForAadhaar, setOtpForAadhaar] = useState('');
-	const [isAadhaarVerified, setIsAadhaarVerified] = useState(false);
-	const [isAadhaarOtpSent, setIsAadhaarOtpSent] = useState(false);
-	const [isAadhaarOtpLoading, setIsAadhaarOtpLoading] = useState(false);
-	const [maskedAadhaar, setMaskedAadhaar] = useState('');
-	const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState('');
+	
 	const [providerAgreementsAccepted, setProviderAgreementsAccepted] = useState<Record<ProviderAgreementKey, boolean>>({
 		THERAPIST_IC_AGREEMENT: false,
 		THERAPIST_NDA: false,
 		THERAPIST_DATA_PROCESSING_AGREEMENT: false,
 	});
+	const [showSignupFields, setShowSignupFields] = useState(false);
 	const [nriConsent, setNriConsent] = useState<NriConsentState>({
 		nri_declared: false,
 		nri_tos_accepted: false,
 		nri_tos_accepted_at: '',
 	});
+
+  const [signupStep, setSignupStep] = useState<SignupStep>(1);
+const [selectedSpecialization, setSelectedSpecialization] = useState('');
+
 	const [showPatientTermsModal, setShowPatientTermsModal] = useState(false);
 	const [canAcceptPatientTerms, setCanAcceptPatientTerms] = useState(false);
 	const [activeAgreement, setActiveAgreement] = useState<ProviderAgreementKey | null>(null);
 	const [canAcceptActiveAgreement, setCanAcceptActiveAgreement] = useState(false);
 	const agreementScrollRef = useRef<HTMLDivElement | null>(null);
 	const patientTermsScrollRef = useRef<HTMLDivElement | null>(null);
+	const [email, setEmail] = useState("");
+const [dob, setDob] = useState("");
+const [gender, setGender] = useState("");
+const [language, setLanguage] = useState("English");
+const [city, setCity] = useState("");
+const [verifiedUser, setVerifiedUser] = useState<any>(null);
+
+const [providerEmail, setProviderEmail] = useState('');
+const [providerRegistrationNumber, setProviderRegistrationNumber] = useState('');
+const [providerCredentialScreenshot, setProviderCredentialScreenshot] = useState<File | null>(null);
+const [latestCredentialsValid, setLatestCredentialsValid] = useState(false);
+
+
 
 	const isPatientLeadFlow = useMemo(() => {
-		const query = new URLSearchParams(location.search);
-		const returnTarget = String(query.get('next') || query.get('returnTo') || '').toLowerCase();
-		return (
-			returnTarget.includes('/assessment-preset')
-			|| returnTarget.includes('/patient/sessions')
-			|| returnTarget.includes('/patient/dashboard')
-			|| returnTarget.includes('/plans')
-		);
-	}, [location.search]);
+  const query = new URLSearchParams(location.search);
+
+  const returnTarget = String(
+    query.get("next") || query.get("returnTo" ) || ""
+  ).toLowerCase();
+
+  const flow = String(query.get("flow") || "").toLowerCase();
+
+  return (
+    flow === "patient-lead" ||
+    returnTarget.includes("/assessment-preset") ||
+    returnTarget.includes("/patient/sessions") ||
+    returnTarget.includes("/patient/dashboard")
+  );
+}, [location.search]);
+
+
+
+
+useEffect(() => {
+  const query = new URLSearchParams(location.search);
+  const specialization = query.get('specialization');
+
+  if (specialization) {
+    setRole('therapist');
+    setSelectedSpecialization(specialization);
+    setSignupStep(2);
+  }
+}, [location.search]);
+
+useEffect(() => {
+  if (isPatientLeadFlow) {
+    setRole("patient");
+    setSignupStep(2);
+  }
+}, [isPatientLeadFlow]);
 
 	const isCertificationContext = useMemo(() => {
 		const query = new URLSearchParams(location.search);
@@ -213,7 +248,16 @@ export default function SignupPage() {
 		);
 	}, [location.search]);
 
-	const isProviderFlow = !isCertificationContext && !isPatientLeadFlow && role !== 'patient';
+	const isProviderRole = ['therapist', 'psychiatrist', 'psychologist', 'coach'].includes(role);
+
+const isProviderFlow =
+  !isCertificationContext &&
+  !isPatientLeadFlow &&
+  role === 'therapist';
+
+
+
+
 	const allProviderAgreementsAccepted = useMemo(
 		() => Object.values(providerAgreementsAccepted).every(Boolean),
 		[providerAgreementsAccepted],
@@ -230,13 +274,7 @@ export default function SignupPage() {
 		}
 
 		if (!isProviderFlow) {
-			setAadhaar('');
-			setOtpForAadhaar('');
-			setIsAadhaarVerified(false);
-			setIsAadhaarOtpSent(false);
-			setIsAadhaarOtpLoading(false);
-			setMaskedAadhaar('');
-			setGeneratedAadhaarOtp('');
+	
 			setProviderAgreementsAccepted({
 				THERAPIST_IC_AGREEMENT: false,
 				THERAPIST_NDA: false,
@@ -306,209 +344,248 @@ export default function SignupPage() {
 		setShowPatientTermsModal(false);
 	};
 
-	const maskAadhaar = (value: string): string => {
-		const digits = value.replace(/\D/g, '').slice(0, 12);
-		if (digits.length < 4) return '**** **** ****';
-		return `**** **** ${digits.slice(-4)}`;
-	};
 
-	const sendAadhaarOtp = () => {
-		if (!isProviderFlow) return;
-		const digits = aadhaar.replace(/\D/g, '').slice(0, 12);
-		if (digits.length !== 12) {
-			setError('Please enter a valid 12-digit Aadhaar number.');
-			return;
-		}
 
-		setIsAadhaarOtpLoading(true);
-		setError(null);
-		const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
-		setGeneratedAadhaarOtp(mockOtp);
-		setIsAadhaarVerified(false);
-		setIsAadhaarOtpSent(true);
-		setOtpForAadhaar('');
-		setTimeout(() => {
-			setIsAadhaarOtpLoading(false);
-			// TODO: Replace this mock OTP flow with a real Aadhaar eKYC provider integration.
-			console.log('Mock Aadhaar OTP:', mockOtp);
-		}, 400);
-	};
 
-	const verifyAadhaarOtp = () => {
-		if (!isProviderFlow) return;
-		if (!isAadhaarOtpSent) {
-			setError('Please send Aadhaar OTP first.');
-			return;
-		}
 
-		const enteredOtp = otpForAadhaar.replace(/\D/g, '').slice(0, 4);
-		if (enteredOtp.length !== 4) {
-			setError('Please enter a valid 4-digit OTP.');
-			return;
-		}
+	// const requestOtp = async () => {
+	// 	if (!isProviderFlow && !acceptedTerms) {
+	// 		setError('Please accept Terms & Conditions to continue.');
+	// 		return;
+	// 	}
 
-		if (enteredOtp !== generatedAadhaarOtp) {
-			setIsAadhaarVerified(false);
-			setError('Invalid Aadhaar OTP.');
-			return;
-		}
+	// 	if (isProviderFlow && !isAadhaarVerified) {
+	// 		setError('Please complete Aadhaar verification to continue.');
+	// 		return;
+	// 	}
 
-		setError(null);
-		setIsAadhaarVerified(true);
-		setMaskedAadhaar(maskAadhaar(aadhaar));
-		setAadhaar('');
-	};
+	// 	if (isProviderFlow && !allProviderAgreementsAccepted) {
+	// 		setError('Please read and accept all provider legal agreements to continue.');
+	// 		return;
+	// 	}
 
-	const requestOtp = async () => {
-		if (!isProviderFlow && !acceptedTerms) {
-			setError('Please accept Terms & Conditions to continue.');
-			return;
-		}
+	// 	setError(null);
+	// 	setLoading(true);
+	// 	setDevOtp(null);
+	// 	try {
+	// 		const result = await signupWithPhone(
+	// 			phone.trim(),
+	// 			isCertificationContext
+	// 				? { name: name.trim(), role: 'learner' }
+	// 				: { name: name.trim(), role: isPatientLeadFlow ? 'patient' : role },
+	// 		);
+	// 		setOtpSent(true);
+	// 		setDevOtp(result.devOtp || null);
+	// 	} catch (err) {
+	// 		setError(getApiErrorMessage(err, 'Failed to send OTP'));
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
 
-		if (isProviderFlow && !isAadhaarVerified) {
-			setError('Please complete Aadhaar verification to continue.');
-			return;
-		}
+	
+const requestOtp = async () => {
+  if (!phone.trim()) {
+    setError('Please enter phone number.');
+    return;
+  }
 
-		if (isProviderFlow && !allProviderAgreementsAccepted) {
-			setError('Please read and accept all provider legal agreements to continue.');
-			return;
-		}
+  if (!name.trim()) {
+    setError('Please enter full name.');
+    return;
+  }
 
-		setError(null);
-		setLoading(true);
-		setDevOtp(null);
-		try {
-			const result = await signupWithPhone(
-				phone.trim(),
-				isCertificationContext
-					? { name: name.trim(), role: 'learner' }
-					: { name: name.trim(), role: isPatientLeadFlow ? 'patient' : role },
-			);
-			setOtpSent(true);
-			setDevOtp(result.devOtp || null);
-		} catch (err) {
-			setError(getApiErrorMessage(err, 'Failed to send OTP'));
-		} finally {
-			setLoading(false);
-		}
-	};
+  if (role === 'patient' && !acceptedTerms) {
+    setError('Please accept Terms & Conditions.');
+    return;
+  }
 
+
+  setError(null);
+  setLoading(true);
+
+  try {
+    const result = await signupWithPhone(phone.trim(), {
+      name: name.trim(),
+      role: role === 'clinic' || role === 'corporate' ? 'patient' : role,
+    });
+
+    setOtpSent(true);
+    setDevOtp(result.devOtp || null);
+  } catch (err) {
+    setError(getApiErrorMessage(err, 'Failed to send OTP'));
+  } finally {
+    setLoading(false);
+  }
+};
+	
 	useEffect(() => {
 		const query = new URLSearchParams(location.search);
 		const prefillPhone = query.get('phone');
 		const reason = query.get('reason');
-		const userType = String(query.get('userType') || '').toLowerCase();
-		const queryRole = query.get('role');
 
 		if (prefillPhone && !phone) {
 			setPhone(prefillPhone);
 		}
 
-		if ((locationState?.role || queryRole) && role === 'patient') {
-			const candidateRole = locationState?.role || queryRole;
-			if (candidateRole === 'therapist' || candidateRole === 'psychiatrist' || candidateRole === 'psychologist' || candidateRole === 'coach') {
-				setRole(candidateRole);
-			}
-		}
-
 		if (reason === 'terms' && !otpSent && !error) {
 			setError('Please review and accept Terms & Conditions to complete registration.');
 		}
-
-		if (!isPatientLeadFlow && !isCertificationContext && !otpSent) {
-			if (userType === 'therapist' || userType === 'psychiatrist' || userType === 'psychologist' || userType === 'coach' || userType === 'patient') {
-				setRole(userType as SignupRole);
-			}
-		}
-	}, [location.search, phone, otpSent, error, isPatientLeadFlow, isCertificationContext]);
-
+	}, [location.search, phone, otpSent, error]);
 
 	const resolveReturnTo = (): string => {
 		const qp = new URLSearchParams(location.search);
-		const candidate = qp.get('returnTo') || qp.get('next') || '';
-		if (!candidate) {
-			return '';
-		}
-
-		if (!candidate.startsWith('/')) {
-			return '';
-		}
-
-		if (candidate.startsWith('/auth/')) {
-			return '';
-		}
-
-		return candidate;
+		return qp.get('returnTo') || qp.get('next') || window.location.pathname || '/';
 	};
 
-	const hasSessionCookieHint = (): boolean => {
-		if (typeof document === 'undefined') return false;
-		const csrfCookieName = (import.meta.env.VITE_CSRF_COOKIE_NAME || 'csrf_token').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		return new RegExp(`(?:^|; )${csrfCookieName}=`).test(document.cookie);
-	};
+const verifyOtp = async () => {
+  const acceptedDocuments = [
+    ...(role === 'therapist' && providerAgreementsAccepted.THERAPIST_IC_AGREEMENT ? ['THERAPIST_IC_AGREEMENT'] : []),
+    ...(role === 'therapist' && providerAgreementsAccepted.THERAPIST_NDA ? ['THERAPIST_NDA'] : []),
+    ...(role === 'therapist' && providerAgreementsAccepted.THERAPIST_DATA_PROCESSING_AGREEMENT ? ['THERAPIST_DATA_PROCESSING_AGREEMENT'] : []),
+  ];
 
-	const verifyOtp = async () => {
-		if (!isCertificationContext && nriConsent.nri_declared && !nriConsent.nri_tos_accepted) {
-			setError('Please review and accept NRI Terms of Service to complete registration.');
-			return;
-		}
+  setError(null);
+  setLoading(true);
 
-		const acceptedDocuments = [
-			...(isProviderFlow && providerAgreementsAccepted.THERAPIST_IC_AGREEMENT ? ['THERAPIST_IC_AGREEMENT'] : []),
-			...(isProviderFlow && providerAgreementsAccepted.THERAPIST_NDA ? ['THERAPIST_NDA'] : []),
-			...(isProviderFlow && providerAgreementsAccepted.THERAPIST_DATA_PROCESSING_AGREEMENT ? ['THERAPIST_DATA_PROCESSING_AGREEMENT'] : []),
-		];
+  try {
+    const result = await verifyPhoneSignupOtp(phone.trim(), otp.trim(), {
+      acceptedTerms: role === 'therapist' ? allProviderAgreementsAccepted : acceptedTerms,
+      acceptedDocuments,
+      nri_declared: nriConsent.nri_declared,
+      nri_tos_accepted: nriConsent.nri_tos_accepted,
+      nri_tos_accepted_at: nriConsent.nri_tos_accepted_at || undefined,
+    });
 
-		setError(null);
-		setLoading(true);
-		try {
-			const guestGameToken = localStorage.getItem('guest_game_token') || undefined;
-			const result = await verifyPhoneSignupOtp(phone.trim(), otp.trim(), {
-				acceptedTerms: isProviderFlow ? allProviderAgreementsAccepted : acceptedTerms,
-				acceptedDocuments,
-				nri_declared: nriConsent.nri_declared,
-				nri_tos_accepted: nriConsent.nri_tos_accepted,
-				nri_tos_accepted_at: nriConsent.nri_tos_accepted_at || undefined,
-			}, guestGameToken);
+    await checkAuth({ force: true });
+    setVerifiedUser(result.user);
+    setSignupStep(4);
+  } catch (err) {
+    setError(getApiErrorMessage(err, 'OTP verification failed'));
+  } finally {
+    setLoading(false);
+  }
+};
 
-			if (guestGameToken) {
-				localStorage.removeItem('guest_game_token');
-			}
-			await checkAuth({ force: true });
-			await queryClient.invalidateQueries({ queryKey: ['wallet'] });
+const completeProfileAndContinue = async () => {
+  if (!name.trim()) {
+    setError('Please enter your full name.');
+    return;
+  }
 
-			let resolvedUser = result.user;
-			if (hasSessionCookieHint()) {
-				try {
-					resolvedUser = await fetchMe();
-				} catch {
-					// Keep OTP response user as fallback.
-				}
-			}
+  setError(null);
+  setLoading(true);
 
-			const returnTo = resolveReturnTo();
-			if (isCertificationContext) {
-				navigate(returnTo || '/certifications', { replace: true });
-				return;
-			}
-			// If backend indicates patient requires a subscription, send to plans page
-			if ((resolvedUser as any)?.requiresSubscription) {
-				navigate(`/plans?returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
-				return;
-			}
-			const postLoginRoute = getPostLoginRoute(resolvedUser);
-			navigate(postLoginRoute, { replace: true });
-		} catch (err) {
-			setError(getApiErrorMessage(err, 'OTP verification failed'));
-		} finally {
-			setLoading(false);
-		}
-	};
+  try {
+    // TODO: profile update API
+    // await updatePatientProfile({
+    //   name,
+    //   email,
+    //   dob,
+    //   gender,
+    //   preferredLanguage: language,
+    //   city,
+    // });
+
+    if (isPatientLeadFlow) {
+      navigate('/patient/onboarding/preferences', {
+        replace: true,
+      });
+      return;
+    }
+
+    const postLoginRoute = getPostLoginRoute(verifiedUser);
+
+    navigate(postLoginRoute, {
+      replace: true,
+    });
+
+  } catch (err) {
+    setError(
+      getApiErrorMessage(err, 'Profile completion failed')
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+const completeProviderRegistration = async () => {
+  if (!providerEmail.trim()) {
+    setError('Please enter provider email.');
+    return;
+  }
+
+  if (!allProviderAgreementsAccepted) {
+  setError('Please accept all provider agreements.');
+  return;
+}
+
+  if (!providerRegistrationNumber.trim()) {
+    setError('Please enter RCI/NMC registration number.');
+    return;
+  }
+
+  if (!providerCredentialScreenshot) {
+    setError('Please upload today screenshot from RCI/NMC verification page.');
+    return;
+  }
+
+  if (!latestCredentialsValid) {
+    setError('Please confirm latest credentials are valid.');
+    return;
+  }
+
+  setError(null);
+  setLoading(true);
+
+  try {
+    await providerRegister({
+      fullName: name.trim(),
+      email: providerEmail.trim(),
+      registrationNum: providerRegistrationNumber.trim(),
+      registrationType: 'RCI',
+      professionalType: 'THERAPIST',
+      highestQual: 'Not provided',
+      yearsExperience: 0,
+      specializations: selectedSpecialization ? [selectedSpecialization] : [],
+      languages: [language || 'English'],
+      hourlyRate: 0,
+      latestCredentialsValid,
+      credentialScreenshot: providerCredentialScreenshot,
+    });
+await checkAuth({ force: true });
+
+navigate('/provider/plans', { replace: true });
+  } catch (err) {
+    setError(getApiErrorMessage(err, 'Provider registration failed'));
+  } finally {
+    setLoading(false);
+  }
+};
+	
 
 	return (
-		<div className="responsive-page">
-			<div className="responsive-container py-6 sm:py-10">
+		<div className="relative min-h-screen overflow-hidden">
+  <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    
+    {/* LEFT TEXT SECTION */}
+    <section className="hidden lg:flex flex-col justify-center px-16 xl:px-24 animate-fadeIn">
+      <blockquote className="max-w-2xl font-serif text-4xl font-light leading-[1.15] text-white sm:text-5xl lg:text-6xl">
+        You&rsquo;re <span className="font-semibold text-gentle-blue">not alone</span>.
+        <br />
+        <span className="mt-2 inline-block">
+          Let&rsquo;s take this <span className="font-semibold text-calm-sage">together</span>.
+        </span>
+      </blockquote>
+
+      <p className="mt-8 max-w-sm text-base italic text-white/90 animate-fadeInUp">
+        Choose growth, one step at a time.
+      </p>
+    </section>
+
+    {/* RIGHT SIGNUP FORM */}
+    <section className="flex items-center justify-center px-4 py-10">
+   <div className="responsive-container py-6 sm:py-10">
 				<div className="mx-auto w-full max-w-lg rounded-3xl border border-calm-sage/20 bg-wellness-surface p-5 shadow-soft-md sm:p-8">
 					<div className="mb-3">
 						<Link to="/" className="text-sm text-calm-sage underline underline-offset-2 hover:text-wellness-text">
@@ -516,194 +593,295 @@ export default function SignupPage() {
 						</Link>
 					</div>
 					<h1 className="text-2xl font-semibold text-wellness-text sm:text-3xl">Create your account</h1>
-					<p className="mt-2 text-sm text-wellness-muted sm:text-base">
+					{/* <p className="mt-2 text-sm text-wellness-muted sm:text-base">
 						{isCertificationContext
 							? 'Register for certification using phone number and OTP.'
 							: 'Register using phone number and OTP.'}
-					</p>
+					</p> */}
 
-					<div className="mt-6 space-y-4">
-						<Input
-							id="signup-name"
-							label="Full Name"
-							autoComplete="name"
-							placeholder="Your full name"
-							value={name}
-							onChange={(event) => setName(event.target.value)}
-							required
-						/>
-						<Input
-							id="signup-phone"
-							label="Phone Number"
-							type="tel"
-							autoComplete="tel"
-							placeholder="+919876543210"
-							value={phone}
-							onChange={(event) => setPhone(event.target.value)}
-							required
-						/>
+		<div className="mt-6 space-y-5">
 
-						{!isCertificationContext && !isPatientLeadFlow ? (
-						<div>
-							<label htmlFor="signup-role" className="mb-2 block text-sm font-medium text-wellness-text">Role</label>
-							<select
-								id="signup-role"
-								value={role}
-								onChange={(event) => setRole(event.target.value as SignupRole)}
-								className="w-full rounded-2xl border-2 border-calm-sage/30 bg-white px-5 py-3 text-wellness-text transition-smooth focus:border-calm-sage focus:outline-none focus:ring-2 focus:ring-calm-sage/20"
-							>
-								<option value="patient">Patient</option>
-								<option value="therapist">Therapist</option>
-								<option value="psychiatrist">Psychiatrist</option>
-								<option value="psychologist">Psychologist</option>
-								<option value="coach">Coach</option>
-							</select>
-						</div>
-						) : null}
+  {signupStep === 1 ? (
+    <div>
+      {/* <h2 className="text-xl font-bold text-wellness-text">Get started</h2> */}
+      <p className="mt-1 text-sm text-wellness-muted">
+        Choose your role to begin registration
+      </p>
 
-						{!isProviderFlow ? (
-							<label className="flex items-start gap-2 text-sm text-wellness-text">
-								<input
-									type="checkbox"
-									checked={acceptedTerms}
-									readOnly
-									onClick={(event) => {
-										event.preventDefault();
-										openPatientTermsModal();
-									}}
-								/>
-								<button type="button" onClick={openPatientTermsModal} className="text-left underline underline-offset-2 text-calm-sage">
-									I accept the Terms of Service, Privacy Policy, and Refund &amp; Cancellation Policy.
-								</button>
-							</label>
-						) : null}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {[
+  {
+    value: "patient",
+    label: "Patient",
+    desc: "Seeking mental wellness support",
+    icon: "👤",
+  },
+  {
+    value: "therapist",
+    label: "Provider",
+    desc: "Psychologist · Psychiatrist · Therapist · Coach",
+    icon: "🧑‍⚕️",
+  },
+  {
+    value: "corporate",
+    label: "Corporate",
+    desc: "Employee with corporate Client ID",
+    icon: "🏢",
+  },
+  {
+    value: "clinic",
+    label: "MyDigitalClinic",
+    desc: "Clinic user with Client ID",
+    icon: "🏥",
+  },
+].map((item) => (
+          <button
+            key={item.value}
+            type="button"
+           onClick={() => {
+  setRole(item.value as SignupRole);
 
-						{!isCertificationContext ? (
-							<NriPatch onChange={setNriConsent} blockSubmitButtons={false} />
-						) : null}
+  if (item.value === 'therapist') {
+    setSelectedSpecialization('clinical_psychologist');
+  }
 
-						{isProviderFlow ? (
-							<div className="rounded-2xl border border-calm-sage/30 bg-white p-4">
-								<p className="text-sm font-semibold text-wellness-text">Aadhaar Verification</p>
-								<p className="mt-1 text-xs text-wellness-muted">
-									Providers must verify Aadhaar before phone OTP registration.
-								</p>
-								<div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-									<Input
-										id="provider-aadhaar"
-										label="Aadhaar Number"
-										inputMode="numeric"
-										maxLength={12}
-										placeholder="12-digit Aadhaar"
-										value={aadhaar}
-										onChange={(event) => setAadhaar(event.target.value.replace(/\D/g, '').slice(0, 12))}
-										disabled={isAadhaarVerified || isAadhaarOtpLoading}
-										required
-									/>
-									<Button type="button" onClick={sendAadhaarOtp} loading={isAadhaarOtpLoading} className="min-h-[48px] sm:self-end">
-										{isAadhaarOtpLoading ? 'Sending...' : 'Send OTP'}
-									</Button>
-								</div>
+  setSignupStep(2);
+}}
+            className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-calm-sage hover:shadow-md"
+          >
+            <div className="text-3xl">{item.icon}</div>
+            <h3 className="mt-3 text-lg font-bold text-wellness-text">
+              {item.label}
+            </h3>
+            <p className="mt-1 text-sm text-wellness-muted">{item.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null}
 
-								{isAadhaarOtpSent && !isAadhaarVerified ? (
-									<div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
-										<Input
-											id="provider-aadhaar-otp"
-											label="Aadhaar OTP"
-											inputMode="numeric"
-											pattern="\\d{4}"
-											maxLength={4}
-											placeholder="4-digit OTP"
-											value={otpForAadhaar}
-											onChange={(event) => setOtpForAadhaar(event.target.value.replace(/\D/g, '').slice(0, 4))}
-											required
-										/>
-										<Button type="button" onClick={verifyAadhaarOtp} className="min-h-[48px] sm:self-end">
-											Verify Aadhaar
-										</Button>
-									</div>
-								) : null}
 
-								{isAadhaarVerified ? (
-									<p className="mt-2 text-xs font-medium text-emerald-700">Aadhaar verified: {maskedAadhaar}</p>
-								) : null}
+  {signupStep === 2 && (
+  <div>
+    <button
+      type="button"
+      onClick={() => setSignupStep(1)}
+      className="mb-4 text-sm text-wellness-muted hover:text-calm-sage"
+    >
+      ← Back
+    </button>
 
-								<div className="my-4 h-px bg-calm-sage/20" />
-								<p className="text-sm font-semibold text-wellness-text">Provider Legal Agreements</p>
-								<p className="mt-1 text-xs text-wellness-muted">
-									To register as a provider, read each agreement fully and accept it.
-								</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="rounded-xl  p-6 text-center">
+        <div className="text-2xl">
+          {role === 'patient' ? '👤' : role === 'therapist' ? '🧠' : role === 'corporate' ? '🏢' : '🏥'}
+        </div>
 
-								<div className="mt-3 space-y-2 text-sm">
-									{PROVIDER_AGREEMENTS.map((agreement) => (
-										<div key={agreement.key} className="flex items-center justify-between rounded-xl border border-calm-sage/20 bg-calm-sage/5 px-3 py-2">
-											<label
-												className="flex cursor-pointer items-center gap-2 text-wellness-text"
-												onClick={() => openAgreement(agreement.key)}
-											>
-												<input
-													type="checkbox"
-													checked={providerAgreementsAccepted[agreement.key]}
-													readOnly
-													onClick={(event) => {
-														event.preventDefault();
-														openAgreement(agreement.key);
-													}}
-												/>
-												<span className="underline underline-offset-2">I agree to the {agreement.label}</span>
-											</label>
-											<span className="text-xs font-semibold text-calm-sage">
-												{providerAgreementsAccepted[agreement.key] ? 'Accepted' : 'Pending'}
-											</span>
-										</div>
-									))}
-								</div>
-							</div>
-						) : null}
+        <h3 className="mt-2 text-sm font-bold text-blue-900">
+          {role === 'therapist'
+            ? selectedSpecialization
+              ? selectedSpecialization.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+              : 'Provider'
+            : role === 'patient'
+              ? 'Patient'
+              : role === 'corporate'
+                ? 'Corporate'
+                : 'MyDigitalClinic'}
+        </h3>
 
-						{otpSent ? (
-							<Input
-								id="signup-otp"
-								label="OTP"
-								inputMode="numeric"
-								pattern="\\d{4}"
-								maxLength={4}
-								autoComplete="one-time-code"
-								placeholder="4-digit OTP"
-								value={otp}
-								onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 4))}
-								required
-							/>
-						) : null}
+        <p className="mt-1 text-xs text-wellness-muted">
+          {role === 'therapist' ? 'RCI/NMC registered' : 'MANAS360 account'}
+        </p>
+      </div>
 
-						{!otpSent ? (
-							<Button
-								type="button"
-								fullWidth
-								loading={loading}
-								className="min-h-[48px]"
-								onClick={requestOtp}
-							>
-								{loading ? 'Sending OTP...' : 'Send OTP'}
-							</Button>
-						) : (
-							<Button
-								type="button"
-								fullWidth
-								loading={loading}
-								className="min-h-[48px]"
-								onClick={verifyOtp}
-							>
-								{loading ? 'Verifying OTP...' : (isCertificationContext ? 'Verify OTP and Continue' : 'Verify OTP and Register')}
-							</Button>
-						)}
+      <p className="mt-3 text-xs text-center text-wellness-muted">
+        Discover → Plans → Profile
+      </p>
 
-						{nriConsent.nri_declared && !nriConsent.nri_tos_accepted ? (
-							<p className="text-xs text-amber-700">
-								NRI Terms of Service must be accepted before final registration. You can send OTP now and accept NRI terms before verifying OTP.
-							</p>
-						) : null}
-					</div>
+      <Button
+        type="button"
+        fullWidth
+        className="mt-3 min-h-[44px]"
+        onClick={() => setSignupStep(3)}
+      >
+        + Join Now
+      </Button>
+    </div>
+  </div>
+)}
+
+  {signupStep === 3 ? (
+  <div>
+    <button
+      type="button"
+      onClick={() => setSignupStep(2)}
+      className="mb-5 text-sm text-wellness-muted hover:text-calm-sage"
+    >
+      ← Back
+    </button>
+
+    <h2 className="text-xl font-bold text-wellness-text">Verify your phone</h2>
+
+    {!otpSent ? (
+      <>
+        <Input
+          id="signup-name"
+          label="Full Name"
+          placeholder="Enter your full name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
+
+        <Input
+          id="signup-phone"
+          label="Phone Number"
+          type="tel"
+          autoComplete="tel"
+          placeholder="+919876543210"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          required
+        />
+
+        {role === 'patient' && (
+          <label className="mt-4 flex items-start gap-2 text-sm text-wellness-text">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              readOnly
+              onClick={(event) => {
+                event.preventDefault();
+                openPatientTermsModal();
+              }}
+            />
+            <span>
+              I agree to the Terms of Service, Privacy Policy, and consent to processing of my data.
+            </span>
+          </label>
+        )}
+
+        <Button
+          type="button"
+          fullWidth
+          loading={loading}
+          className="mt-4 min-h-[48px]"
+          onClick={requestOtp}
+        >
+          {loading ? 'Sending OTP...' : 'Send OTP'}
+        </Button>
+      </>
+    ) : (
+      <>
+        <p className="mt-1 text-sm text-wellness-muted">
+          We sent a 6-digit OTP to {phone}
+        </p>
+
+        <Input
+          id="signup-otp"
+          label="Enter OTP"
+          inputMode="numeric"
+          pattern="\\d{6}"
+          maxLength={6}
+          autoComplete="one-time-code"
+          placeholder="6-digit OTP"
+          value={otp}
+          onChange={(event) =>
+            setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))
+          }
+          required
+        />
+
+        <Button
+          type="button"
+          fullWidth
+          loading={loading}
+          className="mt-4 min-h-[48px]"
+          onClick={verifyOtp}
+        >
+          {loading ? 'Verifying OTP...' : 'Verify OTP'}
+        </Button>
+
+        <button
+          type="button"
+          onClick={requestOtp}
+          className="mt-4 w-full text-sm text-wellness-muted hover:text-calm-sage"
+        >
+          Didn&apos;t receive? Resend OTP
+        </button>
+      </>
+    )}
+  </div>
+) : null}
+
+{signupStep === 4 ? (
+  <div>
+    <button
+      type="button"
+      onClick={() => setSignupStep(3)}
+      className="mb-5 text-sm text-wellness-muted hover:text-calm-sage"
+    >
+      ← Back
+    </button>
+
+    {role === 'patient' ? (
+      <>
+        <h2 className="text-xl font-bold text-wellness-text">Complete your profile</h2>
+
+        <div className="mt-5 space-y-4">
+          <Input id="signup-name" label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Input id="signup-email" label="Email optional" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+
+          <Input id="dob" label="Date of birth" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+
+          <Input id="city" label="City" value={city} onChange={(e) => setCity(e.target.value)} required />
+
+          <Button type="button" fullWidth loading={loading} onClick={completeProfileAndContinue}>
+            Complete registration
+          </Button>
+        </div>
+      </>
+    ) : (
+      <>
+        <h2 className="text-xl font-bold text-wellness-text">Provider verification</h2>
+
+        <div className="mt-5 space-y-4">
+          <Input id="provider-email" label="Email" type="email" value={providerEmail} onChange={(e) => setProviderEmail(e.target.value)} required />
+          <Input id="provider-registration-number" label="RCI/NMC Number" value={providerRegistrationNumber} onChange={(e) => setProviderRegistrationNumber(e.target.value)} required />
+
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(e) => setProviderCredentialScreenshot(e.target.files?.[0] || null)}
+            className="w-full rounded-xl border border-dashed border-slate-300 bg-white p-3 text-sm"
+          />
+
+          <label className="flex items-start gap-2 text-sm text-wellness-text">
+            <input checked={latestCredentialsValid} onChange={(e) => setLatestCredentialsValid(e.target.checked)} type="checkbox" />
+            <span>Latest credentials are valid</span>
+          </label>
+
+          {PROVIDER_AGREEMENTS.map((agreement) => (
+            <button
+              key={agreement.key}
+              type="button"
+              onClick={() => openAgreement(agreement.key)}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left text-sm"
+            >
+              {agreement.label} — {providerAgreementsAccepted[agreement.key] ? 'Accepted' : 'Read & Accept'}
+            </button>
+          ))}
+
+          <Button type="button" fullWidth loading={loading} onClick={completeProviderRegistration}>
+            Submit provider registration
+          </Button>
+        </div>
+      </>
+    )}
+  </div>
+) : null}
+
+</div>
 
 					{activeAgreementConfig ? (
 						<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -803,11 +981,7 @@ export default function SignupPage() {
 						</div>
 					) : null}
 
-					{devOtp ? (
-						<p className="mt-3 text-xs text-wellness-muted">
-							Development OTP: <span className="font-semibold text-wellness-text">{devOtp}</span>
-						</p>
-					) : null}
+				
 
 					{error ? (
 						<p role="alert" aria-live="polite" className="mt-3 text-sm text-red-600">{error}</p>
@@ -820,6 +994,10 @@ export default function SignupPage() {
 						</Link>
 					</p>
 				</div>
+			</div>
+    </section>
+
+
 			</div>
 		</div>
 	);

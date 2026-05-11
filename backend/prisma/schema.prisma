@@ -1,3 +1,32 @@
+model CorporateAgreementTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  content     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agreements CorporateAgreement[]
+
+  @@map("corporate_agreement_templates")
+}
+
+model CorporateAgreement {
+  id         String   @id @default(uuid())
+  templateId String
+  email      String
+  value      String?
+  status     String   @default("Draft")
+  companyKey String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  template CorporateAgreementTemplate @relation(fields: [templateId], references: [id])
+
+  @@map("corporate_agreements")
+}
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
@@ -6,33 +35,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model CorporateAgreement {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  agreement_code       String    @unique
-  company_key          String
-  company_name         String
-  status               String    @default("draft")
-  effective_start_date DateTime? @db.Date
-  effective_end_date   DateTime? @db.Date
-  base_amount_inr      Decimal   @default(0) @db.Decimal(12, 2)
-  currency             String    @default("INR")
-  selected_addons      Json      @default("[]")
-  selected_workshops   Json      @default("[]")
-  notes                String?
-  sent_at              DateTime? @db.Timestamptz(6)
-  client_reviewed_at   DateTime? @db.Timestamptz(6)
-  signed_uploaded_at   DateTime? @db.Timestamptz(6)
-  activated_at         DateTime? @db.Timestamptz(6)
-  created_at           DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
-
-  @@index([company_key], map: "idx_corporate_agreements_company_key")
-  @@index([company_key, status], map: "idx_corporate_agreements_company_status")
-  @@index([created_at(sort: Desc)], map: "idx_corporate_agreements_created_at")
-  @@index([status], map: "idx_corporate_agreements_status")
-  @@map("corporate_agreements")
 }
 
 model User {
@@ -85,8 +87,8 @@ model User {
   careTeamAssignmentsCreated    CareTeamAssignment[]        @relation("CareTeamAssignmentCreator")
   careTeamAssignmentsAsPatient  CareTeamAssignment[]        @relation("CareTeamAssignmentPatient")
   careTeamAssignmentsAsProvider CareTeamAssignment[]        @relation("CareTeamAssignmentProvider")
-  certificationEnrollments      CertificationEnrollment[]
   chatAnalyses                  ChatAnalysis[]              @relation("UserChatAnalyses")
+  chatMessages                  ChatMessage[]
   consentRevocations            Consent[]                   @relation("ConsentRevokedByUser")
   consents                      Consent[]
   crisisEscalations             CrisisEscalation[]          @relation("UserCrisisEscalations")
@@ -96,29 +98,25 @@ model User {
   gad7Assessments               GAD7Assessment[]            @relation("UserGAD7Assessments")
   goalsAsPatient                Goal[]                      @relation("GoalPatient")
   goalsAsProvider               Goal[]                      @relation("GoalProvider")
-  groupTherapyInvitesSent       GroupTherapyInvite[]        @relation("GroupTherapyInviteBy")
-  groupTherapyInvitesReceived   GroupTherapyInvite[]        @relation("GroupTherapyInvitePatient")
-  groupTherapyApprovedSessions  GroupTherapySession[]       @relation("GroupTherapyApprovedBy")
-  groupTherapyHostedSessions    GroupTherapySession[]       @relation("GroupTherapyHost")
-  groupTherapyRequests          GroupTherapySession[]       @relation("GroupTherapyRequestedBy")
-  invoiceEventsAsActor          InvoiceEvent[]              @relation("InvoiceEventsActor")
-  invoices                      Invoice[]                   @relation("UserInvoices")
   labOrdersAsPatient            LabOrder[]                  @relation("LabOrderPatient")
   labOrdersAsProvider           LabOrder[]                  @relation("LabOrderProvider")
   leadAssignments               LeadAssignment[]
+  legalAcceptances              UserAcceptance[]
+  legalDocumentsUpdated         LegalDocument[]             @relation("LegalDocumentUpdatedBy")
   patientLeads                  Lead[]                      @relation("LeadPatient")
   providerLeads                 Lead[]                      @relation("LeadProvider")
-  legalDocumentsUpdated         LegalDocument[]             @relation("LegalDocumentUpdatedBy")
   subscriptions                 MarketplaceSubscription[]   @relation("UserSubscriptions")
   moodLogs                      MoodLog[]                   @relation("UserMoodLogs")
   moodPredictions               MoodPrediction[]            @relation("UserMoodPredictions")
   notifications                 Notification[]
   patientInvoices               PatientInvoice[]
+  invoices                      Invoice[]                   @relation("UserInvoices")
+  invoiceEventsAsActor          InvoiceEvent[]              @relation("InvoiceEventsActor")
+  payouts                       Payout[]                    @relation("PayoutProvider")
   patient_pathway_state         patient_pathway_state?
   patientPaymentMethod          PatientPaymentMethod?
   patientProfile                PatientProfile?
   patientSubscription           PatientSubscription?
-  payouts                       Payout[]                    @relation("PayoutProvider")
   phq9Assessments               PHQ9Assessment[]            @relation("UserPHQ9Assessments")
   platformAccess                PlatformAccess?
   platformConfigsUpdated        PlatformConfig[]            @relation("PlatformConfigUpdatedBy")
@@ -139,7 +137,11 @@ model User {
   therapistResources            TherapistResource[]
   therapistSessionNotesAuthored TherapistSessionNote[]      @relation("TherapistSessionNoteAuthor")
   therapyBookings               TherapySession[]
-  legalAcceptances              UserAcceptance[]
+  groupTherapyRequests          GroupTherapySession[]       @relation("GroupTherapyRequestedBy")
+  groupTherapyHostedSessions    GroupTherapySession[]       @relation("GroupTherapyHost")
+  groupTherapyApprovedSessions  GroupTherapySession[]       @relation("GroupTherapyApprovedBy")
+  groupTherapyInvitesSent       GroupTherapyInvite[]        @relation("GroupTherapyInviteBy")
+  groupTherapyInvitesReceived   GroupTherapyInvite[]        @relation("GroupTherapyInvitePatient")
   grantedCapabilities           UserCapability[]            @relation("UserCapabilitiesGrantor")
   userCapabilities              UserCapability[]            @relation("UserCapabilitiesOwner")
 
@@ -189,26 +191,26 @@ model Role {
 model QrCode {
   code            String         @id
   redirectUrl     String         @map("redirect_url")
-  templateId      String         @default("classic-black") @map("template_id")
-  logoUrl         String?        @map("logo_url")
-  isActive        Boolean        @default(true) @map("is_active")
-  createdById     String?        @map("created_by_id")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-  scanCount       Int            @default(0) @map("scan_count")
-  connectedCount  Int            @default(0) @map("connected_count")
-  stylePreset     String         @default("rounded") @map("style_preset")
-  foregroundColor String         @default("#0F172A") @map("foreground_color")
-  backgroundColor String         @default("#FFFFFF") @map("background_color")
   qrType          String?        @map("qr_type")
   destinationUrl  String?        @map("destination_url")
   ownerId         String?        @map("owner_id")
   isDynamic       Boolean        @default(true) @map("is_dynamic")
   expiresAt       DateTime?      @map("expires_at")
   lastScannedAt   DateTime?      @map("last_scanned_at")
-  createdBy       User?          @relation("QrCodeCreatedBy", fields: [createdById], references: [id])
-  conversions     QrConversion[]
+  templateId      String         @default("classic-black") @map("template_id")
+  stylePreset     String         @default("rounded") @map("style_preset")
+  foregroundColor String         @default("#0F172A") @map("foreground_color")
+  backgroundColor String         @default("#FFFFFF") @map("background_color")
+  logoUrl         String?        @map("logo_url")
+  isActive        Boolean        @default(true) @map("is_active")
+  scanCount       Int            @default(0) @map("scan_count")
+  connectedCount  Int            @default(0) @map("connected_count")
+  createdById     String?        @map("created_by_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  createdBy       User?          @relation("QrCodeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   scans           QrScan[]
+  conversions     QrConversion[]
 
   @@index([createdById])
   @@index([createdAt])
@@ -228,8 +230,8 @@ model QrScan {
   sessionId     String?        @map("session_id")
   userAgent     String?        @map("user_agent")
   createdAt     DateTime       @default(now()) @map("created_at")
-  conversions   QrConversion[]
   qrCode        QrCode         @relation(fields: [qrCodeCode], references: [code], onDelete: Cascade)
+  conversions   QrConversion[]
 
   @@index([qrCodeCode, scanTimestamp])
   @@index([sessionId])
@@ -247,7 +249,7 @@ model QrConversion {
   conversionAt      DateTime @default(now()) @map("conversion_at")
   createdAt         DateTime @default(now()) @map("created_at")
   qrCode            QrCode   @relation(fields: [qrCodeCode], references: [code], onDelete: Cascade)
-  qrScan            QrScan?  @relation(fields: [qrScanId], references: [id])
+  qrScan            QrScan?  @relation(fields: [qrScanId], references: [id], onDelete: SetNull)
 
   @@index([qrCodeCode, conversionType])
   @@index([sessionId])
@@ -383,7 +385,7 @@ model PlatformConfig {
   version     Int      @default(1)
   updatedById String?  @map("updated_by_id")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   updatedBy   User?    @relation("PlatformConfigUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([key])
@@ -425,24 +427,10 @@ model AuthAuditLog {
 
   @@index([userId, createdAt])
   @@index([event, createdAt])
-  @@map("auth_audit_logs")
-}
-
-model PlatformConfigHistory {
-  id          String   @id @default(uuid())
-  key         String
-  version     Int
-  value       Json
-  changedById String?  @map("changed_by_id")
-  operation   String
-  changedAt   DateTime @default(now()) @map("changed_at")
-
-  @@unique([key, version])
-  @@map("platform_config_history")
 }
 
 model ProviderVerification {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
   license     String
   licenseType String
@@ -452,15 +440,14 @@ model ProviderVerification {
   verifiedAt  DateTime?
   reviewedBy  String?
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // relation to `User` intentionally omitted to avoid adding inverse field on User model
 
   @@index([userId])
   @@map("provider_verifications")
 }
- 
 
 model PatientProfile {
   id                           String                       @id @default(uuid())
@@ -486,6 +473,14 @@ model PatientProfile {
   therapistResourcesAssigned   TherapistResource[]
   therapistSessionNotes        TherapistSessionNote[]
   therapySessions              TherapySession[]
+  preferredLanguage    String?
+  communicationChannels String[] @default([])
+  therapyModes         String[] @default([])
+  availability         Json?
+  timezone             String?
+  sessionDuration      String?
+  reminderTiming       String?
+
 
   @@index([userId])
   @@map("patient_profiles")
@@ -541,32 +536,7 @@ model TherapistProfile {
   user                     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([nriPoolCertified])
   @@map("therapist_profiles")
-}
-
-model CertificationEnrollment {
-  id                    String                   @id @default(uuid())
-  userId                String
-  certificationSlug     String
-  status                CertificationStatus      @default(NONE)
-  paymentPlan           CertificationPaymentPlan @default(FULL)
-  installmentsPaidCount Int                      @default(1)
-  amountPaid            Int                      @default(0)
-  totalAmount           Int                      @default(0)
-  progress              Int                      @default(0)
-  modulesCompleted      Int                      @default(0)
-  certificationId       String?
-  certId                String?
-  nextInstallmentDue    DateTime?
-  enrollmentDate        DateTime                 @default(now())
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
-  user                  User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, certificationSlug])
-  @@index([userId])
-  @@map("certification_enrollments")
 }
 
 model ProviderDocument {
@@ -590,13 +560,13 @@ model PatientAssessment {
   answers        Int[]
   totalScore     Int
   severityLevel  String
+  entryType      String?
+  sourceMetadata String?
+  utmCampaign    String?
+  utmMedium      String?
+  utmSource      String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  entryType      String?        @db.VarChar(50)
-  sourceMetadata String?
-  utmCampaign    String?        @db.VarChar(255)
-  utmMedium      String?        @db.VarChar(255)
-  utmSource      String?        @db.VarChar(255)
   patient        PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@index([patientId, createdAt(sort: Desc)])
@@ -624,56 +594,66 @@ model ScreeningTemplate {
 }
 
 model GroupTherapySession {
-  id                String                   @id @default(cuid())
-  title             String
-  topic             String
-  description       String?
-  requestedById     String                   @map("requested_by_id")
-  hostTherapistId   String                   @map("host_therapist_id")
-  approvedById      String?                  @map("approved_by_id")
-  groupCategoryId   String?                  @map("group_category_id")
-  scheduledAt       DateTime                 @map("scheduled_at")
-  durationMinutes   Int                      @map("duration_minutes")
-  maxMembers        Int                      @map("max_members")
-  priceMinor        BigInt                   @map("price_minor")
-  allowGuestJoin    Boolean                  @default(false) @map("allow_guest_join")
-  requiresAdminGate Boolean                  @default(false) @map("requires_admin_gate")
-  requiresPayment   Boolean                  @default(false) @map("requires_payment")
-  jitsiRoomName     String?                  @map("jitsi_room_name")
-  publishAt         DateTime?                @map("publish_at")
-  rejectionReason   String?                  @map("rejection_reason")
-  createdAt         DateTime                 @default(now()) @map("created_at")
-  updatedAt         DateTime                 @updatedAt @map("updated_at")
-  approvedAt        DateTime?                @map("approved_at")
-  publishedAt       DateTime?                @map("published_at")
-  sessionMode       String                   @map("session_mode")
-  status            String
-  enrollments       GroupTherapyEnrollment[]
-  invites           GroupTherapyInvite[]
-  approvedBy        User?                    @relation("GroupTherapyApprovedBy", fields: [approvedById], references: [id])
-  groupCategory     GroupCategory?           @relation(fields: [groupCategoryId], references: [id])
-  hostTherapist     User                     @relation("GroupTherapyHost", fields: [hostTherapistId], references: [id])
-  requestedBy       User                     @relation("GroupTherapyRequestedBy", fields: [requestedById], references: [id])
+  id          String  @id @default(cuid())
+  title       String
+  topic       String
+  description String?
+  sessionMode String  @map("session_mode")
+  status      String
+
+  requestedById   String  @map("requested_by_id")
+  hostTherapistId String  @map("host_therapist_id")
+  approvedById    String? @map("approved_by_id")
+  groupCategoryId String? @map("group_category_id")
+
+  scheduledAt     DateTime @map("scheduled_at")
+  durationMinutes Int      @map("duration_minutes")
+  maxMembers      Int      @map("max_members")
+
+  priceMinor        BigInt  @map("price_minor")
+  allowGuestJoin    Boolean @default(false) @map("allow_guest_join")
+  requiresPayment   Boolean @default(false) @map("requires_payment")
+  requiresAdminGate Boolean @default(false) @map("requires_admin_gate")
+
+  jitsiRoomName   String? @map("jitsi_room_name")
+  rejectionReason String? @map("rejection_reason")
+
+  publishAt   DateTime? @map("publish_at")
+  publishedAt DateTime? @map("published_at")
+  approvedAt  DateTime? @map("approved_at")
+
+  requestedBy   User?                    @relation("GroupTherapyRequestedBy", fields: [requestedById], references: [id])
+  hostTherapist User?                    @relation("GroupTherapyHost", fields: [hostTherapistId], references: [id])
+  approvedBy    User?                    @relation("GroupTherapyApprovedBy", fields: [approvedById], references: [id])
+  groupCategory GroupCategory?           @relation(fields: [groupCategoryId], references: [id])
+  invites       GroupTherapyInvite[]
+  enrollments   GroupTherapyEnrollment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("group_therapy_sessions")
 }
 
 model GroupTherapyEnrollment {
-  id                  String              @id @default(cuid())
-  sessionId           String              @map("session_id")
-  userId              String?             @map("user_id")
-  guestName           String?             @map("guest_name")
-  guestEmail          String?             @map("guest_email")
-  amountMinor         BigInt?             @map("amount_minor")
-  paymentId           String?             @map("payment_id")
-  merchantTransaction String?             @map("merchant_transaction")
-  paidAt              DateTime?           @map("paid_at")
-  joinedAt            DateTime?           @map("joined_at")
-  createdAt           DateTime            @default(now()) @map("created_at")
-  updatedAt           DateTime            @updatedAt @map("updated_at")
-  enrolledByAdminId   String?             @map("enrolled_by_admin_id")
+  id String @id @default(cuid())
+
+  sessionId  String              @map("session_id")
+  session    GroupTherapySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId     String?             @map("user_id")
+  guestEmail String?             @map("guest_email")
+  guestName  String?             @map("guest_name")
+
+  enrolledByAdminId   String?   @map("enrolled_by_admin_id")
   status              String
-  session             GroupTherapySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  amountMinor         BigInt?   @map("amount_minor")
+  paymentId           String?   @map("payment_id")
+  merchantTransaction String?   @map("merchant_transaction")
+  paidAt              DateTime? @map("paid_at")
+  joinedAt            DateTime? @map("joined_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([sessionId, userId, guestEmail])
   @@map("group_therapy_enrollments")
@@ -684,19 +664,19 @@ model GroupTherapyInvite {
   sessionId       String              @map("session_id")
   patientUserId   String              @map("patient_user_id")
   invitedById     String              @map("invited_by_id")
+  status          String
   amountMinor     BigInt              @map("amount_minor")
-  paymentId       String?             @map("payment_id")
-  paymentDeadline DateTime?           @map("payment_deadline")
   message         String?
+  paymentDeadline DateTime?           @map("payment_deadline")
   acceptedAt      DateTime?           @map("accepted_at")
   paidAt          DateTime?           @map("paid_at")
   joinedAt        DateTime?           @map("joined_at")
+  paymentId       String?             @map("payment_id")
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
-  status          String
-  invitedBy       User                @relation("GroupTherapyInviteBy", fields: [invitedById], references: [id], onDelete: Cascade)
-  patient         User                @relation("GroupTherapyInvitePatient", fields: [patientUserId], references: [id], onDelete: Cascade)
   session         GroupTherapySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  patient         User                @relation("GroupTherapyInvitePatient", fields: [patientUserId], references: [id], onDelete: Cascade)
+  invitedBy       User                @relation("GroupTherapyInviteBy", fields: [invitedById], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, patientUserId])
   @@index([patientUserId, status])
@@ -880,6 +860,8 @@ model PatientMoodEntry {
   @@map("patient_mood_entries")
 }
 
+
+
 model TherapySession {
   id                       String                @id @default(uuid())
   bookingReferenceId       String                @unique
@@ -904,7 +886,7 @@ model TherapySession {
   isLocked                 Boolean               @default(true)
   audioRecordingUrl        String?               @map("audio_recording_url")
   transcript               String?
-  sourceFunnel             String?               @map("source_funnel") @db.VarChar(30)
+  sourceFunnel             String?               @map("source_funnel")
   therapistSessionNote     TherapistSessionNote?
   patientProfile           PatientProfile        @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
   therapistProfile         User                  @relation(fields: [therapistProfileId], references: [id], onDelete: Cascade)
@@ -914,7 +896,6 @@ model TherapySession {
   @@index([therapistProfileId, status, dateTime(sort: Desc)])
   @@index([patientProfileId, status, dateTime(sort: Desc)])
   @@index([paymentStatus, createdAt(sort: Desc)])
-  @@index([sourceFunnel])
   @@map("therapy_sessions")
 }
 
@@ -1029,20 +1010,19 @@ model SessionBookingIntent {
   durationMinute        Int                 @default(50)
   amountMinor           BigInt
   currency              String              @default("INR")
+  sourceFunnel          String?             @map("source_funnel")
   razorpayPaymentId     String?
   status                BookingIntentStatus @default(PENDING)
   sessionId             String?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   merchantTransactionId String              @unique
-  sourceFunnel          String?             @map("source_funnel") @db.VarChar(30)
   patient               User                @relation("BookingIntentPatient", fields: [patientId], references: [id], onDelete: Cascade)
   provider              User                @relation("BookingIntentProvider", fields: [providerId], references: [id])
 
   @@index([patientId, status, createdAt])
   @@index([providerId, scheduledAt])
   @@index([scheduledAt])
-  @@index([sourceFunnel])
   @@map("session_booking_intents")
 }
 
@@ -1060,18 +1040,16 @@ model AppointmentRequest {
   razorpayPaymentId       String?                  @map("razorpay_payment_id")
   amountMinor             BigInt?
   currency                String                   @default("INR")
+  sourceFunnel            String?                  @map("source_funnel")
   status                  AppointmentRequestStatus @default(PENDING)
   expiresAt               DateTime?                @map("expires_at")
   cancelledAt             DateTime?                @map("cancelled_at")
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
-  sourceFunnel            String?                  @map("source_funnel") @db.VarChar(30)
-  therapySessionId        String?                  @map("therapy_session_id")
 
   @@index([patientId, status, createdAt(sort: Desc)])
   @@index([status, expiresAt])
   @@index([acceptedProviderId])
-  @@index([therapySessionId])
   @@map("appointment_requests")
 }
 
@@ -1103,8 +1081,9 @@ model ChatMessage {
   userId    String   @map("user_id")
   role      String
   content   String
-  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  timestamp DateTime @default(now())
   botType   String   @map("bot_type")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, botType, timestamp(sort: Desc)], map: "chat_messages_user_bot_ts_idx")
   @@index([userId, timestamp(sort: Desc)], map: "chat_messages_user_ts_idx")
@@ -1422,9 +1401,9 @@ model FinancialPayment {
   wallet                ProviderWallet?        @relation("WalletPayments", fields: [providerId], references: [providerId])
   session               FinancialSession?      @relation("SessionPayments", fields: [sessionId], references: [id])
   refunds               FinancialRefund[]      @relation("PaymentRefunds")
-  invoice               Invoice?               @relation("PaymentInvoice")
   revenueLedger         RevenueLedger[]        @relation("PaymentRevenueLedger")
   walletTransactions    WalletTransaction[]    @relation("PaymentWalletTransactions")
+  invoice               Invoice?               @relation("PaymentInvoice")
 
   @@index([sessionId, status])
   @@index([providerId, status])
@@ -1466,17 +1445,17 @@ model FinancialRefund {
 
 model UniversalCheckoutPayment {
   id                   String                  @id @default(uuid())
-  type                 String                  @db.VarChar(50)
+  type                 String                  @db.VarChar(50) // 'provider' | 'patient'
   planId               String                  @db.VarChar(255)
-  baseAmountMinor      BigInt                  @default(0)
-  gstMinor             BigInt                  @default(0)
-  totalAmountMinor     BigInt                  @default(0)
-  walletUsedMinor      BigInt                  @default(0)
-  finalAmountMinor     BigInt                  @default(0)
+  baseAmountMinor      BigInt                  @default(0) // Amount in paise
+  gstMinor             BigInt                  @default(0) // GST in paise
+  totalAmountMinor     BigInt                  @default(0) // Total incl GST
+  walletUsedMinor      BigInt                  @default(0) // Wallet deduction
+  finalAmountMinor     BigInt                  @default(0) // Final amount to pay
   status               UniversalCheckoutStatus @default(INITIATED)
   idempotencyKey       String                  @unique
   phonepeTransactionId String?                 @unique
-  planDetails          Json?
+  planDetails          Json? // Activation details
   createdAt            DateTime                @default(now())
   completedAt          DateTime?
   failedAt             DateTime?
@@ -1545,7 +1524,7 @@ model PayoutRequest {
   providerId             String
   amountMinor            BigInt
   currency               String              @default("INR")
-  status                 PayoutStatus        @default(REQUESTED)
+  status                 PayoutRequestStatus @default(REQUESTED)
   minWithdrawalRuleMinor BigInt              @default(10000)
   requestedAt            DateTime            @default(now())
   approvedAt             DateTime?
@@ -1556,6 +1535,8 @@ model PayoutRequest {
   rejectionReason        String?
   bankReference          String?             @unique
   idempotencyKey         String              @unique
+  platformAmount         BigInt?             @map("platform_amount")
+  therapistAmount        BigInt?             @map("therapist_amount")
   provider               ProviderWallet      @relation("WalletPayouts", fields: [providerId], references: [providerId])
   walletTransactions     WalletTransaction[] @relation("PayoutWalletTransactions")
 
@@ -1618,6 +1599,8 @@ model PatientSubscription {
   id                  String    @id @default(uuid())
   userId              String    @unique
   price               Int
+  planVersion         Int       @default(1)
+  priceLocked         Boolean   @default(false)
   status              String
   autoRenew           Boolean   @default(true)
   createdAt           DateTime  @default(now())
@@ -1629,8 +1612,6 @@ model PatientSubscription {
   processing          Boolean   @default(false)
   processingStartedAt DateTime?
   metadata            Json?
-  planVersion         Int       @default(1)
-  priceLocked         Boolean   @default(false)
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])
@@ -1743,6 +1724,7 @@ model Invoice {
   totalMinor           BigInt
   status               String            @default("GENERATED")
   lifecycleStatus      InvoiceStatus     @default(DRAFT) @map("lifecycle_status")
+  invoiceMethod        InvoiceMethod     @default(PDF) @map("invoice_method")
   retryCount           Int               @default(0)
   pdfPath              String?
   pdfUrl               String?           @map("pdf_url")
@@ -1760,11 +1742,10 @@ model Invoice {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   isPaidOut            Boolean           @default(false)
-  invoiceMethod        InvoiceMethod     @default(PDF) @map("invoice_method")
-  events               InvoiceEvent[]
-  payment              FinancialPayment? @relation("PaymentInvoice", fields: [paymentId], references: [id])
+  payment              FinancialPayment? @relation("PaymentInvoice", fields: [paymentId], references: [id], onDelete: SetNull)
   customer             User              @relation("UserInvoices", fields: [userId], references: [id], onDelete: Cascade)
   payoutItem           PayoutItem?       @relation("InvoicePayoutItem")
+  events               InvoiceEvent[]
 
   @@unique([id, version])
   @@index([status, createdAt(sort: Desc)])
@@ -1772,7 +1753,7 @@ model Invoice {
   @@index([userId, createdAt(sort: Desc)])
   @@index([paymentId])
   @@index([paymentTransactionId])
-  @@index([isPaidOut], map: "idx_invoice_is_paid_out")
+  @@index([isPaidOut])
   @@map("invoices")
 }
 
@@ -1780,13 +1761,13 @@ model InvoiceEvent {
   id             String         @id @default(uuid())
   invoiceId      String         @map("invoice_id")
   eventType      String         @map("event_type")
+  invoiceMethod  InvoiceMethod? @map("invoice_method")
   beforeState    Json?          @map("before_state")
   afterState     Json?          @map("after_state")
   actorUserId    String?        @map("actor_user_id")
   idempotencyKey String?        @map("idempotency_key")
   createdAt      DateTime       @default(now()) @map("created_at")
-  invoiceMethod  InvoiceMethod? @map("invoice_method")
-  actor          User?          @relation("InvoiceEventsActor", fields: [actorUserId], references: [id])
+  actor          User?          @relation("InvoiceEventsActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   invoice        Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([invoiceId], map: "idx_invoice_events_invoice_id")
@@ -1799,30 +1780,30 @@ model Payout {
   providerId    String
   amountMinor   BigInt
   currency      String       @default("INR")
-  status        String
-  method        String       @default("BANK")
+  status        PayoutStatus @default(PENDING)
+  method        PayoutMethod @default(BANK)
   referenceId   String?
   failureReason String?
   createdAt     DateTime     @default(now())
   processedAt   DateTime?
   version       BigInt       @default(1)
-  items         PayoutItem[] @relation("PayoutItems")
   provider      User         @relation("PayoutProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  items         PayoutItem[] @relation("PayoutItems")
 
-  @@index([providerId, createdAt(sort: Desc)], map: "idx_payout_provider_created")
-  @@index([status, createdAt(sort: Desc)], map: "idx_payout_status_created")
+  @@index([providerId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
   @@map("payouts")
 }
 
 model PayoutItem {
   id          String  @id @default(uuid())
   payoutId    String
-  invoiceId   String  @unique(map: "payout_items_invoiceId_unique")
+  invoiceId   String  @unique
   amountMinor BigInt
-  invoice     Invoice @relation("InvoicePayoutItem", fields: [invoiceId], references: [id], onDelete: Cascade)
   payout      Payout  @relation("PayoutItems", fields: [payoutId], references: [id], onDelete: Cascade)
+  invoice     Invoice @relation("InvoicePayoutItem", fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  @@index([payoutId], map: "idx_payout_item_payout")
+  @@index([payoutId])
   @@map("payout_items")
 }
 
@@ -1833,12 +1814,12 @@ model IdempotencyKey {
   requestHash String   @map("request_hash")
   response    Json
   createdAt   DateTime @default(now()) @map("created_at")
-  expiresAt   DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @map("expires_at")
+  expiresAt   DateTime @map("expires_at") // TTL: default 7 days
 
   @@unique([id, endpoint, actorId])
   @@unique([endpoint, actorId, requestHash])
   @@index([endpoint, actorId])
-  @@index([expiresAt])
+  @@index([expiresAt]) // For cleanup queries
   @@map("idempotency_keys")
 }
 
@@ -2205,6 +2186,8 @@ model ProviderSubscription {
   providerId          String                    @unique
   plan                ProviderPlan
   price               Int
+  planVersion         Int                       @default(1)
+  priceLocked         Boolean                   @default(false)
   leadsPerWeek        Int
   startDate           DateTime                  @default(now())
   expiryDate          DateTime
@@ -2223,8 +2206,6 @@ model ProviderSubscription {
   weekStartsAt        DateTime                  @default(now())
   lastAssignedAt      DateTime?
   metadata            Json?
-  planVersion         Int                       @default(1)
-  priceLocked         Boolean                   @default(false)
   provider            User                      @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([status])
@@ -2444,8 +2425,8 @@ model UserWallet {
   id            String                  @id @default(uuid())
   userId        String                  @unique
   balance       Int                     @default(0)
-  createdAt     DateTime                @default(now())
   lastTxnDate   DateTime?
+  createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
   bookingUsages BookingWalletUsage[]
   transactions  UserWalletTransaction[]
@@ -2525,31 +2506,28 @@ model PricingVersion {
   @@map("pricing_versions")
 }
 
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model AuditLog {
   id        String   @id @default(uuid())
+  userId    String   @map("user_id")
   action    String
   resource  String
   details   Json?    @map("details")
   createdAt DateTime @default(now()) @map("created_at")
-  userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([resource, action])
-  @@index([userId, createdAt(sort: Desc)], map: "idx_audit_logs_user_id_created_at_desc")
   @@map("audit_logs")
 }
 
 model CrisisAlert {
   id              String   @id @default(uuid())
-  severity        String   @default("high")
-  createdAt       DateTime @default(now()) @map("created_at")
   patientId       String   @map("patient_id")
-  resolutionNotes String?  @map("resolution_notes")
-  respondedBy     String?  @map("responded_by")
+  severity        String   @default("high")
   status          String   @default("pending")
+  respondedBy     String?  @map("responded_by")
+  resolutionNotes String?  @map("resolution_notes")
+  createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@index([status, createdAt(sort: Desc)])
@@ -2826,7 +2804,6 @@ model product_addons {
   active     Boolean  @default(true)
   created_at DateTime @default(now()) @db.Timestamp(6)
   updated_at DateTime @default(now()) @db.Timestamp(6)
-  minutes    Int      @default(0)
 }
 
 model session_pricing {
@@ -2869,6 +2846,7 @@ model InstitutionalAgreement {
   id                    Int                     @id @default(autoincrement())
   agreement_number      String                  @unique
   template_id           Int
+  entity_id             String?
   agreement_type        String
   partner_name          String
   partner_type          String
@@ -2885,13 +2863,45 @@ model InstitutionalAgreement {
   signature_status      String                  @default("draft")
   status                String                  @default("draft")
   created_at            DateTime                @default(now())
+  template              AgreementTemplate       @relation(fields: [template_id], references: [id], onDelete: Restrict)
+  entity                Entity?                 @relation(fields: [entity_id], references: [id], onDelete: SetNull)
   signature_logs        AgreementSignatureLog[]
-  template              AgreementTemplate       @relation(fields: [template_id], references: [id])
 
   @@index([template_id])
+  @@index([entity_id])
   @@index([status])
   @@index([signature_status])
   @@map("institutional_agreements")
+}
+
+model Entity {
+  id          String   @id @default(uuid())
+  entity_name String
+  entity_type String
+  admin_name  String?
+  admin_email String   @unique
+  created_at  DateTime @default(now())
+
+  contracts  Contract[]
+  agreements InstitutionalAgreement[]
+}
+
+model Contract {
+  id       String @id @default(uuid())
+  entityId String
+  entity   Entity @relation(fields: [entityId], references: [id])
+
+  contract_number  String @unique
+  pricing_model    String
+  price_per_member Float?
+  max_members      Int?
+
+  start_date DateTime
+  end_date   DateTime
+
+  created_at DateTime @default(now())
+
+  @@index([entityId])
 }
 
 model AgreementSignatureLog {
@@ -2909,81 +2919,8 @@ model AgreementSignatureLog {
   @@map("agreement_signature_logs")
 }
 
-model RetreatIntent {
-  id             String   @id @default(uuid())
-  name           String
-  phone          String
-  email          String?
-  theme          String
-  preferredDates String?
-  groupSize      String?
-  budgetRange    String?
-  personalNote   String?
-  status         String   @default("RECEIVED")
-  consentContact Boolean  @default(true)
-  assignedAdmin  String?
-  adminNotes     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@index([status])
-  @@index([theme])
-  @@index([createdAt])
-  @@map("retreat_intents")
-}
-
-model SoundTherapyTrack {
-  id          String   @id @default(uuid())
-  title       String
-  artist      String   @default("MANAS360")
-  genre       String
-  description String?
-  frequency   String?
-  duration    String?
-  embedCode   String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("sound_therapy_tracks")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model eap_addon_catalog {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  addon_code    String   @unique
-  addon_name    String
-  description   String?
-  unit          String   @default("per_employee_per_month")
-  price_inr     Decimal  @db.Decimal(12, 2)
-  is_active     Boolean  @default(true)
-  display_order Int      @default(0)
-  metadata      Json     @default("{}")
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([is_active, display_order], map: "idx_eap_addon_catalog_active_order")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model eap_workshop_catalog {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workshop_code    String   @unique
-  workshop_name    String
-  description      String?
-  delivery_mode    String   @default("hybrid")
-  duration_minutes Int
-  base_price_inr   Decimal  @db.Decimal(12, 2)
-  is_active        Boolean  @default(true)
-  display_order    Int      @default(0)
-  metadata         Json     @default("{}")
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([is_active, display_order], map: "idx_eap_workshop_catalog_active_order")
-}
-
 enum UserRole {
+  LEARNER
   PATIENT
   THERAPIST
   ADMIN
@@ -2991,11 +2928,9 @@ enum UserRole {
   COACH
   PSYCHOLOGIST
   SUPER_ADMIN
+  COMPLIANCE_OFFICER
   CLINICAL_DIRECTOR
   FINANCE_MANAGER
-  COMPLIANCE_OFFICER
-  LEARNER
-  CLINICAL_ADMIN
 }
 
 enum UserStatus {
@@ -3074,21 +3009,6 @@ enum BookingIntentStatus {
   CONFIRMED
   FAILED
   EXPIRED
-}
-
-enum CertificationStatus {
-  NONE
-  ENROLLED
-  COMPLETED
-  VERIFIED
-  PAID
-  PARTIAL
-  EXPIRED
-}
-
-enum CertificationPaymentPlan {
-  FULL
-  INSTALLMENT
 }
 
 enum AppointmentRequestStatus {
@@ -3311,14 +3231,10 @@ enum InvoiceMethod {
 }
 
 enum PayoutStatus {
-  REQUESTED
-  APPROVED
-  PAID
-  REJECTED
-  FAILED
   PENDING
   PROCESSING
   COMPLETED
+  FAILED
 }
 
 enum PayoutMethod {
@@ -3326,289 +3242,9 @@ enum PayoutMethod {
   UPI
 }
 
-// ═══════════════════════════════════════════════
-// MyDigitalClinic — Tenant Tables
-// ═══════════════════════════════════════════════
-
-model Clinic {
-  id                String   @id @default(uuid())
-  clinicCode        String   @unique @map("clinic_code")
-  name              String   @map("clinic_name")
-  address           String?  @map("clinic_address")
-  phone             String   @map("clinic_phone")
-  email             String   @map("clinic_email")
-  license           String?  @map("clinic_license")
-  specializations   String[]
-  city              String?
-  state             String?
-  
-  ownerName         String   @map("owner_name")
-  ownerPhone        String   @map("owner_phone")
-  ownerEmail        String   @map("owner_email")
-  
-  tier              String   @default("trial")
-  trialStartedAt    DateTime @default(now()) @map("trial_started_at")
-  trialEndsAt       DateTime @map("trial_ends_at")
-  subscriptionStatus String  @default("trial") @map("subscription_status")
-  maxTherapists     Int      @default(5) @map("max_therapists")
-  maxPatients       Int      @default(50) @map("max_patients")
-  
-  currentTherapistCount Int  @default(0) @map("current_therapist_count")
-  currentPatientCount   Int  @default(0) @map("current_patient_count")
-  totalSessionsCount    Int  @default(0) @map("total_sessions_count")
-  
-  autoPurgeEnabled  Boolean  @default(false) @map("auto_purge_enabled")
-  
-  staff             ClinicUser[]
-  patients          ClinicPatient[]
-  sessions          ClinicSession[]
-  reports           ClinicReport[]
-  assessments       ClinicAssessment[]
-  subscriptions     ClinicSubscription[]
-  transactions      ClinicBillingTransaction[]
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  @@map("clinics")
-}
-
-model MDCFeatureCatalog {
-  id              String   @id @default(uuid())
-  name            String   @unique
-  slug            String   @unique
-  description     String?
-  category        String   // core, addon, analytics, integration
-  availabilityDate DateTime? @map("availability_date")
-  isActive        Boolean  @default(true) @map("is_active")
-  
-  pricing         MDCTierPricing[]
-
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  @@map("mdc_feature_catalog")
-}
-
-model MDCTierPricing {
-  id              String   @id @default(uuid())
-  featureId       String   @map("feature_id")
-  clinicTier      String   @map("clinic_tier") // solo, small, large
-  monthlyPrice    Float    @map("monthly_price")
-  quarterlyPrice  Float    @map("quarterly_price")
-
-  feature         MDCFeatureCatalog @relation(fields: [featureId], references: [id])
-
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  @@unique([featureId, clinicTier])
-  @@map("mdc_tier_pricing")
-}
-
-model ClinicSubscription {
-  id                String   @id @default(uuid())
-  clinicId          String   @map("clinic_id")
-  selectedFeatures  Json     @map("selected_features")
-  clinicTier        String   @map("clinic_tier")
-  billingCycle      String   @map("billing_cycle") // monthly, quarterly
-  monthlyTotal      Float    @map("monthly_total")
-  billingAmount     Float    @map("billing_amount")
-  status            String   @default("trial") // trial, active, paused, cancelled
-  
-  trialStartsAt     DateTime @default(now()) @map("trial_starts_at")
-  trialEndsAt       DateTime @map("trial_ends_at")
-  nextBillingDate   DateTime? @map("next_billing_date")
-  nextRenewalAmount Float?    @map("next_renewal_amount")
-
-  clinic            Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  transactions      ClinicBillingTransaction[]
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  @@map("clinic_subscriptions")
-}
-
-model ClinicBillingTransaction {
-  id                String   @id @default(uuid())
-  clinicId          String   @map("clinic_id")
-  subscriptionId    String   @map("subscription_id")
-  periodStart       DateTime @map("period_start")
-  periodEnd         DateTime @map("period_end")
-  amountDue         Float    @map("amount_due")
-  amountPaid        Float?   @map("amount_paid")
-  paymentStatus     String   @default("pending") // pending, paid, failed, refunded
-  paymentGateway    String?  @map("payment_gateway")
-  paymentId         String?  @map("payment_id")
-  attemptedAt       DateTime? @map("attempted_at")
-  paidAt            DateTime? @map("paid_at")
-  failureReason     String?  @map("failure_reason")
-
-  clinic            Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  subscription      ClinicSubscription @relation(fields: [subscriptionId], references: [id])
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  @@map("clinic_billing_transactions")
-}
-
-model ClinicUser {
-  id              String   @id @default(uuid())
-  clinicId        String   @map("clinic_id")
-  loginSuffix     String   @map("login_suffix")
-  loginCode       String   @unique @map("login_code")
-  role            String   
-  
-  fullName        String   @map("full_name")
-  phone           String
-  email           String?
-  
-  licenseNumber   String?  @map("license_number")
-  licenseType     String?  @map("license_type")
-  qualification   String?
-  verificationStatus String @default("pending") @map("verification_status")
-  
-  isActive        Boolean  @default(true) @map("is_active")
-  
-  phoneVerificationOtpHash      String?  @map("phone_verification_otp_hash")
-  phoneVerificationOtpExpiresAt DateTime? @map("phone_verification_otp_expires_at")
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  assignedPatients ClinicPatient[] @relation("AssignedTherapist")
-  sessions        ClinicSession[]
-  authSessions    MDCSession[]
-
-  @@map("clinic_users")
-}
-
-model MDCSession {
-  id               String    @id @default(uuid())
-  clinicUserId     String    @map("clinic_user_id")
-  jti              String    @unique
-  refreshTokenHash String
-  ipAddress        String?
-  userAgent        String?
-  device           String?
-  revokedAt        DateTime?
-  expiresAt        DateTime
-  lastActiveAt     DateTime  @default(now())
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  clinicUser       ClinicUser @relation(fields: [clinicUserId], references: [id], onDelete: Cascade)
-
-  @@index([clinicUserId, revokedAt])
-  @@index([clinicUserId, expiresAt])
-  @@map("mdc_sessions")
-}
-
-model MDCAuditLog {
-  id        String   @id @default(uuid())
-  clinicUserId String? @map("clinic_user_id")
-  event     String
-  status    String   // success, failure
-  ipAddress String?
-  userAgent String?
-  metadata  Json?
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("mdc_audit_logs")
-}
-
-model ClinicPatient {
-  id                String   @id @default(uuid())
-  clinicId          String   @map("clinic_id")
-  assignedTherapistId String? @map("assigned_therapist_id")
-  
-  loginCode         String   @unique @map("login_code")
-  loginSuffix       String   @map("login_suffix")
-  
-  fullName          String   @map("full_name")
-  phone             String
-  email             String?
-  dateOfBirth       DateTime? @map("date_of_birth")
-  gender            String?
-  primaryCondition  String?  @map("primary_condition")
-  notes             String?
-  verificationStatus String @default("pending") @map("verification_status")
-  
-  status            String   @default("active")
-  
-  phoneVerificationOtpHash      String?  @map("phone_verification_otp_hash")
-  phoneVerificationOtpExpiresAt DateTime? @map("phone_verification_otp_expires_at")
-  
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  clinic            Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  assignedTherapist ClinicUser? @relation("AssignedTherapist", fields: [assignedTherapistId], references: [id])
-  sessions          ClinicSession[]
-  assessments       ClinicAssessment[]
-
-  @@map("clinic_patients")
-}
-
-model ClinicSession {
-  id              String   @id @default(uuid())
-  clinicId        String   @map("clinic_id")
-  therapistId     String   @map("therapist_id")
-  patientId       String   @map("patient_id")
-  
-  scheduledAt     DateTime @map("scheduled_at")
-  durationMinutes Int      @default(50) @map("duration_minutes")
-  status          String   @default("scheduled")
-  
-  jitsiRoomId     String?  @map("jitsi_room_id")
-  sessionNotes    String?  @map("session_notes")
-  notesCompletedAt DateTime? @map("notes_completed_at")
-  
-  phq9Score       Int?     @map("phq9_score")
-  gad7Score       Int?     @map("gad7_score")
-  therapeuticGpsData Json? @map("therapeutic_gps_data")
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  therapist       ClinicUser @relation(fields: [therapistId], references: [id])
-  patient         ClinicPatient @relation(fields: [patientId], references: [id])
-
-  @@map("clinic_sessions")
-}
-
-model ClinicAssessment {
-  id              String   @id @default(uuid())
-  clinicId        String   @map("clinic_id")
-  patientId       String   @map("patient_id")
-  
-  type            String   
-  score           Int
-  severity        String
-  data            Json
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  patient         ClinicPatient @relation(fields: [patientId], references: [id])
-
-  @@map("clinic_assessments")
-}
-
-model ClinicReport {
-  id              String   @id @default(uuid())
-  clinicId        String   @map("clinic_id")
-  patientId       String   @map("patient_id")
-  
-  fileName        String   @map("file_name")
-  s3Key           String   @unique @map("s3_key")
-  fileType        String   @default("pdf") @map("file_type")
-  
-  expiresAt       DateTime @map("expires_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-
-  @@map("clinic_reports")
+enum CertificationStatus {
+  NONE
+  ENROLLED
+  COMPLETED
+  EXPIRED
 }

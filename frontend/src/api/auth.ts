@@ -120,25 +120,96 @@ export const login = async (payload: LoginPayload): Promise<AuthUser> => {
 	return loggedInUser;
 };
 
-export const providerRegister = async (payload: ProviderRegisterPayload): Promise<void> => {
-	await http.post<ApiEnvelope<unknown>>('/v1/provider/onboarding', payload);
-};
+// export const providerRegister = async (payload: ProviderRegisterPayload): Promise<void> => {
+// 	await http.post<ApiEnvelope<unknown>>('/v1/provider/onboarding', payload);
+// };
 
 export const googleLogin = async (idToken: string): Promise<AuthUser> => {
 	const response = await http.post<ApiEnvelope<{ user: AuthUser; sessionId: string }>>('/v1/auth/login/google', { idToken });
 	return response.data.data.user;
 };
 
+type SignupRole =
+  | 'patient'
+  | 'learner'
+  | 'therapist'
+  | 'psychiatrist'
+  | 'psychologist'
+  | 'coach'
+  | 'corporate'
+  | 'clinic';
+
+type SignupProfile = {
+  name?: string;
+  role?: SignupRole;
+
+  // provider registration fields
+  email?: string;
+  registrationNumber?: string;
+  providerStatus?: 'ACTIVE_NOT_VERIFIED';
+  latestCredentialsValid?: boolean;
+  credentialScreenshotUrl?: string;
+};
+
 export const signupWithPhone = async (
-	phone: string,
-	profile?: { name?: string; role?: 'patient' | 'learner' | 'therapist' | 'psychiatrist' | 'psychologist' | 'coach' },
+  phone: string,
+  profile?: SignupProfile,
 ): Promise<{ userId: string; phone: string; message: string; devOtp?: string }> => {
-	const normalizedPhone = normalizePhoneForAuth(phone);
-	const response = await http.post<ApiEnvelope<{ userId: string; phone: string; message: string; devOtp?: string }>>('/v1/auth/signup/phone', {
-		phone: normalizedPhone,
-		...(profile || {}),
-	});
-	return response.data.data;
+  const normalizedPhone = normalizePhoneForAuth(phone);
+
+  const response = await http.post<
+    ApiEnvelope<{ userId: string; phone: string; message: string; devOtp?: string }>
+  >('/v1/auth/signup/phone', {
+    phone: normalizedPhone,
+    ...(profile || {}),
+  });
+
+  return response.data.data;
+};
+
+export const providerRegister = async (payload: {
+  fullName: string;
+  email?: string;
+  registrationNum: string;
+  registrationType: 'RCI' | 'NMC' | 'STATE_COUNCIL' | 'OTHER';
+  professionalType: 'THERAPIST' | 'PSYCHIATRIST' | 'PSYCHOLOGIST' | 'COACH';
+  highestQual?: string;
+  yearsExperience?: number;
+  specializations?: string[];
+  languages?: string[];
+  hourlyRate?: number;
+  latestCredentialsValid: boolean;
+  credentialScreenshot: File;
+}) => {
+  const formData = new FormData();
+
+  formData.append('fullName', payload.fullName);
+  if (payload.email) formData.append('email', payload.email);
+  formData.append('registrationNum', payload.registrationNum);
+  formData.append('registrationType', payload.registrationType);
+  formData.append('professionalType', payload.professionalType);
+  formData.append('highestQual', payload.highestQual || 'Not provided');
+  formData.append('yearsExperience', String(payload.yearsExperience || 0));
+  formData.append('hourlyRate', String(payload.hourlyRate || 0));
+  formData.append('latestCredentialsValid', String(payload.latestCredentialsValid));
+
+  payload.specializations?.forEach((item) => {
+    formData.append('specializations', item);
+  });
+
+  payload.languages?.forEach((item) => {
+    formData.append('languages', item);
+  });
+
+  formData.append('credentialScreenshot', payload.credentialScreenshot);
+
+  const response = await http.post('/v1/auth/provider-register', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data.data;
 };
 
 export const verifyPhoneSignupOtp = async (
@@ -201,9 +272,4 @@ export const logout = async (): Promise<void> => {
 	await http.post('/v1/auth/logout', {}, {
 		headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
 	});
-};
-
-export const becomeProvider = async (): Promise<AuthUser> => {
-	const response = await http.post<ApiEnvelope<AuthUser>>('/v1/users/me/become-provider');
-	return response.data.data;
 };

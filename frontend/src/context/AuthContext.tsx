@@ -3,7 +3,6 @@ import {
   login as loginApi,
   logout as logoutApi,
   me as meApi,
-  becomeProvider as becomeProviderApi,
   type AuthUser,
 } from '../api/auth';
 
@@ -93,16 +92,17 @@ export const isPlatformAdminUser = (user: AuthUser | null | undefined): boolean 
   );
 };
 
-export const getPostLoginRoute = (user: AuthUser | null | undefined): string => {
+export const getPostLoginRoute = (
+  user: AuthUser | null | undefined
+): string => {
   if (!user) return '/patient/dashboard';
 
   if ((user as any)?.legalAcceptanceRequired) {
     return '/auth/legal-accept';
   }
 
-  // If patient requires subscription, route to plans page
-  if ((user as any)?.requiresSubscription) {
-    return '/plans';
+  if (normalizeRole(user.role) === 'patient') {
+    return '/patient/onboarding/preferences';
   }
 
   if (hasCorporateAccess(user)) {
@@ -118,34 +118,44 @@ export const getPostLoginRoute = (user: AuthUser | null | undefined): string => 
   }
 
   if (isProviderRole(user.role)) {
-    // Dev/testing bypass only: never allow onboarding skip in production builds.
-    const isProductionBuild = import.meta.env.PROD === true || String(import.meta.env.MODE || '').toLowerCase() === 'production';
-    const skipFlagEnabled = (import.meta.env.VITE_SKIP_ONBOARDING || '').toString() === 'true';
-    const skipOnboarding = import.meta.env.DEV === true || (!isProductionBuild && skipFlagEnabled);
-    if (skipOnboarding) return '/provider/dashboard';
-
-    const normalizedRole = normalizeRole(user.role);
-    const onboardingStatus = String(user.onboardingStatus || '').toUpperCase();
-
-    // Learners can bypass subscription and setup screens to access their dashboard/certifications
-    if (normalizedRole === 'learner') {
+    if (normalizeRole(user.role) === 'learner') {
       return '/provider/dashboard';
     }
 
+    const isProductionBuild =
+      import.meta.env.PROD === true ||
+      String(import.meta.env.MODE || '').toLowerCase() === 'production';
+
+    const skipFlagEnabled =
+      (import.meta.env.VITE_SKIP_ONBOARDING || '').toString() === 'true';
+
+    const skipOnboarding =
+      import.meta.env.DEV === true || (!isProductionBuild && skipFlagEnabled);
+
+    if (skipOnboarding) return '/provider/dashboard';
+
+    const onboardingStatus = String(user.onboardingStatus || '').toUpperCase();
+
     if (!user.platformAccessActive) {
-      return '/provider/subscription';
-    }
+  return '/provider/plans';
+}
+
     if (onboardingStatus !== 'COMPLETED') {
       return '/onboarding/provider-setup';
     }
+
     if (!user.isTherapistVerified) {
       return '/provider/verification-pending';
     }
+
     return '/provider/dashboard';
   }
 
   return getDefaultRouteForRole(user.role);
 };
+
+
+
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -155,7 +165,6 @@ type AuthContextValue = {
   login: (identifier: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   checkAuth: (options?: { force?: boolean }) => Promise<void>;
-  becomeProvider: () => Promise<void>;
 };
 
 type AuthContextGlobal = typeof globalThis & {
@@ -269,11 +278,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [clearSessionHint]);
 
-  const becomeProvider = useCallback(async () => {
-    const updatedUser = await becomeProviderApi();
-    setUser(updatedUser);
-  }, []);
-
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -283,9 +287,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       checkAuth,
-      becomeProvider,
     }),
-    [user, loading, login, logout, checkAuth, becomeProvider],
+    [user, loading, login, logout, checkAuth],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

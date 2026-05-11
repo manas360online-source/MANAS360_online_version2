@@ -32,11 +32,6 @@ import {
 	getAdminPlatformAnalyticsController,
 } from '../controllers/admin-analytics.controller';
 import {
-  getAllTracks,
-  createTrack,
-  deleteTrack
-} from '../controllers/admin-sound.controller';
-import {
 	listPaymentReliabilityController,
 	getPaymentReliabilityMetricsController,
 	getPaymentReliabilityDetailController,
@@ -117,9 +112,6 @@ import {
 	rejectAdminAgreementController,
 	updateAdminAgreementStatusController,
 } from '../controllers/admin-agreement.controller';
-import { listCorporateDemoRequestsController } from '../controllers/corporate.controller';
-import { listRetreatIntentsController, updateRetreatIntentStatusController } from '../controllers/retreat.controller';
-import { listMdcClinicsController, updateMdcClinicSubscriptionController } from '../controllers/admin-mdc.controller';
 
 const router = Router();
 
@@ -519,21 +511,5 @@ router.patch('/roles/:role', requireAuth, requireRole('superadmin'), requireAdmi
 router.get('/rbac/platform-admins', requireAuth, requireRole(['admin', 'superadmin', 'clinicaldirector', 'financemanager', 'complianceofficer']), requireAdminPolicy('users.view'), asyncHandler(getPlatformAdminRoleInventoryController));
 router.post('/rbac/platform-admins', requireAuth, requireRole('superadmin'), requireAdminPolicy('users.moderate'), asyncHandler(createPlatformAdminAccountController));
 router.get('/rbac/effective-policies', requireAuth, requireRole(['admin', 'superadmin', 'clinicaldirector', 'financemanager', 'complianceofficer']), requireAdminPolicy('users.view'), asyncHandler(getEffectiveAdminPoliciesController));
-
-// === CORPORATE DEMO REQUESTS ===
-router.get('/corporate-demo-requests', requireAuth, requireRole(['admin', 'superadmin']), requireAdminPolicy('users.view'), asyncHandler(listCorporateDemoRequestsController));
-
-// === RETREAT INTENTS ===
-router.get('/retreat-intents', requireAuth, requireRole(['admin', 'superadmin']), requireAdminPolicy('users.view'), asyncHandler(listRetreatIntentsController));
-router.patch('/retreat-intents/:id/status', requireAuth, requireRole(['admin', 'superadmin']), requireAdminPolicy('users.moderate'), asyncHandler(updateRetreatIntentStatusController));
-
-// === SOUND THERAPY ADMIN ===
-router.get('/sound', requireAuth, requireRole(['admin', 'superadmin']), asyncHandler(getAllTracks));
-router.post('/sound', requireAuth, requireRole(['admin', 'superadmin']), asyncHandler(createTrack));
-router.delete('/sound/:id', requireAuth, requireRole(['admin', 'superadmin']), asyncHandler(deleteTrack));
-
-// === DIGITAL CLINICS ADMIN ===
-router.get('/mdc-clinics', requireAuth, requireRole(['admin', 'superadmin']), requireAdminPolicy('users.view'), asyncHandler(listMdcClinicsController));
-router.patch('/mdc-clinics/:id/subscription', requireAuth, requireRole(['admin', 'superadmin']), requireAdminPolicy('users.moderate'), asyncHandler(updateMdcClinicSubscriptionController));
 
 export default router;

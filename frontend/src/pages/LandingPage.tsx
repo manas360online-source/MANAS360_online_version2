@@ -1,10 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Instagram, Youtube, Linkedin, Moon, Sun } from "lucide-react";
-import { applyTheme, getStoredThemePreference, persistThemePreference, resolveTheme, type ThemePreference } from '../lib/themePreference';
-const logo = "/Logo.jpeg";
-// landingBg uses the image from the public folder (URL-encoded for spaces)
-const landingBg = "/You%20renot%20alone-Beach.jpeg";
 
 type Language = "English" | "Hindi" | "Kannada" | "Tamil" | "Telugu";
 
@@ -44,37 +39,17 @@ type QuickNavMegaMenu = {
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [activeTheme, setActiveTheme] = useState<ThemePreference>(() => resolveTheme(getStoredThemePreference()));
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const [showTopPromo, setShowTopPromo] = useState(true);
+  const [showMentalHealthPromo, setShowMentalHealthPromo] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("English");
   const [isScrolled, setIsScrolled] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [activeQuickNav, setActiveQuickNav] = useState<string | null>(null);
   const quickNavCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leftPanelCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    applyTheme(activeTheme);
-  }, [activeTheme]);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'theme-preference') {
-        setActiveTheme(resolveTheme(getStoredThemePreference()));
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const toggleTheme = () => {
-    const nextTheme: ThemePreference = activeTheme === 'dark' ? 'light' : 'dark';
-    setActiveTheme(nextTheme);
-    persistThemePreference(nextTheme);
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -116,90 +91,70 @@ const LandingPage: React.FC = () => {
 
   const handleScrollToAssess = () => {
     navigate("/assessment");
+    // navigate("/free-screening");
   };
+
+
+  
 
   const handleHitASixerPromo = () => {
     navigate("/hit-a-sixer");
   };
 
-  // Route map for individual mega menu items (by item title)
-  const megaItemRoutes: Record<string, string> = {
-    // Premium Therapy Hub items
-    "1-on-1 Therapy": "/premium-theraphy",
-    "Psychiatry Consult": "/premium-theraphy",
-    "Couples Therapy": "/find-spark",
-    "Group Therapy": "/group-therapy",
-    "Sound Therapy": "/sound-therapy",
-    "Executive Coaching": "/premium-theraphy",
-    "Wellness Retreats": "/retreats",
-    // Wellness Shop is "coming soon" — no route
-    // I Need a Helping Hand items
-    "Free Screening": "/assessment",
-    "Find a Therapist": "/helping-hand",
-    "See a Psychiatrist": "/helping-hand",
-    "Specialized Care": "/specialized-care",
-    "Group Sessions": "/group-therapy",
-    "Crisis Support": "/crisis",
-    // AI Power Hub items
-    "Anytime Buddy AI": "/ai-power-hub",
-    "AnytimeBuddy Chat": "/ai-power-hub",
-    "Vent Buddy": "/ai-power-hub",
-    "AI Session Notes": "/ai-power-hub",
-    // Digital Pets items
-    "Baby Dinosaur": "/pet",
-    "Golden Retriever": "/pet",
-    "Healing Elephant": "/pet",
-    "Chintu Fox": "/pet",
-    "Name Your Pet \u2014 Adopt": "/pet",
-    // Self-Help items
-    "Mood Tracker": "/self-help",
-    "Breathing Exercises": "/self-help",
-    "Journaling Prompts": "/self-help",
-    "Sleep Guide": "/self-help",
-    "CBT Worksheets": "/self-help",
-    // Find a Spark items
-    "Find a Spark \u2014 Couples": "/find-spark",
-    "Concerned Parent": "/find-spark",
-    "Family Plan": "/find-spark",
-    "Teen & Student": "/find-spark",
-    // Corporate items
-    "Corporate Wellness": "/corporate-landing",
-    "Education Institutions": "/corporate-landing",
-    "Healthcare Units": "/corporate-landing",
-    "Government Agency": "/corporate-landing",
-    // Certify2EarnMore items
-    "Certification Hub": "/certifications",
-    "Join as Therapist": "/certifications",
-    // MyDigitalClinic items
-    "Patient Database": "/my-digital-clinic",
-    "Session Notes": "/my-digital-clinic",
-    "Scheduling": "/my-digital-clinic",
-    "Prescriptions": "/my-digital-clinic",
-    "Progress Tracking": "/my-digital-clinic",
-    "3 days": "/my-digital-clinic",
-  };
+  const handleQuickNavMegaItemClick = (menuLabel: string) => {
+    if (menuLabel === "I Need a Helping Hand") {
+      setActiveQuickNav(null);
+      navigate("/helping-hand");
+      return;
+    }
 
-  // Fallback route map for parent menu labels (used when no item-specific route exists)
-  const menuFallbackRoutes: Record<string, string> = {
-    "I Need a Helping Hand": "/helping-hand",
-    "AI Power Hub": "/ai-power-hub",
-    "Find a Spark Again": "/find-spark",
-    "Self-Help Tools": "/self-help",
-    "For Corporates / Edu / Healthcare": "/corporate-landing",
-    "Premium Therapy Hub": "/premium-theraphy",
-    "MyDigitalClinic": "/my-digital-clinic",
-    "Certify2EarnMore": "/certifications",
-    "Digital Pets4Happy Hormones": "/pet",
-  };
+    if (menuLabel === "AI Power Hub") {
+      setActiveQuickNav(null);
+      navigate("/ai-power-hub");
+      return;
+    }
 
-  const handleMegaItemNav = (itemTitle: string, parentMenu: string | null) => {
-    setActiveQuickNav(null);
-    const route = megaItemRoutes[itemTitle] || (parentMenu ? menuFallbackRoutes[parentMenu] : null);
-    if (route) navigate(route);
-  };
+    if (menuLabel === "Find a Spark Again") {
+      setActiveQuickNav(null);
+      navigate("/find-spark");
+      return;
+    }
 
-  // handleQuickNavMegaItemClick was removed because the individual mega menu items
-  // are routed via `handleMegaItemNav` and specific onClick handlers in the UI.
+    if (menuLabel === "Self-Help Tools") {
+      setActiveQuickNav(null);
+      navigate("/self-help");
+      return;
+    }
+
+    if (menuLabel === "For Corporates / Edu / Healthcare") {
+      setActiveQuickNav(null);
+      navigate("/corporate-landing");
+      return;
+    }
+
+    if (menuLabel === "Premium Therapy Hub") {
+      setActiveQuickNav(null);
+      navigate("/premium-theraphy");
+      return;
+    }
+
+    if (menuLabel === "MyDigitalClinic") {
+      setActiveQuickNav(null);
+      navigate("/my-digital-clinic");
+      return;
+    }
+
+    if (menuLabel === "Certify2EarnMore") {
+      setActiveQuickNav(null);
+      navigate("/certifications");
+      return;
+    }
+
+    if (menuLabel === "Digital Pets4Happy Hormones") {
+      setActiveQuickNav(null);
+      navigate("/pet");
+    }
+  };
 
   const footerQuickLinkRoutes: Record<string, string> = {
     "About Us": "/landing",
@@ -269,10 +224,10 @@ const LandingPage: React.FC = () => {
   );
   const quickNavItems: Array<{ icon: string; label: string }> = useMemo(
     () => [
-      { icon: "\uD83D\uDC8E", label: "Premium Therapy Hub" },
-      { icon: "\u26A1", label: "AI Power Hub" },
       { icon: "\uD83E\uDD1D", label: "I Need a Helping Hand" },
+      { icon: "\u26A1", label: "AI Power Hub" },
       { icon: "\uD83D\uDC3E", label: "Digital Pets4Happy Hormones" },
+      { icon: "\uD83D\uDC8E", label: "Premium Therapy Hub" },
       { icon: "\uD83E\uDDF0", label: "Self-Help Tools" },
       { icon: "\u2728", label: "Find a Spark Again" },
       { icon: "\uD83C\uDFDB\uFE0F", label: "For Corporates / Edu / Healthcare" },
@@ -328,14 +283,12 @@ const LandingPage: React.FC = () => {
         subtitle: "Clinically supervised, evidence-based sessions",
         columns: 5,
         items: [
-          { icon: "🧠", title: "1-on-1 Therapy", subtitle: "Psychologist sessions from ₹699", badge: "₹699" },
-          { icon: "⚕️", title: "Psychiatry Consult", subtitle: "Medication review from ₹999", badge: "₹999" },
-          { icon: "💑", title: "Couples Therapy", subtitle: "Rebuild your relationship", badge: "₹1,499" },
-          { icon: "👥", title: "Group Therapy", subtitle: "Peer circles from ₹149", badge: "₹149" },
-          { icon: "🎵", title: "Sound Therapy", subtitle: "Raga healing + sleep tracks", badge: "20 Free" },
-          { icon: "💼", title: "Executive Coaching", subtitle: "High-performance wellness", badge: "Pro" },
-          { icon: "🏕️", title: "Wellness Retreats", subtitle: "Rishikesh, Coorg, Goa" },
-          { icon: "🛒", title: "Wellness Shop", subtitle: "Journals, tools, merch", badge: "Soon" }
+          { icon: "\uD83E\uDDE0", title: "1-on-1 Therapy", subtitle: "Psychologist sessions from \u20B9699", badge: "\u20B9699" },
+          { icon: "\u2695\uFE0F", title: "Psychiatry Consult", subtitle: "Medication review from \u20B9999", badge: "\u20B9999" },
+          { icon: "\uD83D\uDC91", title: "Couples Therapy", subtitle: "Rebuild your relationship", badge: "\u20B91,499" },
+          { icon: "\uD83D\uDC65", title: "Group Therapy", subtitle: "Peer circles from \u20B9149", badge: "\u20B9149" },
+          { icon: "\uD83C\uDFB5", title: "Sound Therapy", subtitle: "Raga healing + sleep tracks", badge: "20 Free" },
+          { icon: "\uD83D\uDCBC", title: "Executive Coaching", subtitle: "High-performance wellness", badge: "Pro" }
         ]
       },
       "Self-Help Tools": {
@@ -383,7 +336,9 @@ const LandingPage: React.FC = () => {
         columns: 4,
         items: [
           { icon: "\uD83C\uDFC6", title: "Certification Hub", subtitle: "CBT, NLP, 5Whys training", badge: "Pro" },
-          { icon: "\uD83E\uDDD1", title: "Join as Therapist", subtitle: "Earn \u20B950K-2L/month" }
+          { icon: "\uD83E\uDDD1", title: "Join as Therapist", subtitle: "Earn \u20B950K-2L/month" },
+          { icon: "\uD83C\uDFD5\uFE0F", title: "Wellness Retreats", subtitle: "Rishikesh, Coorg, Goa" },
+          { icon: "\uD83D\uDED2", title: "Wellness Shop", subtitle: "Journals, tools, merch" }
         ]
       },
       MyDigitalClinic: {
@@ -397,7 +352,7 @@ const LandingPage: React.FC = () => {
           { icon: "\uD83D\uDCC6", title: "Scheduling", subtitle: "Booking + auto-reminders" },
           { icon: "\uD83D\uDC8A", title: "Prescriptions", subtitle: "Digital sign + PDF + delivery" },
           { icon: "\uD83D\uDCCA", title: "Progress Tracking", subtitle: "PHQ-9/GAD-7 trends" },
-          { icon: "\u2728", title: "3 days", subtitle: "All modules unlocked", badge: "Free" }
+          { icon: "\u2728", title: "21-Day Free Trial", subtitle: "All modules unlocked", badge: "Free" }
         ]
       }
     }),
@@ -494,862 +449,1532 @@ const LandingPage: React.FC = () => {
     <div
       style={{
         minHeight: "100vh",
-        backgroundImage: `linear-gradient(rgba(238, 233, 233, 0.46), rgba(223, 213, 213, 0.46)), url(${landingBg})`,
-        backgroundSize: "cover",
+        position: "relative",
+        backgroundImage: 'url("/You%20renot%20alone-Beach.jpeg")',
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
         backgroundAttachment: "fixed",
-        backgroundColor: "#F8FAFC"
+        backgroundRepeat: "no-repeat"
       }}
     >
-      <header
+  {showTopPromo && !isScrolled && (
+  <div
+    style={{
+      background: "#2D6A2E",
+      color: "white",
+      fontSize: "11px",
+      fontWeight: 500,
+      borderBottom: "1px solid rgba(0,0,0,0.1)",
+      width: "100%"
+    }}
+  >
+    <div
+      style={{
+        maxWidth: "1260px",
+        margin: "0 auto",
+        padding: "8px 40px 8px 14px", // Right padding zyada rakha hai close button ke liye
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "12px",
+        flexWrap: "wrap", // Mobile par content niche aa jayega
+        position: "relative"
+      }}
+    >
+      {/* Left Section: Icon and Text */}
+      <div 
+        style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "8px", 
+          cursor: "pointer",
+          textAlign: "center"
+        }}
+        onClick={handleHitASixerPromo}
+      >
+        <span style={{ fontSize: "14px" }}>🏏</span>
+        <div style={{ lineHeight: "1.2" }}>
+          <span style={{ fontWeight: 800, color: "#FFD700", marginRight: "6px" }}>HIT A SIXER!</span>
+          <span style={{ opacity: 0.9 }}>
+            — Refer a friend & both get <strong style={{ color: "#FFD700" }}>10% off</strong>
+            <span className="hide-on-mobile"> next therapy session</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Middle Section: Action Button */}
+      <button
+        type="button"
+        onClick={handleHitASixerPromo}
         style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          width: "100%",
-          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-          background: isScrolled
-            ? "rgba(255, 255, 255, 0.95)"
-            : "rgba(255, 255, 255, 0.8)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: isScrolled
-            ? "1px solid rgba(226, 232, 240, 0.8)"
-            : "1px solid rgba(46, 38, 38, 0.3)",
-          boxShadow: isScrolled
-            ? "0 4px 25px rgba(0, 0, 0, 0.05)"
-            : "none"
+          border: "1px solid #ADFF2F",
+          cursor: "pointer",
+          background: "transparent",
+          color: "#FFD700",
+          fontWeight: 700,
+          fontSize: "10px",
+          padding: "3px 10px",
+          borderRadius: "20px",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px"
         }}
       >
-        {showTopPromo && !isScrolled && (
-          <div
-            style={{
-              background: "linear-gradient(90deg, #2E7D32, #2F855A)",
-              color: "white",
-              fontSize: "12px",
-              fontWeight: 700
-            }}
-          >
-            <div
-              style={{
-                maxWidth: "1260px",
-                margin: "0 auto",
-                padding: "10px 16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "14px"
-              }}
-              role="button"
-              tabIndex={0}
-              onClick={handleHitASixerPromo}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleHitASixerPromo();
-                }
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-                <span style={{ opacity: 0.95 }}>&#127951;</span>
-                <span style={{ whiteSpace: "nowrap" }}>HIT A SIXER!</span>
-                <span style={{ opacity: 0.95, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  Refer a friend & both get <span style={{ color: "#FFE082" }}>10% off</span> next therapy session
+        CLAIM ₹70 CREDIT →
+      </button>
+
+      {/* Right Section: Timer */}
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: "5px", 
+        fontSize: "11px", 
+        opacity: 0.9,
+        background: "rgba(0,0,0,0.1)",
+        padding: "2px 8px",
+        borderRadius: "4px"
+      }}>
+        <span>⏳</span>
+        <span>Expires in 23:56:59</span>
+      </div>
+
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowTopPromo(false);
+        }}
+        aria-label="Close"
+        style={{
+          position: "absolute",
+          right: "10px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          border: "none",
+          cursor: "pointer",
+          background: "transparent",
+          color: "rgba(255,255,255,0.6)",
+          fontSize: "20px",
+          lineHeight: 1,
+          padding: "5px"
+        }}
+      >
+        &times;
+      </button>
+    </div>
+
+    {/* Mobile Specific Styling (Optional) */}
+    <style>{`
+      @media (max-width: 600px) {
+        .hide-on-mobile { display: none; }
+      }
+    `}</style>
+  </div>
+)}
+
+{/* World Mental Health Day Promo Banner */}
+{showMentalHealthPromo && (
+  <div
+    style={{
+      // Image image_d6c619.png ke jaisa dark navy to mustard yellow gradient
+      background: "linear-gradient(90deg, #001A4D 0%, #002266 40%, #8B8000 100%)",
+      color: "white",
+      fontSize: "11px",
+      fontWeight: 500,
+      width: "100%",
+    }}
+  >
+    <div
+      style={{
+        maxWidth: "1260px",
+        margin: "0 auto",
+        padding: "8px 40px 8px 14px", // Right padding close button ke liye space chhodta hai
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center", // Desktop par centered, mobile par wrap
+        gap: "12px",
+        flexWrap: "wrap", // Mobile par content ko niche shift karne ke liye
+        position: "relative",
+        minHeight: "40px"
+      }}
+    >
+      {/* Promo Text Section */}
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: "8px", 
+        flexWrap: "wrap", 
+        justifyContent: "center",
+        textAlign: "center"
+      }}>
+        <span>🎁</span>
+        <span style={{ color: "#D4C900", fontWeight: "700" }}>
+          Free for World Mental Health Day
+        </span>
+        <span style={{ opacity: 0.9, fontSize: "12px" }}>
+          — Premium access 30 days, no card needed
+        </span>
+      </div>
+
+      {/* Action Button */}
+      <button
+        type="button"
+        style={{
+          border: "1px solid #D4C900",
+          cursor: "pointer",
+          background: "transparent",
+          color: "#D4C900",
+          fontWeight: 700,
+          fontSize: "10px",
+          padding: "4px 12px",
+          borderRadius: "16px",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px"
+        }}
+      >
+        CLAIM FREE →
+      </button>
+
+      {/* Close Button - Isko absolute rakha hai taaki ye hamesha corner mein rahe */}
+      <button
+        type="button"
+        onClick={() => setShowMentalHealthPromo(false)}
+        aria-label="Close"
+        style={{
+          position: "absolute",
+          right: "10px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          border: "none",
+          cursor: "pointer",
+          background: "transparent",
+          color: "rgba(255,255,255,0.6)",
+          fontSize: "20px",
+          lineHeight: 1,
+          padding: "5px"
+        }}
+      >
+        &times;
+      </button>
+    </div>
+  </div>
+)}
+
+
+   
+  {/* LEFT QUICK DOCK */}
+<div
+  className="left-dock-wrap"
+  onMouseEnter={openLeftPanel}
+  onMouseLeave={closeLeftPanelWithDelay}
+>
+  <div className={`floating-left-dock ${leftPanelOpen ? "is-open" : ""}`}>
+    {[
+      { id: "bot", icon: "🤖", bg: "#EFE7FF", dot: true },
+      { id: "pets", icon: "🐾", bg: "#F0EAFE" },
+      { id: "sound", icon: "🎵", bg: "#E6F4F1" },
+      { id: "schedule", icon: "🗓️", bg: "#DCFCE7" },
+      { id: "chat", icon: "💬", bg: "#DCFCE7" },
+      { id: "notes", icon: "📋", bg: "#E6F0FF" },
+      { id: "brain", icon: "🧠", bg: "#FCE7F3" },
+    ].map((item) => (
+      <button
+        key={item.id}
+        type="button"
+        className="dock-icon-btn"
+        style={{ background: item.bg }}
+        aria-label={item.id}
+      >
+        <span>{item.icon}</span>
+        {item.dot && <span className="dock-live-dot" />}
+      </button>
+    ))}
+  </div>
+
+  <div className={`left-dock-panel ${leftPanelOpen ? "open" : ""}`}>
+    <div className="dock-panel-inner">
+      <div className="dock-section-title first">QUICK ACCESS</div>
+
+      {[
+        { icon: "🤖", title: "AnytimeBUDDY", text: "Your 24/7 AI companion · Talk anytime", tag: "LIVE", tagColor: "#16A34A" },
+        { icon: "🐾", title: "Digital Pets", text: "🧪 Oxytocin · 🦋 Serotonin · 🐘 Dopamine", tag: "NEW", tagColor: "#2563EB" },
+        { icon: "🎵", title: "Sound Therapy", text: "Sleep, calm, focus — 200+ curated" },
+      ].map((row) => (
+        <div key={row.title} className="dock-panel-row">
+          <div className="dock-panel-icon">{row.icon}</div>
+          <div className="dock-panel-text">
+            <div className="dock-panel-name">
+              {row.tag && (
+                <span className="dock-tag" style={{ background: row.tagColor }}>
+                  {row.tag}
                 </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleHitASixerPromo}
-                style={{
-                  border: "none",
-                  cursor: "pointer",
-                  background: "#9CCC65",
-                  color: "#1B1B1B",
-                  fontWeight: 800,
-                  fontSize: "11px",
-                  padding: "6px 14px",
-                  borderRadius: "16px",
-                  whiteSpace: "nowrap"
-                }}
-              >
-                CLAIM &#8377;70 CREDIT &#9889;
-              </button>
-
-              <span style={{ fontSize: "11px", fontWeight: 600, opacity: 0.9, whiteSpace: "nowrap" }}>
-                Offer expires in 23:57:36
-              </span>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowTopPromo(false);
-                }}
-                aria-label="Close"
-                style={{
-                  border: "none",
-                  cursor: "pointer",
-                  background: "transparent",
-                  color: "rgba(255,255,255,0.9)",
-                  fontSize: "16px",
-                  lineHeight: 1
-                }}
-              >
-                &times;
-              </button>
+              )}
+              {row.title}
             </div>
+            <div className="dock-panel-desc">{row.text}</div>
+          </div>
+        </div>
+      ))}
+
+      <div className="dock-divider" />
+      <div className="dock-section-title">WHATSAPP</div>
+
+      {[
+        { icon: "🗓️", title: "WA Book Session", text: "Book therapist via WhatsApp · 2 min" },
+        { icon: "💬", title: "WA Session", text: "Text-based therapy · Chat at your pace", tag: "CHAT", tagColor: "#16A34A" },
+      ].map((row) => (
+        <div key={row.title} className="dock-panel-row">
+          <div className="dock-panel-icon">{row.icon}</div>
+          <div className="dock-panel-text">
+            <div className="dock-panel-name">
+              {row.tag && (
+                <span className="dock-tag" style={{ background: row.tagColor }}>
+                  {row.tag}
+                </span>
+              )}
+              {row.title}
+            </div>
+            <div className="dock-panel-desc">{row.text}</div>
+          </div>
+        </div>
+      ))}
+
+      <div className="dock-divider" />
+      <div className="dock-section-title">FREE TOOLS</div>
+
+      {[
+        { icon: "📝", title: "Free Screening", text: "PHQ-9 · GAD-7 · 3 min · 5 languages", tag: "FREE", tagColor: "#06B6D4" },
+        { icon: "🧠", title: "AI Self-Service", text: "CBT · Journaling · Breathing · Mood", tag: "AI", tagColor: "#DB2777" },
+      ].map((row) => (
+        <div key={row.title} className="dock-panel-row">
+          <div className="dock-panel-icon">{row.icon}</div>
+          <div className="dock-panel-text">
+            <div className="dock-panel-name">
+              {row.tag && (
+                <span className="dock-tag" style={{ background: row.tagColor }}>
+                  {row.tag}
+                </span>
+              )}
+              {row.title}
+            </div>
+            <div className="dock-panel-desc">{row.text}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <style>{`
+    .left-dock-wrap {
+      position: fixed;
+      left: 0;
+      top: 155px;
+      z-index: 180;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .floating-left-dock {
+      width: 52px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid #E1E8F0;
+      border-left: none;
+      border-radius: 0 20px 20px 0;
+      padding: 10px 7px;
+      box-shadow: 0 12px 32px rgba(15,23,42,0.14);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.24s ease;
+    }
+
+    .floating-left-dock.is-open {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .dock-icon-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .dock-live-dot {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22C55E;
+      border: 1.5px solid white;
+    }
+
+    .left-dock-panel {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateX(-8px);
+      pointer-events: none;
+      transition: width 0.26s ease, opacity 0.22s ease, transform 0.26s ease;
+    }
+
+    .left-dock-panel.open {
+      width: 335px;
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .dock-panel-inner {
+      background: rgba(255,255,255,0.96);
+      border: 1px solid #E1E8F0;
+      border-left: none;
+      border-radius: 0 22px 22px 0;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.16);
+      padding: 14px 14px 16px;
+      max-height: 76vh;
+      overflow-y: auto;
+      backdrop-filter: blur(14px);
+    }
+
+    .dock-panel-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 4px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+
+    .dock-panel-row:hover {
+      background: #F8FAFC;
+      transform: translateX(3px);
+    }
+
+    .dock-panel-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ECF4F1, #DFE8F1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .dock-panel-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .dock-panel-name {
+      position: relative;
+      font-size: 20px;
+      font-weight: 900;
+      color: #082B63;
+      -webkit-text-fill-color: #082B63;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-top: 4px;
+    }
+
+    .dock-panel-desc {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      font-weight: 800;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dock-tag {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: translateY(-72%);
+      font-size: 10px;
+      font-weight: 900;
+      color: white;
+      -webkit-text-fill-color: white;
+      border-radius: 999px;
+      padding: 3px 10px;
+      box-shadow: 0 5px 12px rgba(15,23,42,0.14);
+    }
+
+    .dock-divider {
+      height: 1px;
+      background: #D7DEE8;
+      margin: 12px 4px;
+    }
+
+    .dock-section-title {
+      margin: 14px 4px 8px;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #082B63;
+      -webkit-text-fill-color: #082B63;
+    }
+
+    .dock-section-title.first {
+      margin-top: 0;
+    }
+
+    @media (max-width: 1100px) {
+      .left-dock-panel.open {
+        width: 300px;
+      }
+
+      .dock-panel-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+      }
+
+      .dock-panel-name {
+        font-size: 17px;
+      }
+
+      .dock-panel-desc {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .left-dock-wrap {
+        top: auto;
+        bottom: 18px;
+        left: 12px;
+      }
+
+      .floating-left-dock {
+        width: auto;
+        max-width: calc(100vw - 24px);
+        overflow-x: auto;
+        flex-direction: row;
+        border: 1px solid #E1E8F0;
+        border-radius: 999px;
+        padding: 8px;
+        gap: 8px;
+        box-shadow: 0 12px 32px rgba(15,23,42,0.14);
+      }
+
+      .floating-left-dock.is-open {
+        border-radius: 999px;
+        box-shadow: 0 12px 32px rgba(15,23,42,0.14);
+      }
+
+      .left-dock-panel {
+        display: none;
+      }
+
+      .dock-icon-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+      }
+    }
+  `}</style>
+</div>
+
+{/* RIGHT FLOATING AVATARS */}
+<div className="floating-right-avatars">
+  {[
+    { bg: "#FFF", image: "/AnytimeBUDDY.jpeg", label: "Doctor" },
+    { bg: "#111827", image: "/HitASixer.jpeg", label: "Cricket", href: "/hit-a-sixer" },
+    { bg: "#03163A", image: "/DigitalPet1.jpg", label: "Digital Pet", href: "/pet" },
+  ].map((item, idx) => (
+    <div
+      key={idx}
+      className="right-avatar"
+      style={{ background: item.bg, animationDelay: `${idx * 0.35}s` }}
+      role={item.href ? "button" : undefined}
+      tabIndex={item.href ? 0 : undefined}
+      onClick={() => item.href && navigate(item.href)}
+      onKeyDown={(e) => {
+        if (item.href && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          navigate(item.href);
+        }
+      }}
+    >
+      <img src={item.image} alt={item.label} />
+    </div>
+  ))}
+</div>
+
+<style>{`
+  .left-dock-wrap {
+    position: fixed;
+    left: 0;
+    top: 260px;
+    z-index: 180;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .floating-left-dock {
+    width: 54px;
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #E1E8F0;
+    border-left: none;
+    border-radius: 0 18px 18px 0;
+    padding: 10px 7px;
+    box-shadow: 0 12px 32px rgba(15,23,42,0.14);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.22s ease;
+  }
+
+  .floating-left-dock.is-open {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .dock-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .left-dock-panel {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateX(-8px);
+    pointer-events: none;
+    transition: width 0.25s ease, opacity 0.22s ease, transform 0.25s ease;
+  }
+
+  .left-dock-panel.open {
+    width: 286px;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .dock-panel-inner {
+    background: white;
+    border: 1px solid #E1E8F0;
+    border-left: none;
+    border-radius: 0 20px 20px 0;
+    box-shadow: 0 18px 40px rgba(15,23,42,0.16);
+    padding: 14px 12px;
+    max-height: 76vh;
+    overflow-y: auto;
+  }
+
+  .dock-panel-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #0B2D5E;
+    -webkit-text-fill-color: #0B2D5E;
+    margin-bottom: 10px;
+  }
+
+  .dock-panel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .dock-panel-row:hover {
+    background: #F8FAFC;
+  }
+
+  .dock-panel-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+    background: linear-gradient(180deg,#ECF4F1,#DFE8F1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    flex-shrink: 0;
+  }
+
+  .dock-panel-text {
+    min-width: 0;
+  }
+
+  .dock-panel-name {
+    font-size: 14px;
+    font-weight: 900;
+    color: #1F2937;
+    -webkit-text-fill-color: #1F2937;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dock-panel-desc {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #6B7280;
+    -webkit-text-fill-color: #6B7280;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dock-tag {
+    font-size: 9px;
+    font-weight: 900;
+    color: #0A8F4D;
+    -webkit-text-fill-color: #0A8F4D;
+    background: #DCFCE7;
+    border-radius: 999px;
+    padding: 2px 6px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .floating-right-avatars {
+    position: fixed;
+    right: 18px;
+    top: 288px;
+    z-index: 160;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .right-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    border: 5px solid rgba(255,255,255,0.95);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: avatarFloat 3.8s ease-in-out infinite;
+    overflow: hidden;
+  }
+
+  .right-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 999px;
+    display: block;
+  }
+
+  @keyframes avatarFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .floating-right-avatars {
+      right: 10px;
+      top: 250px;
+      gap: 10px;
+    }
+
+    .right-avatar {
+      width: 58px;
+      height: 58px;
+      border-width: 4px;
+    }
+
+    .left-dock-wrap {
+      top: 145px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .left-dock-wrap {
+      top: auto;
+      bottom: 18px;
+      left: 12px;
+    }
+
+    .floating-left-dock {
+      width: auto;
+      flex-direction: row;
+      border: 1px solid #E1E8F0;
+      border-radius: 999px;
+      padding: 8px;
+      gap: 8px;
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+    }
+
+    .floating-left-dock.is-open {
+      border-radius: 999px;
+      box-shadow: 0 12px 32px rgba(15,23,42,0.14);
+    }
+
+    .left-dock-panel {
+      display: none;
+    }
+
+    .dock-icon-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 16px;
+    }
+
+    .floating-right-avatars {
+      display: none;
+    }
+  }
+`}</style>
+
+    <header className="manas-header">
+  <div className="header-top-line" />
+
+  <div className="header-main">
+    <a href="/" className="header-logo" aria-label="MANAS360 Home">
+      <img src="/Manas360-Logo_Med_optimized.jpeg" alt="MANAS360" />
+    </a>
+
+    <div className="language-pills">
+      {(["English", "Hindi", "Kannada", "Tamil", "Telugu"] as const).map((lang) => {
+        const active = selectedLanguage === lang;
+        return (
+          <button
+            key={lang}
+            type="button"
+            onClick={() => setSelectedLanguage(lang)}
+            className={`lang-btn ${active ? "active" : ""}`}
+          >
+            {languageLabelMap[lang]}
+          </button>
+        );
+      })}
+    </div>
+
+    <div className="header-actions">
+      <button type="button" className="search-box" onClick={() => setShowSearch(true)}>
+        <span>🔍</span>
+        <span className="search-text">Search or ask...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <button type="button" className="subscribe-btn">Subscribe</button>
+
+      <div className="login-wrap">
+        <a href="/auth/signup">
+        <button
+          type="button"
+          className="subscribe-btn"
+         
+        >
+          Sign UP
+        </button>
+        </a>
+        <button
+          type="button"
+          className="login-btn"
+          onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
+        >
+          Log In
+        </button>
+
+        {loginDropdownOpen && (
+          <div className="login-dropdown">
+            {loginOptions.map((option) => (
+              <div
+                key={option.type}
+                className="login-option"
+                onClick={() => handleLogin(option.type)}
+              >
+                <span className="login-option-icon">{option.icon}</span>
+                <div>
+                  <div className="login-option-title">{option.label}</div>
+                  <div className="login-option-desc">{option.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+      </div>
 
-        <a
-          href="/"
-          aria-label="MANAS360 Home"
-          style={{
-            position: "fixed",
-            left: "16px",
-            top: showTopPromo && !isScrolled ? "76px" : "16px",
-            zIndex: 100,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "62px",
-            height: "62px",
-            borderRadius: "16px",
-            padding: "4px",
-            boxSizing: "border-box",
-            overflow: "hidden",
-            background: "rgba(255,255,255,0.92)",
-            border: "1px solid rgba(226, 232, 240, 0.88)",
-            backdropFilter: "blur(8px)",
-            boxShadow: "0 8px 18px rgba(15,23,42,0.10)",
-            textDecoration: "none",
-            transition: "top 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease"
-          }}
-        >
-          <img
-            src={logo}
-            alt="MANAS360"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              objectPosition: "center",
-              display: "block",
-              borderRadius: "12px",
-              background: "#FFFFFF"
-            }}
+      <div className="social-icons">
+        {["☏", "◎", "▶", "in"].map((s) => (
+          <span key={s}>{s}</span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div className="quick-menu-area">
+    <div
+      className="quick-nav-holder"
+      onMouseEnter={keepQuickNavMenuOpen}
+      onMouseLeave={closeQuickNavMenuWithDelay}
+    >
+      <nav className="quick-nav">
+        {quickNavItems.map((item) => {
+          const menu = quickNavMegaMenus[item.label];
+          const isActive = activeQuickNav === item.label && !!menu;
+
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className={`quick-item ${isActive ? "active" : ""}`}
+              onMouseEnter={() => openQuickNavMenu(item.label)}
+              style={{
+                borderColor: isActive && menu?.accent ? menu.accent : undefined,
+              }}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {activeQuickNav && quickNavMegaMenus[activeQuickNav] && (
+        <div className="mega-menu">
+          <div
+            className="mega-top-line"
+            style={{ background: quickNavMegaMenus[activeQuickNav].accent }}
           />
-        </a>
-        <div
-          className="left-dock-wrap"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: "120px",
-            transform: "none",
-            zIndex: 95,
-            display: "block",
-            alignItems: "center"
-          }}
-          onMouseEnter={openLeftPanel}
-          onMouseLeave={closeLeftPanelWithDelay}
-        >
-          <div
-            className="floating-left-dock"
-            style={{
-              background: "rgba(255,255,255,0.88)",
-              border: "1px solid #E1E8F0",
-              borderLeft: "none",
-              borderRadius: "0 18px 18px 0",
-              padding: "10px 8px 10px 6px",
-              boxShadow: "0 14px 36px rgba(15, 23, 42, 0.14)",
-              backdropFilter: "blur(10px)",
-              width: "56px"
-            }}
-          >
-            {[
-              { id: "bot", icon: "🤖", bg: "linear-gradient(180deg, #EFE7FF, #E6EEFF)", dot: true },
-              { id: "pets", icon: "🐾", bg: "linear-gradient(180deg, #EFE7FF, #ECE9FF)" },
-              { id: "sound", icon: "🎵", bg: "linear-gradient(180deg, #DDF3EC, #E3F0FF)" },
-              { id: "divider-1", divider: true },
-              { id: "schedule", icon: "🗓️", bg: "linear-gradient(180deg, #DDF3EC, #E3F0FF)" },
-              { id: "chat-mid", icon: "💬", bg: "linear-gradient(180deg, #DDF3EC, #E6EDF8)" },
-              { id: "divider-2", divider: true },
-              { id: "notes", icon: "📋", bg: "linear-gradient(180deg, #E6F0FF, #E9EEF8)" },
-              { id: "brain", icon: "🧠", bg: "linear-gradient(180deg, #FDE7EF, #F4E8FF)" }
-            ].map((item) => {
-              if (item.divider) {
-                return <div key={item.id} style={{ height: "1px", background: "#D7DEE8", margin: "8px 6px" }} />;
-              }
 
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "11px",
-                    border: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    margin: "4px 2px",
-                    background: item.bg,
-                    fontSize: "18px",
-                    position: "relative"
-                  }}
-                  aria-label="Quick item"
-                >
-                  <span>{item.icon}</span>
-                  {item.dot ? (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: "2px",
-                        right: "2px",
-                        width: "7px",
-                        height: "7px",
-                        borderRadius: "999px",
-                        background: "#22C55E",
-                        border: "1.5px solid #FFFFFF"
-                      }}
-                      aria-hidden
-                    />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
+          <div className="mega-content">
+            <div className="mega-title">
+              {quickNavMegaMenus[activeQuickNav].title}
+            </div>
 
-          <div
-            className="left-dock-panel"
-            style={{
-              width: leftPanelOpen ? "272px" : "0px",
-              opacity: leftPanelOpen ? 1 : 0,
-              overflow: "hidden",
-              transform: leftPanelOpen ? "translateX(0)" : "translateX(-8px)",
-              transition: "width 0.22s ease, opacity 0.18s ease, transform 0.22s ease",
-              pointerEvents: leftPanelOpen ? "auto" : "none"
-            }}
-          >
+            <div className="mega-subtitle">
+              {quickNavMegaMenus[activeQuickNav].subtitle}
+            </div>
+
             <div
+              className="mega-grid"
               style={{
-                marginLeft: "8px",
-                background: "rgba(255,255,255,0.92)",
-                border: "1px solid #E1E8F0",
-                borderRadius: "0 20px 20px 0",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.16)",
-                padding: "12px 12px 10px",
-                maxHeight: "76vh",
-                overflowY: "auto"
+                gridTemplateColumns: `repeat(${quickNavMegaMenus[activeQuickNav].columns}, minmax(0, 1fr))`,
               }}
             >
-              <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "2px", color: "#0B2D5E", marginBottom: "7px" }}>QUICK ACCESS</div>
+              {quickNavMegaMenus[activeQuickNav].items.map((mi) => (
+                <div
+                  key={mi.title}
+                  className="mega-card"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleQuickNavMegaItemClick(activeQuickNav)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleQuickNavMegaItemClick(activeQuickNav);
+                    }
+                  }}
+                >
+                  <div className="mega-icon">{mi.icon}</div>
 
-              {[
-                { icon: "\uD83E\uDD16", title: "AnytimeBUDDY", text: "Your 24/7 AI companion", tag: "LIVE" },
-                { icon: "\uD83D\uDC3E", title: "Digital Pets", text: "Oxytocin \u2022 Serotonin \u2022 Dopamine", tag: "NEW" },
-                { icon: "\uD83C\uDFA7", title: "Sound Therapy", text: "Sleep, calm, focus" }
-              ].map((row) => (
-                <div key={row.title} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "7px" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(180deg,#ECF4F1,#DFE8F1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "21px", flexShrink: 0 }}>{row.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "17px", color: "#2B3345", lineHeight: 1.05 }}>
-                      {row.tag ? <span style={{ fontSize: "10px", fontWeight: 800, color: "#0A8F4D", background: "#DCFCE7", borderRadius: "999px", padding: "2px 6px", marginRight: "6px", verticalAlign: "middle" }}>{row.tag}</span> : null}
-                      <span style={{ fontSize: "17px", fontWeight: 800, color: "#1F2937", verticalAlign: "middle" }}>{row.title}</span>
+                  <div className="mega-text">
+                    <div className="mega-card-title-row">
+                      <div className="mega-card-title">{mi.title}</div>
+                      {mi.badge && <span className="mega-badge">{mi.badge}</span>}
                     </div>
-                    <div style={{ fontSize: "11px", color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.text}</div>
-                  </div>
-                </div>
-              ))}
 
-              <div style={{ height: "1px", background: "#D7DEE8", margin: "10px 2px" }} />
-              <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "2px", color: "#0B2D5E", marginBottom: "7px" }}>WHATSAPP</div>
-
-              {[
-                { icon: "\uD83D\uDCC5", title: "WA Book Session", text: "Book therapist via WhatsApp" },
-                { icon: "\uD83D\uDCAC", title: "WA Session", text: "Text-based therapy chat" }
-              ].map((row) => (
-                <div key={row.title} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "7px" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(180deg,#ECF4F1,#DFE8F1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "21px", flexShrink: 0 }}>{row.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#1F2937", lineHeight: 1.1 }}>{row.title}</div>
-                    <div style={{ fontSize: "11px", color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.text}</div>
-                  </div>
-                </div>
-              ))}
-
-              <div style={{ height: "1px", background: "#D7DEE8", margin: "10px 2px" }} />
-              <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "2px", color: "#0B2D5E", marginBottom: "7px" }}>FREE TOOLS</div>
-
-              {[
-                { icon: "\uD83D\uDCDD", title: "Free Screening", text: "PHQ-9 \u2022 GAD-7 \u2022 3 min" },
-                { icon: "\uD83E\uDDE0", title: "AI Self-Service", text: "CBT \u2022 Journaling \u2022 Mood" }
-              ].map((row) => (
-                <div key={row.title} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "7px" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(180deg,#ECF4F1,#DFE8F1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "21px", flexShrink: 0 }}>{row.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#1F2937", lineHeight: 1.1 }}>{row.title}</div>
-                    <div style={{ fontSize: "11px", color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.text}</div>
+                    <div className="mega-card-subtitle">{mi.subtitle}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
+      )}
+    </div>
+  </div>
 
-        <div
-          className="floating-right-avatars"
-          style={{
-            position: "fixed",
-            right: "18px",
-            top: "168px",
-            zIndex: 160,
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px"
-          }}
-        >
-          {[
-            { bg: "#FFF", image: "/AnytimeBUDDY.jpeg", label: "Doctor" },
-            { bg: "#111827", image: "/HitASixer.jpeg", label: "Cricket", href: "/hit-a-sixer" },
-            { bg: "#03163A", image: "/Digital-Pet-Hub.png", label: "Digital Pet", href: "/pet" }
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              style={{
-                width: "58px",
-                height: "58px",
-                borderRadius: "999px",
-                background: item.bg,
-                border: "5px solid rgba(255,255,255,0.9)",
-                boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: item.href ? "pointer" : "default",
-                animation: `avatarFloat 3.8s ease-in-out ${idx * 0.35}s infinite`
-              }}
-              role={item.href ? "button" : undefined}
-              tabIndex={item.href ? 0 : undefined}
-              onClick={() => {
-                if (item.href) {
-                  navigate(item.href);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (item.href && (e.key === "Enter" || e.key === " ")) {
-                  e.preventDefault();
-                  navigate(item.href);
-                }
-              }}
-              aria-hidden
-            >
-              {item.image ? (
-                <img
-                  src={item.image}
-                  alt={item.label}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    objectPosition: "center",
-                    display: "block",
-                    borderRadius: "999px",
-                    background: item.bg
-                  }}
-                />
-              ) : (
-                <span style={{ fontSize: "24px" }}>{item.label}</span>
-              )}
-            </div>
-          ))}
-        </div>
+  <style>{`
+   .manas-header {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: #FFFFFF !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom: 1px solid #E2E8F0;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.04);
+  }
 
-        <div style={{ position: "fixed", right: "24px", bottom: "24px", zIndex: 120 }}>
-          <button
-            type="button"
-            style={{
-              width: "62px",
-              height: "62px",
-              borderRadius: "999px",
-              border: "none",
-              cursor: "pointer",
-              background: "linear-gradient(135deg, #7C3AED, #5B21B6)",
-              boxShadow: "0 16px 36px rgba(0,0,0,0.22)",
-              color: "white",
-              position: "relative",
-              animation: "chatFloat 3.2s ease-in-out infinite"
-            }}
-            aria-label="Chat"
-          >
-            <span style={{ fontSize: "30px", display: "inline-block", transform: "rotate(0deg)", animation: "chatTilt 3s ease-in-out infinite" }}>&#129302;</span>
-            <span
-              style={{
-                position: "absolute",
-                top: "-8px",
-                left: "-7px",
-                width: "18px",
-                height: "18px",
-                borderRadius: "999px",
-                background: "#EF4444",
-                color: "white",
-                fontSize: "11px",
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "2px solid rgba(255,255,255,0.9)"
-              }}
-            >
-              3
-            </span>
-            <span
-              style={{
-                position: "absolute",
-                top: "4px",
-                right: "4px",
-                width: "14px",
-                height: "14px",
-                borderRadius: "999px",
-                background: "#22C55E",
-                border: "2px solid rgba(255,255,255,0.95)"
-              }}
-              aria-hidden
-            />
-          </button>
-        </div>
+    .header-top-line {
+      height: 4px;
+      background: linear-gradient(90deg, #082B63, #7F8000, #082B63);
+    }
 
-        <div className="brand-bar">
-          <div style={{ maxWidth: "1260px", margin: "0 auto", padding: "0 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
-                {(["English", "Hindi", "Kannada", "Tamil", "Telugu"] as const).map((lang) => {
-                  const active = selectedLanguage === lang;
-                  return (
-                    <button
-                      key={lang}
-                      type="button"
-                      onClick={() => setSelectedLanguage(lang)}
-                      style={{
-                        border: "1px solid #E8EDF2",
-                        background: active ? "#0B2D5E" : "white",
-                        color: active ? "white" : "#1A1A2E",
-                        fontSize: "11px",
-                        fontWeight: 800,
-                        padding: "6px 12px",
-                        borderRadius: "16px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      {languageLabelMap[lang]}
-                    </button>
-                  );
-                })}
-              </div>
+    .header-main {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 8px 16px 6px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 18px;
+    }
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  aria-label="Toggle theme"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    border: "1px solid #D5DEE9",
-                    background: "#F8FBFF",
-                    cursor: "pointer",
-                    color: "#64748B",
-                  }}
-                >
-                  {activeTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSearch(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 14px",
-                    borderRadius: "18px",
-                    border: "1px solid #D5DEE9",
-                    cursor: "pointer",
-                    background: "#F8FBFF",
-                    minWidth: "214px"
-                  }}
-                >
-                  <span style={{ fontSize: "14px", color: "#2563EB" }}>&#128269;</span>
-                  <span style={{ fontSize: "11px", color: "#64748B", flex: 1, textAlign: "left", fontWeight: 700 }}>Search or ask...</span>
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      color: "#64748B",
-                      background: "#FFFFFF",
-                      border: "1px solid #DDE5EF",
-                      padding: "2px 7px",
-                      borderRadius: "8px"
-                    }}
-                  >
-                    ⌘ K
-                  </span>
-                </button>
+    .header-logo {
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      text-decoration: none;
+    }
 
-                <button
-                  type="button"
-                  onClick={() => navigate('/subscribe')}
-                  style={{
-                    background: "#0B2D5E",
-                    color: "white",
-                    padding: "9px 20px",
-                    borderRadius: "18px",
-                    fontSize: "12px",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    border: "none",
-                    whiteSpace: "nowrap"
-                  }}
-                >
-                  Subscribe
-                </button>
+    .header-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
-                <div style={{ position: "relative" }}>
-                  <button
-                    type="button"
-                    onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0px",
-                      padding: "9px 18px",
-                      borderRadius: "18px",
-                      border: "1px solid #D5DEE9",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                      color: "#1A1A2E",
-                      background: "white",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    Log In
-                  </button>
+    .language-pills {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-                  {loginDropdownOpen && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "calc(100% + 8px)",
-                        right: 0,
-                        background: "white",
-                        borderRadius: "12px",
-                        boxShadow: "0 14px 50px rgba(0, 0, 0, 0.14)",
-                        padding: "6px",
-                        width: "248px",
-                        zIndex: 150,
-                        border: "1px solid #E8EDF2"
-                      }}
-                    >
-                      {loginOptions.map((option) => (
-                        <div
-                          key={option.type}
-                          onClick={() => handleLogin(option.type)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            padding: "8px 10px",
-                            borderRadius: "9px",
-                            cursor: "pointer",
-                            transition: "background 0.15s"
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "#FAFCFF";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "transparent";
-                          }}
-                        >
-                          <span style={{ fontSize: "17px", width: "24px", textAlign: "center" }}>{option.icon}</span>
-                          <div>
-                            <div style={{ fontSize: "12px", fontWeight: 900, color: "#1A1A2E" }}>{option.label}</div>
-                            <div style={{ fontSize: "10px", color: "#666680", marginTop: "1px" }}>{option.desc}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+    .lang-btn {
+      border: 1px solid #E2E8F0;
+      background: #fff;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 7px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
 
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "6px" }}>
-                  {[
-                    { key: "wa", label: <MessageCircle className="h-4 w-4" />, href: "https://wa.me/919876543210" },
-                    { key: "ig", label: <Instagram className="h-4 w-4" />, href: "https://instagram.com/manas360" },
-                    { key: "yt", label: <Youtube className="h-4 w-4" />, href: "https://youtube.com/@manas360" },
-                    { key: "in", label: <Linkedin className="h-4 w-4" />, href: "https://linkedin.com/company/manas360" }
-                  ].map((s) => (
-                    <a
-                      key={s.key}
-                      href={s.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "7px",
-                        background: "transparent",
-                        border: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "13px",
-                        fontWeight: 900,
-                        color: "#66708A",
-                        textDecoration: "none"
-                      }}
-                    >
-                      {s.label}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
+    .lang-btn.active {
+      background: #082B63;
+      border-color: #082B63;
+      color: white;
+      -webkit-text-fill-color: white;
+    }
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                padding: "10px 0 14px 0",
-                borderTop: "1px solid rgba(232, 237, 242, 0.7)"
-              }}
-            >
-              <div style={{ position: "relative", flex: 1, minWidth: 0 }} onMouseEnter={keepQuickNavMenuOpen} onMouseLeave={closeQuickNavMenuWithDelay}>
-                <div className="quick-nav" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "nowrap", flex: 1, minWidth: 0, maxWidth: "100%" }}>
-                  {quickNavItems.map((item) => {
-                    const menu = quickNavMegaMenus[item.label];
-                    const isActive = activeQuickNav === item.label && !!menu;
-                    const accent = menu?.accent;
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
 
-                    return (
-                      <div
-                        key={item.label}
-                        onMouseEnter={() => openQuickNavMenu(item.label)}
-                        className="quick-nav-chip"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          fontSize: "clamp(11px, 1vw, 13px)",
-                          fontWeight: 900,
-                          color: "#000000",
-                          opacity: 1,
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          padding: "6px 10px",
-                          borderRadius: "999px",
-                          border: isActive && accent ? `1px solid ${accent}` : "1px solid rgba(15, 23, 42, 0.22)",
-                          background: "rgba(255,255,255,1)",
-                          boxShadow: isActive ? "0 10px 24px rgba(15, 23, 42, 0.14)" : "0 2px 4px rgba(15,23,42,0.08)"
-                        }}
-                      >
-                        <span className="quick-nav-chip-icon" style={{ fontSize: "clamp(11px, 1.0vw, 13px)" }}>{item.icon}</span>
-                        <span className="quick-nav-chip-label">{item.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+    .search-box {
+      width: 175px;
+      height: 34px;
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 10px;
+      cursor: pointer;
+    }
 
-                {activeQuickNav && quickNavMegaMenus[activeQuickNav] && (
-                  <div style={{ position: "absolute", left: 0, right: 0, top: "calc(100% + 10px)", zIndex: 170 }}>
-                    <div
-                      style={{
-                        background: "white",
-                        borderRadius: "18px",
-                        border: "1px solid rgba(226, 232, 240, 0.95)",
-                        boxShadow: "0 28px 90px rgba(15, 23, 42, 0.22)",
-                        overflow: "hidden"
-                      }}
-                    >
-                      <div style={{ height: "3px", background: quickNavMegaMenus[activeQuickNav].accent }} />
+    .search-text {
+      flex: 1;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+    }
 
-                      <div style={{ padding: "18px 18px 16px 18px" }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
-                          <div>
-                            <div style={{ fontSize: "18px", fontWeight: 900, color: "#0F172A", lineHeight: 1.15 }}>
-                              {quickNavMegaMenus[activeQuickNav].title}
-                            </div>
-                            <div style={{ marginTop: "4px", fontSize: "12px", fontWeight: 700, color: "#64748B" }}>
-                              {quickNavMegaMenus[activeQuickNav].subtitle}
-                            </div>
-                          </div>
-                        </div>
+    .search-box kbd {
+      font-size: 10px;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 1px 5px;
+      background: white;
+    }
 
-                        <div
-                          style={{
-                            marginTop: "14px",
-                            display: "grid",
-                            gridTemplateColumns: `repeat(${quickNavMegaMenus[activeQuickNav].columns}, minmax(0, 1fr))`,
-                            gap: "10px"
-                          }}
-                        >
-                          {quickNavMegaMenus[activeQuickNav].items.map((mi) => (
-                            <div
-                              key={mi.title}
-                              style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                gap: "10px",
-                                padding: "12px 12px",
-                                borderRadius: "14px",
-                                background: "rgba(255,255,255,0.98)",
-                                cursor:
-                                  activeQuickNav === "I Need a Helping Hand" ||
-                                    activeQuickNav === "AI Power Hub" ||
-                                    activeQuickNav === "Find a Spark Again" ||
-                                    activeQuickNav === "Self-Help Tools" ||
-                                    activeQuickNav === "For Corporates / Edu / Healthcare" ||
-                                    activeQuickNav === "Premium Therapy Hub" ||
-                                    activeQuickNav === "MyDigitalClinic" ||
-                                    activeQuickNav === "Certify2EarnMore" ||
-                                    activeQuickNav === "Digital Pets4Happy Hormones"
-                                    ? "pointer"
-                                    : "default"
-                              }}
-                              role={
-                                activeQuickNav === "I Need a Helping Hand" ||
-                                  activeQuickNav === "AI Power Hub" ||
-                                  activeQuickNav === "Find a Spark Again" ||
-                                  activeQuickNav === "Self-Help Tools" ||
-                                  activeQuickNav === "For Corporates / Edu / Healthcare" ||
-                                  activeQuickNav === "Premium Therapy Hub" ||
-                                  activeQuickNav === "MyDigitalClinic" ||
-                                  activeQuickNav === "Certify2EarnMore" ||
-                                  activeQuickNav === "Digital Pets4Happy Hormones"
-                                  ? "button"
-                                  : undefined
-                              }
-                              tabIndex={
-                                activeQuickNav === "I Need a Helping Hand" ||
-                                  activeQuickNav === "AI Power Hub" ||
-                                  activeQuickNav === "Find a Spark Again" ||
-                                  activeQuickNav === "Self-Help Tools" ||
-                                  activeQuickNav === "For Corporates / Edu / Healthcare" ||
-                                  activeQuickNav === "Premium Therapy Hub" ||
-                                  activeQuickNav === "MyDigitalClinic" ||
-                                  activeQuickNav === "Certify2EarnMore" ||
-                                  activeQuickNav === "Digital Pets4Happy Hormones"
-                                  ? 0
-                                  : undefined
-                              }
-                              onClick={() => handleMegaItemNav(mi.title, activeQuickNav)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleMegaItemNav(mi.title, activeQuickNav);
-                                }
-                              }}
-                              onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLElement).style.background = "#FAFCFF";
-                              }}
-                              onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.98)";
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: "34px",
-                                  height: "34px",
-                                  borderRadius: "10px",
-                                  border: "1px solid rgba(232, 237, 242, 0.95)",
-                                  background: "#FFFFFF",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flex: "0 0 auto",
-                                  fontSize: "18px"
-                                }}
-                                aria-hidden
-                              >
-                                {mi.icon}
-                              </div>
+    .subscribe-btn {
+      border: none;
+      background: #082B63;
+      color: white;
+      -webkit-text-fill-color: white;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 9px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
 
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-                                  <div style={{ fontSize: "13px", fontWeight: 900, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {mi.title}
-                                  </div>
-                                  {mi.badge && (
-                                    <div
-                                      style={{
-                                        fontSize: "10px",
-                                        fontWeight: 900,
-                                        padding: "2px 8px",
-                                        borderRadius: "999px",
-                                        border: "1px solid rgba(232, 237, 242, 0.95)",
-                                        background: "#F1F5F9",
-                                        color: "#0F172A",
-                                        whiteSpace: "nowrap"
-                                      }}
-                                    >
-                                      {mi.badge}
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ marginTop: "2px", fontSize: "11px", fontWeight: 700, color: "#64748B", lineHeight: 1.45 }}>
-                                  {mi.subtitle}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+    .login-wrap {
+      position: relative;
+    }
+
+    .login-btn {
+      border: 1px solid #E2E8F0;
+      background: #fff;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .login-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 248px;
+      background: white;
+      border: 1px solid #E8EDF2;
+      border-radius: 14px;
+      padding: 7px;
+      box-shadow: 0 18px 60px rgba(15,23,42,0.18);
+      animation: fadeDown 0.18s ease both;
+      z-index: 1000;
+    }
+
+    .login-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .login-option:hover {
+      background: #F8FAFC;
+    }
+
+    .login-option-icon {
+      font-size: 17px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .login-option-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+    }
+
+    .login-option-desc {
+      font-size: 10px;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      margin-top: 1px;
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 10px;
+      font-size: 15px;
+      color: #475569;
+      -webkit-text-fill-color: #475569;
+      font-weight: 900;
+    }
+
+    .quick-menu-area {
+      border-top: 1px solid rgba(226,232,240,0.75);
+    }
+
+    .quick-nav-holder {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 8px 16px 10px;
+      position: relative;
+    }
+
+    .quick-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .quick-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-item {
+      border: 1px solid transparent;
+      background: transparent;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 7px 10px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .quick-item:hover,
+    .quick-item.active {
+      background: #FFFFFF;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.10);
+      transform: translateY(-1px);
+    }
+
+    .mega-menu {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: calc(100% + 8px);
+      background: white;
+      border-radius: 20px;
+      border: 1px solid rgba(226,232,240,0.95);
+      box-shadow: 0 28px 90px rgba(15,23,42,0.22);
+      overflow: hidden;
+      animation: fadeDown 0.22s ease both;
+      z-index: 1000;
+    }
+
+    .mega-top-line {
+      height: 4px;
+    }
+
+    .mega-content {
+      padding: 18px;
+    }
+
+    .mega-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      line-height: 1.15;
+    }
+
+    .mega-subtitle {
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+    }
+
+    .mega-grid {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mega-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(248,250,252,0.9);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+    }
+
+    .mega-card:hover {
+      background: white;
+      border-color: #E2E8F0;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 35px rgba(15,23,42,0.08);
+    }
+
+    .mega-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #E8EDF2;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .mega-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .mega-card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .mega-card-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mega-badge {
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #F1F5F9;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+      white-space: nowrap;
+    }
+
+    .mega-card-subtitle {
+      margin-top: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      line-height: 1.45;
+    }
+
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .header-main {
+        grid-template-columns: auto 1fr;
+      }
+
+      .header-actions {
+        grid-column: 1 / -1;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .mega-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-main {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+
+      .header-logo {
+        width: 46px;
+        height: 46px;
+      }
+
+      .language-pills {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+      }
+
+      .lang-btn {
+        flex-shrink: 0;
+        font-size: 11px;
+        padding: 7px 13px;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .search-box {
+        flex: 1;
+        min-width: 145px;
+      }
+
+      .social-icons {
+        display: none;
+      }
+
+      .subscribe-btn,
+      .login-btn {
+        font-size: 10px;
+        padding: 8px 11px;
+      }
+
+      .quick-nav {
+        justify-content: flex-start;
+        gap: 12px;
+      }
+
+      .quick-item {
+        font-size: 11px;
+      }
+
+      .mega-menu {
+        left: 8px;
+        right: 8px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      .mega-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `}</style>
+</header>
 
 
 
-      <div style={{ textAlign: "center", padding: "24px 16px 72px 16px", maxWidth: "980px", margin: "48px auto 0" }}>
-        <h1
-          style={{
-            fontSize: "56px",
-            fontWeight: 900,
-            color: "#050B14",
-            lineHeight: 1.05,
-            margin: "16px 0 12px 0",
-            fontFamily: "Georgia, 'Times New Roman', serif"
-          }}
-        >
-          You're <span style={{ color: "#7F8000" }}>not alone</span>. Let's take
-          <br />
-          this <span style={{ color: "#7F8000" }}>together</span>.
-        </h1>
-        <p style={{ fontSize: "14px", color: "#08101E", lineHeight: 1.6, margin: "0 0 8px 0", fontWeight: 900 }}>
-          Feeling overwhelmed? Confused? That's okay. We'll help you
-          <br />
-          understand your feelings in a safe, quiet space.
-        </p>
-        <p style={{ fontSize: "12px", color: "#08101E", margin: "0 0 18px 0", fontWeight: 900 }}>Takes just 60 seconds.</p>
+<div
+  style={{
+    position: "relative",
+    overflow: "hidden",
+    textAlign: "center",
+    padding: "34px 26px 82px 26px",
+  }}
+>
+  
+  
 
+ 
+       <div style={{ width: "100%", textAlign: "center", padding: "20px 0",  position: "relative",
+      zIndex: 2, color: "#ffffff", }}>
+ <h1
+  style={{
+    fontSize: "45px",
+    fontWeight: 900,
+    color: "#0F172A",
+    lineHeight: 1.1,
+    margin: "0 auto",
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    width: "100%",
+    textAlign: "center",
+  }}
+>
+  {"You're "}
+  <span
+    style={{
+      color: "#7F8000",
+      WebkitTextFillColor: "#7F8000",
+      marginLeft: "12px",
+      display: "inline-block",
+      fontWeight: 900,
+    }}
+  >
+    not alone
+  </span>
+  {". Let's take"}
+  <br />
+  {"this "}
+  <span
+    style={{
+      color: "#7F8000",
+      WebkitTextFillColor: "#7F8000",
+      marginLeft: "12px",
+      display: "inline-block",
+      fontWeight: 900,
+    }}
+  >
+    together
+  </span>
+  {"."}
+</h1>
+</div>
+      <p
+  style={{
+    fontSize: "14px",
+    position: "relative",
+      zIndex: 2,
+    color: "#0F172A",
+    WebkitTextFillColor: "#0F172A",
+    lineHeight: 1.6,
+    margin: "0 0 8px 0",
+    fontWeight: 600,
+  }}
+>
+  {"Feeling overwhelmed? Confused? That's okay. We'll help you"}
+  <br />
+  {"understand your feelings in a safe, quiet space."}
+</p>
+
+<p
+  style={{
+    fontSize: "12px",
+    position: "relative",
+      zIndex: 2,
+    color: "#0b1b41",
+    WebkitTextFillColor: "#0f2966",
+    margin: "0 0 18px 0",
+    fontWeight: 800,
+  }}
+>
+  Takes just 60 seconds.
+</p>
         <button
           type="button"
           onClick={handleScrollToAssess}
           style={{
             background: "white",
+            position: "relative",
+      zIndex: 2,
             color: "#0F172A",
             padding: "12px 26px",
             borderRadius: "999px",
@@ -1365,548 +1990,1629 @@ const LandingPage: React.FC = () => {
         </button>
 
         <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "14px",
-            flexWrap: "wrap",
-            fontSize: "12px",
-            fontWeight: 800,
-            color: "#08101E"
-          }}
-        >
-          {["Confidential", "No Judgment", "Immediate"].map((t) => (
-            <div key={t} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#0B2D5E" }} />
-              <span>{t}</span>
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    position: "relative",
+      zIndex: 2,
+    gap: "14px",
+    flexWrap: "wrap",
+    fontSize: "12px",
+    fontWeight: 800,
+    color: "#334155",
+    WebkitTextFillColor: "#334155",
+  }}
+>
+  {["Confidential", "No Judgment", "Immediate"].map((t) => (
+    <div
+      key={t}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+      }}
+    >
+      <span
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "999px",
+          background: "#0B2D5E",
+          display: "inline-block",
+          flexShrink: 0,
+        }}
+      />
+
+      <span
+        style={{
+          color: "#334155",
+          position: "relative",
+      zIndex: 2, 
+          WebkitTextFillColor: "#334155",
+          fontWeight: 800,
+        }}
+      >
+        {t}
+      </span>
+    </div>
+  ))}
+</div>
+
+<section
+  aria-label="For Mental Health Professionals"
+  style={{
+    background: "linear-gradient(180deg, #CFE0EB 0%, #E7F3F5 55%, #FFFFFF 100%)",
+    padding: "60px 26px",
+    marginTop: "90px",
+    fontFamily: "Inter, system-ui, sans-serif"
+  }}
+>
+  <style>
+    {`
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin-border {
+        animation: rotate 10s linear infinite;
+      }
+      .card-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      @media (max-width: 1024px) {
+        .card-container { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 600px) {
+        .card-container { grid-template-columns: 1fr; }
+      }
+    `}
+  </style>
+
+  <div style={{ maxWidth: "1100px", margin: "0 auto", textAlign: "center" }}>
+    {/* Badge Title */}
+    <div style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      fontSize: "11px",
+      fontWeight: 900,
+      letterSpacing: "2px",
+      color: "#0B2D5E",
+      marginBottom: "12px"
+    }}>
+      <span style={{ fontSize: "14px" }}>✦</span>
+      FOR MENTAL HEALTH PROFESSIONALS
+    </div>
+
+    <h2 style={{
+      fontFamily: "Georgia, serif",
+      fontStyle: "italic",
+      fontSize: "22px",
+      color: "#0B2D5E",
+      marginBottom: "40px",
+      fontWeight: 600
+    }}>
+      Join India's growing network — Discover plans, create your profile, start earning
+    </h2>
+
+    <div className="card-container">
+      {[
+        { title: "Psychologist", icon: "🧠", badge: "RCI VERIFIED", bColor: "#7C3AED", light: "#F5F3FF", desc: "Clinical & counseling psychology. RCI registered. Earn ₹60K–₹2L/mo" },
+        { title: "Psychiatrist", icon: "⚕️", badge: "NMC VERIFIED", bColor: "#0EA5A6", light: "#F0FDFA", desc: "Diagnosis, medication, e-prescriptions. NMC registered MDs" },
+        { title: "Therapist", icon: "💚", badge: "0% FEE — 3 MO", bColor: "#16A34A", light: "#F0FDF4", desc: "CBT, DBT, REBT, integrative. Build your practice on your terms" },
+        { title: "NLP Coach", icon: "⭐", badge: "CERTIFIED", bColor: "#D97706", light: "#FFFBEB", desc: "Neuro-linguistic programming. Life coaching. Transformation specialists" }
+      ].map((item, i) => (
+        <div key={i} style={{
+          background: "white",
+          borderRadius: "24px",
+          padding: "30px 20px",
+          position: "relative",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+          border: "1px solid #F1F5F9",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}>
+          {/* Top Badge */}
+          <span style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            fontSize: "8px",
+            fontWeight: 900,
+            background: item.bColor,
+            color: "white",
+            padding: "4px 10px",
+            borderRadius: "999px"
+          }}>
+            {item.badge}
+          </span>
+
+          {/* Animated Icon Section */}
+          <div style={{ position: "relative", width: "80px", height: "80px", marginBottom: "20px" }}>
+            <div className="spin-border" style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              border: `2px dashed ${item.bColor}44`,
+            }} />
+            <div style={{
+              position: "absolute",
+              inset: "6px",
+              background: item.light,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "32px"
+            }}>
+              {item.icon}
             </div>
-          ))}
+          </div>
+
+          <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0F172A", margin: "0 0 10px 0" }}>{item.title}</h3>
+         <p
+  style={{
+    fontSize: "12px",
+    color: "#64748B",
+    WebkitTextFillColor: "#64748B",
+    lineHeight: 1.6,
+    margin: "0 0 20px 0",
+    minHeight: "40px",
+    fontWeight: 600,
+  }}
+>
+  {item.desc}
+</p>
+
+          <button style={{
+            background: "transparent",
+            border: `1.5px solid ${item.bColor}`,
+            color: item.bColor,
+            borderRadius: "999px",
+            padding: "8px 20px",
+            fontSize: "12px",
+            fontWeight: 900,
+            cursor: "pointer"
+          }}>
+            ✦ Join Now
+          </button>
+
+          <div style={{ marginTop: "16px", fontSize: "10px", color: "#94A3B8", fontWeight: 700 }}>
+            Discover — Plans — Profile
+          </div>
         </div>
+      ))}
+    </div>
+  </div>
+</section>
+
       </div>
 
-      <section
-        aria-label="For Mental Health Professionals"
-        style={{
-          background: "linear-gradient(180deg, rgba(207, 224, 235, 0.95) 0%, rgba(231, 243, 245, 0.9) 55%, rgba(255,255,255,0.95) 100%)",
-          marginTop: "180px",
-          padding: "42px 16px 18px 16px"
-        }}
-      >
-        <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              fontSize: "12px",
-              fontWeight: 900,
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              color: "#0B2D5E",
-              marginBottom: "10px"
-            }}
-          >
-            <span style={{ fontSize: "14px" }}>&#10022;</span>
-            FOR MENTAL HEALTH PROFESSIONALS
+      
+<section
+  id="assessSection"
+  style={{
+    background: "linear-gradient(180deg, #E8EEF7 0%, #F1F5F9 100%)",
+    padding: "40px 8px",
+    fontFamily: "Inter, system-ui, sans-serif"
+  }}
+>
+  <style>
+    {`
+      .assess-card-inner {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .assess-card-inner:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+      }
+      .assess-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 40px;
+        align-items: center;
+      }
+      @media (max-width: 968px) {
+        .assess-grid {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+      }
+    `}
+  </style>
+
+  <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+    <div
+      style={{
+        background: "white",
+        borderRadius: "20px",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
+        padding: "20px"
+      }}
+    >
+      <div className="assess-grid">
+        {/* Left Side Content */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16A34A" }} />
+        <span
+  style={{
+    fontSize: "12px",
+    fontWeight: 900,
+    letterSpacing: "2px",
+    color: "#0B2D5E",
+    WebkitTextFillColor: "#0B2D5E",
+    textTransform: "uppercase",
+    display: "inline-block",
+  }}
+>
+  FREE MENTAL HEALTH CHECK-UP
+</span>
           </div>
 
-          <div
-            style={{
-              fontFamily: "Georgia, 'Times New Roman', serif",
-              fontStyle: "italic",
-              fontSize: "18px",
-              fontWeight: 700,
-              color: "#0B2D5E",
-              opacity: 0.85,
-              marginBottom: "18px"
-            }}
-          >
-            Join India&apos;s growing network &mdash; Discover plans, create your profile, start earning
-          </div>
+     <h2
+  style={{
+    fontFamily: "Georgia, serif",
+    fontSize: "42px",
+    fontWeight: 800,
+    color: "#0F172A",
+    WebkitTextFillColor: "#0F172A",
+    lineHeight: 1.1,
+    marginBottom: "20px",
+  }}
+>
+  {"Not sure where to start? "}
+  <br />
+  {"Take a "}
+  <span
+    style={{
+      fontStyle: "italic",
+      color: "#0B2D5E",
+      WebkitTextFillColor: "#0B2D5E",
+      fontWeight: 800,
+      display: "inline-block",
+    }}
+  >
+    free assessment
+  </span>
+  {" — your way."}
+</h2>
 
-          <div className="pro-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "18px" }}>
-            <div style={{ background: "rgba(255,255,255,0.92)", border: "1px solid rgba(226,232,240,0.95)", borderRadius: "22px", padding: "18px 16px", boxShadow: "0 16px 40px rgba(0,0,0,0.07)" }}>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: "10px", fontWeight: 900, color: "white", background: "linear-gradient(135deg,#7C3AED,#A78BFA)", padding: "4px 8px", borderRadius: "999px" }}>RCI VERIFIED</span>
-              </div>
-              <div style={{ marginTop: "10px", display: "flex", justifyContent: "center" }}>
-                <div style={{ width: "92px", height: "92px", borderRadius: "999px", border: "2px dashed rgba(124,58,237,0.45)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(237,233,254,0.65)" }}>
-                  <span style={{ fontSize: "34px" }}>&#129504;</span>
-                </div>
-              </div>
-              <div style={{ marginTop: "14px", fontSize: "16px", fontWeight: 900, color: "#0F172A" }}>Psychologist</div>
-              <div style={{ marginTop: "6px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.55 }}>Clinical &amp; counseling psychology. RCI registered. Earn ₹60K&ndash;₹2L/mo</div>
-              <button type="button" onClick={() => navigate("/provider-landing")} style={{ marginTop: "14px", border: "1.5px solid rgba(124,58,237,0.7)", background: "rgba(255,255,255,0.95)", color: "#6D28D9", fontWeight: 900, fontSize: "12px", padding: "10px 14px", borderRadius: "999px", cursor: "pointer" }}>
-                &#10022; Join Now
-              </button>
-              <div style={{ marginTop: "10px", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>Discover &mdash; Plans &mdash; Profile</div>
-            </div>
+        <p
+  style={{
+    fontSize: "15px",
+    color: "#64748B",
+    WebkitTextFillColor: "#64748B",
+    lineHeight: 1.6,
+    marginBottom: "32px",
+    fontWeight: 500,
+  }}
+>
+  A quick PHQ-9 screening takes 3 minutes. Available in Hindi, Kannada, Tamil, Telugu & English.
+  Get your results instantly — no signup, no charge, completely confidential.
+</p>
 
-            <div style={{ background: "rgba(255,255,255,0.92)", border: "1px solid rgba(226,232,240,0.95)", borderRadius: "22px", padding: "18px 16px", boxShadow: "0 16px 40px rgba(0,0,0,0.07)" }}>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: "10px", fontWeight: 900, color: "white", background: "linear-gradient(135deg,#0EA5A6,#22C1C3)", padding: "4px 8px", borderRadius: "999px" }}>NMC VERIFIED</span>
-              </div>
-              <div style={{ marginTop: "10px", display: "flex", justifyContent: "center" }}>
-                <div style={{ width: "92px", height: "92px", borderRadius: "999px", border: "2px dashed rgba(14,165,166,0.45)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(204,251,241,0.55)" }}>
-                  <span style={{ fontSize: "34px" }}>&#128181;</span>
-                </div>
-              </div>
-              <div style={{ marginTop: "14px", fontSize: "16px", fontWeight: 900, color: "#0F172A" }}>Psychiatrist</div>
-              <div style={{ marginTop: "6px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.55 }}>Diagnosis, medication, e-prescriptions. NMC registered MDs</div>
-              <button type="button" onClick={() => navigate("/provider-landing")} style={{ marginTop: "14px", border: "1.5px solid rgba(14,165,166,0.7)", background: "rgba(255,255,255,0.95)", color: "#0F766E", fontWeight: 900, fontSize: "12px", padding: "10px 14px", borderRadius: "999px", cursor: "pointer" }}>
-                &#10022; Join Now
-              </button>
-              <div style={{ marginTop: "10px", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>Discover &mdash; Plans &mdash; Profile</div>
-            </div>
-
-            <div style={{ background: "rgba(255,255,255,0.92)", border: "1px solid rgba(226,232,240,0.95)", borderRadius: "22px", padding: "18px 16px", boxShadow: "0 16px 40px rgba(0,0,0,0.07)" }}>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: "10px", fontWeight: 900, color: "white", background: "linear-gradient(135deg,#16A34A,#22C55E)", padding: "4px 8px", borderRadius: "999px" }}>0% FEE &mdash; 3 MO</span>
-              </div>
-              <div style={{ marginTop: "10px", display: "flex", justifyContent: "center" }}>
-                <div style={{ width: "92px", height: "92px", borderRadius: "999px", border: "2px dashed rgba(34,197,94,0.45)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(220,252,231,0.6)" }}>
-                  <span style={{ fontSize: "34px" }}>&#128154;</span>
-                </div>
-              </div>
-              <div style={{ marginTop: "14px", fontSize: "16px", fontWeight: 900, color: "#0F172A" }}>Therapist</div>
-              <div style={{ marginTop: "6px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.55 }}>CBT, DBT, REBT, integrative. Build your practice on your terms</div>
-              <button type="button" onClick={() => navigate("/provider-landing")} style={{ marginTop: "14px", border: "1.5px solid rgba(34,197,94,0.7)", background: "rgba(255,255,255,0.95)", color: "#15803D", fontWeight: 900, fontSize: "12px", padding: "10px 14px", borderRadius: "999px", cursor: "pointer" }}>
-                &#10022; Join Now
-              </button>
-              <div style={{ marginTop: "10px", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>Discover &mdash; Plans &mdash; Profile</div>
-            </div>
-
-            <div style={{ background: "rgba(255,255,255,0.92)", border: "1px solid rgba(226,232,240,0.95)", borderRadius: "22px", padding: "18px 16px", boxShadow: "0 16px 40px rgba(0,0,0,0.07)" }}>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: "10px", fontWeight: 900, color: "white", background: "linear-gradient(135deg,#D97706,#F59E0B)", padding: "4px 8px", borderRadius: "999px" }}>CERTIFIED</span>
-              </div>
-              <div style={{ marginTop: "10px", display: "flex", justifyContent: "center" }}>
-                <div style={{ width: "92px", height: "92px", borderRadius: "999px", border: "2px dashed rgba(245,158,11,0.45)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(254, 243, 199, 0.7)" }}>
-                  <span style={{ fontSize: "34px" }}>&#11088;</span>
-                </div>
-              </div>
-              <div style={{ marginTop: "14px", fontSize: "16px", fontWeight: 900, color: "#0F172A" }}>NLP Coach</div>
-              <div style={{ marginTop: "6px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.55 }}>Neuro-linguistic programming. Life coaching. Transformation specialists</div>
-              <button type="button" onClick={() => navigate("/provider-landing")} style={{ marginTop: "14px", border: "1.5px solid rgba(245,158,11,0.75)", background: "rgba(255,255,255,0.95)", color: "#B45309", fontWeight: 900, fontSize: "12px", padding: "10px 14px", borderRadius: "999px", cursor: "pointer" }}>
-                &#10022; Join Now
-              </button>
-              <div style={{ marginTop: "10px", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>Discover &mdash; Plans &mdash; Profile</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="assessSection"
-        style={{
-          background: "linear-gradient(180deg, rgba(207, 224, 235, 0.65) 0%, rgba(231, 243, 245, 0.75) 55%, rgba(255,255,255,0.98) 100%)",
-          padding: "12px 16px 56px 16px"
-        }}
-      >
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              borderRadius: "28px",
-              border: "1px solid rgba(226,232,240,0.9)",
-              boxShadow: "0 18px 60px rgba(0,0,0,0.10)",
-              padding: "34px 32px"
-            }}
-          >
-            <div className="assess-grid" style={{ display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: "26px", alignItems: "start" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#16A34A" }} />
-                  <span style={{ fontSize: "12px", fontWeight: 900, letterSpacing: "3px", textTransform: "uppercase", color: "#0B2D5E" }}>FREE MENTAL HEALTH CHECK-UP</span>
-                </div>
-
-                <div
-                  style={{
-                    fontFamily: "Georgia, 'Times New Roman', serif",
-                    fontSize: "36px",
-                    fontWeight: 800,
-                    color: "#0F172A",
-                    lineHeight: 1.15,
-                    marginBottom: "14px"
-                  }}
-                >
-                  Not sure where to start?
-                  <br />
-                  Take a <em style={{ fontStyle: "italic", color: "#0B2D5E" }}>free assessment</em> &mdash; your way.
-                </div>
-
-                <div style={{ fontSize: "14px", color: "#64748B", lineHeight: 1.7, fontWeight: 700, maxWidth: "640px" }}>
-                  A quick PHQ-9 screening takes 3 minutes. Available in Hindi, Kannada, Tamil, Telugu &amp; English. Get your results instantly &mdash; no signup,
-                  no charge, completely confidential.
-                </div>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "18px", marginTop: "18px", fontSize: "12px", fontWeight: 800, color: "#334155" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ width: "22px", height: "22px", borderRadius: "8px", background: "rgba(226,232,240,0.7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>
-                      &#128274;
-                    </span>
-                    100% Confidential
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ width: "22px", height: "22px", borderRadius: "8px", background: "rgba(226,232,240,0.7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>
-                      &#127381;
-                    </span>
-                    Always Free
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ width: "22px", height: "22px", borderRadius: "8px", background: "rgba(226,232,240,0.7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>
-                      &#127760;
-                    </span>
-                    5 Languages
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ width: "22px", height: "22px", borderRadius: "8px", background: "rgba(226,232,240,0.7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>
-                      &#9889;
-                    </span>
-                    Instant Results
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.95)",
-                    border: "1px solid rgba(226,232,240,0.95)",
-                    borderRadius: "18px",
-                    padding: "16px",
-                    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.06)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "14px"
-                  }}
-                  onClick={() => {
-                    // Placeholder
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(237,233,254,0.8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>
-                      &#128241;
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: "14px", fontWeight: 900, color: "#0F172A" }}>In-App Check-In</div>
-                      <div style={{ marginTop: "3px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.45 }}>
-                        Emoji mood picker &bull; 60-second Vibe Check &bull; Track your streak
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 900,
-                      padding: "8px 12px",
-                      borderRadius: "999px",
-                      background: "rgba(237,233,254,0.95)",
-                      color: "#6D28D9",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    OPEN APP
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.95)",
-                    border: "1px solid rgba(226,232,240,0.95)",
-                    borderRadius: "18px",
-                    padding: "16px",
-                    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.06)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "14px"
-                  }}
-                  onClick={() => window.open("https://wa.me/919876543210", "_blank")}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(220,252,231,0.85)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>
-                      &#128172;
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: "14px", fontWeight: 900, color: "#0F172A" }}>WhatsApp Assessment</div>
-                      <div style={{ marginTop: "3px", fontSize: "12px", fontWeight: 700, color: "#64748B", lineHeight: 1.45 }}>
-                        Chat-based PHQ-9 &bull; Reply at your pace &bull; Get PDF report
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 900,
-                      padding: "8px 12px",
-                      borderRadius: "999px",
-                      background: "rgba(220,252,231,0.95)",
-                      color: "#15803D",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    CHAT NOW
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-label="Feature cards" style={{ padding: "0 16px 18px 16px" }}>
-        <div style={{ maxWidth: "1260px", margin: "0 auto" }}>
-          <div className="triple-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" }}>
-            <div
-              style={{
-                borderRadius: "18px",
-                border: "2px solid rgba(245, 158, 11, 0.9)",
-                background: "linear-gradient(135deg, rgba(255, 237, 213, 0.98), rgba(255, 247, 237, 0.9))",
-                padding: "18px",
-                boxShadow: "0 16px 40px rgba(0,0,0,0.08)",
-                cursor: "pointer"
-              }}
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate("/nri-landing")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate("/nri-landing");
-                }
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 900, letterSpacing: "2px", textTransform: "uppercase", color: "#F97316" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#38BDF8" }} />
-                FOR NRIS & GLOBAL INDIANS
-              </div>
-              <div style={{ fontSize: "24px", fontWeight: 900, color: "#9A3412", lineHeight: 1.15, marginTop: "10px" }}>
-                Find a <span style={{ fontStyle: "italic", fontFamily: "Georgia, 'Times New Roman', serif" }}>Janmabhoomi</span>
-                <br />
-                Connection &mdash; Heal
-              </div>
-              <div style={{ fontSize: "12px", color: "#7C2D12", lineHeight: 1.6, fontWeight: 700, marginTop: "10px" }}>
-                Therapy in your mother tongue with Indian therapists who understand your desi dilemma &mdash; career pressure abroad, family guilt, identity crisis,
-                relationships across continents.
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
-                {["IST + Your Timezone", "Hindi · Tamil · Telugu · Kannada", "HIPAA + DPDPA", "USD / GBP / AED / SGD"].map((chip) => (
-                  <div key={chip} style={{ fontSize: "10px", fontWeight: 900, color: "#9A3412", background: "rgba(255,255,255,0.65)", border: "1px solid rgba(251, 191, 36, 0.55)", padding: "4px 8px", borderRadius: "999px" }}>
-                    {chip}
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginTop: "12px" }}>
-                <span style={{ fontSize: "12px", color: "#9CA3AF", textDecoration: "line-through", fontWeight: 800 }}>$45/session</span>
-                <span style={{ fontSize: "22px", fontWeight: 900, color: "#B45309" }}>$29</span>
-                <span style={{ fontSize: "11px", fontWeight: 900, color: "#166534", background: "rgba(187, 247, 208, 0.7)", border: "1px solid #BBF7D0", padding: "4px 10px", borderRadius: "999px" }}>
-                  SAVE 35%
-                </span>
-              </div>
-              <button type="button" onClick={() => navigate("/nri-landing")} style={{ marginTop: "12px", width: "100%", border: "none", cursor: "pointer", borderRadius: "14px", padding: "12px 14px", background: "linear-gradient(135deg, #C2410C, #EA580C)", color: "white", fontWeight: 900, fontSize: "12px", boxShadow: "0 18px 40px rgba(0,0,0,0.12)" }}>
-                IN Connect to Home &mdash; Start Free &rarr;
-              </button>
-            </div>
-
-            <div style={{ borderRadius: "18px", border: "2px solid rgba(34, 197, 94, 0.55)", background: "linear-gradient(135deg, rgba(220, 252, 231, 0.96), rgba(240, 253, 244, 0.92))", padding: "18px", boxShadow: "0 16px 40px rgba(0,0,0,0.08)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 900, letterSpacing: "2px", textTransform: "uppercase", color: "#15803D" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#A78BFA" }} />
-                FOR PRACTICING THERAPISTS
-              </div>
-              <div style={{ fontSize: "24px", fontWeight: 900, color: "#14532D", lineHeight: 1.15, marginTop: "10px" }}>MyDigitalClinic</div>
-              <div style={{ fontSize: "12px", color: "#166534", lineHeight: 1.6, fontWeight: 700, marginTop: "10px" }}>
-                Already have patients? Digitize your practice. Your patients, your records, your control. No marketplace. No patient-sharing.
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
-                {["Session Notes", "Scheduling", "Prescriptions", "PHQ-9 Tracking", "DPDPA"].map((chip) => (
-                  <div key={chip} style={{ fontSize: "10px", fontWeight: 900, color: "#14532D", background: "rgba(255,255,255,0.65)", border: "1px solid rgba(34, 197, 94, 0.35)", padding: "4px 8px", borderRadius: "999px" }}>
-                    {chip}
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
-                <span style={{ fontSize: "10px", fontWeight: 900, color: "white", background: "rgba(21, 128, 61, 0.9)", padding: "5px 10px", borderRadius: "999px" }}>3 DAYS FREE</span>
-                <span style={{ fontSize: "12px", fontWeight: 900, color: "#166534" }}>Pick only modules you need &mdash; from &#8377;99/mo</span>
-              </div>
-              <button type="button" onClick={() => navigate("/my-digital-clinic")} style={{ marginTop: "12px", width: "100%", border: "none", cursor: "pointer", borderRadius: "14px", padding: "12px 14px", background: "linear-gradient(135deg, #14532D, #1F7A3D)", color: "white", fontWeight: 900, fontSize: "12px", boxShadow: "0 18px 40px rgba(0,0,0,0.12)" }}>
-                Configure My Clinic &rarr;
-              </button>
-            </div>
-
-            <div style={{ borderRadius: "18px", border: "2px solid rgba(99, 102, 241, 0.6)", background: "linear-gradient(135deg, rgba(224, 231, 255, 0.98), rgba(245, 243, 255, 0.9))", padding: "18px", boxShadow: "0 16px 40px rgba(0,0,0,0.08)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 900, letterSpacing: "2px", textTransform: "uppercase", color: "#7C3AED" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#111827" }} />
-                DIGITAL COMPANIONS
-              </div>
-              <div style={{ fontSize: "24px", fontWeight: 900, color: "#4C1D95", lineHeight: 1.15, marginTop: "10px" }}>
-                Meet Your Healing
-                <br />
-                Companions
-              </div>
-              <div style={{ fontSize: "12px", color: "#6D28D9", lineHeight: 1.6, fontWeight: 700, marginTop: "10px" }}>Nurture a companion that grows with your wellness journey.</div>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "12px", background: "rgba(255,255,255,0.7)", border: "1px solid rgba(99, 102, 241, 0.25)", padding: "10px", borderRadius: "14px" }}>
-                {[{ name: "Baby Dino", sub: "Oxytocin", icon: "\uD83E\uDD96" }, { name: "Retriever", sub: "Serotonin", icon: "\uD83D\uDC36" }, { name: "Elephant", sub: "Dopamine", icon: "\uD83D\uDC18" }, { name: "Chintu", sub: "Endorphins", icon: "\uD83D\uDC31" }].map((p) => (
-                  <div key={p.name} style={{ flex: "1 1 110px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "34px", height: "34px", borderRadius: "12px", background: "rgba(124,58,237,0.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>{p.icon}</div>
-                    <div>
-                      <div style={{ fontSize: "11px", fontWeight: 900, color: "#4C1D95" }}>{p.name}</div>
-                      <div style={{ fontSize: "10px", fontWeight: 900, color: "#6D28D9" }}>{p.sub}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize: "11px", fontWeight: 800, color: "#6D28D9", marginTop: "10px" }}>&bull; Oxytocin (love) &bull; Serotonin (happy) &bull; Dopamine (reward) &bull; Endorphins (energy)</div>
-              <button type="button" onClick={() => navigate("/pet")} style={{ marginTop: "12px", width: "100%", border: "none", cursor: "pointer", borderRadius: "14px", padding: "12px 14px", background: "linear-gradient(135deg, #6D28D9, #7C3AED)", color: "white", fontWeight: 900, fontSize: "12px", boxShadow: "0 18px 40px rgba(0,0,0,0.12)" }}>Name Your Pet &mdash; Adopt FREE</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-label="Live and upcoming group sessions" style={{ padding: "10px 16px 60px 16px" }}>
-        <div style={{ maxWidth: "1260px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "18px" }}>&#128293;</span>
-              <span style={{ fontSize: "16px", fontWeight: 900, color: "#0F172A" }}>Live &amp; Upcoming Group Sessions</span>
-            </div>
-            <span style={{ fontSize: "11px", fontWeight: 900, color: "#EF4444", background: "rgba(254, 226, 226, 0.9)", border: "1px solid rgba(239, 68, 68, 0.25)", padding: "4px 8px", borderRadius: "999px" }}>3 LIVE NOW</span>
-          </div>
-
-          <div className="live-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
-            {liveCards.map((card) => (
-              <div key={card.title} style={{ borderRadius: "18px", border: "1px solid rgba(239, 68, 68, 0.55)", background: "rgba(255, 255, 255, 0.78)", boxShadow: "0 18px 55px rgba(0,0,0,0.10)", overflow: "hidden" }}>
-                <div style={{ padding: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div style={{ width: "26px", height: "26px", borderRadius: "999px", background: "rgba(226, 232, 240, 0.75)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>{card.icon}</div>
-                      <div style={{ fontSize: "14px", fontWeight: 900, color: "#0F172A", lineHeight: 1.15 }}>{card.title}</div>
-                    </div>
-                    <div style={{ fontSize: "10px", fontWeight: 900, color: "#EF4444", background: "rgba(254, 226, 226, 0.9)", border: "1px solid rgba(239, 68, 68, 0.22)", padding: "5px 10px", borderRadius: "999px", whiteSpace: "nowrap" }}>{card.rightBadge}</div>
-                  </div>
-
-                  <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{ width: "34px", height: "34px", borderRadius: "999px", background: "rgba(186, 230, 253, 0.7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>&#128100;</div>
-                    <div>
-                      <div style={{ fontSize: "12px", fontWeight: 900, color: "#0F172A" }}>{card.doctor}</div>
-                      <div style={{ marginTop: "2px", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>{card.language}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: "10px", fontSize: "11px", fontWeight: 900, color: "#EF4444" }}>{card.seats}</div>
-                </div>
-
-                <div style={{ padding: "12px" }}>
-                  <button type="button" style={{ width: "100%", border: "none", cursor: "pointer", borderRadius: "12px", padding: "10px 12px", background: card.buttonBg, color: "white", fontWeight: 900, fontSize: "12px", boxShadow: "0 14px 30px rgba(0,0,0,0.12)" }}>{card.buttonText}</button>
-                </div>
+          {/* Feature List */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", 
+            gap: "16px",
+            fontSize: "13px", 
+            fontWeight: 700, 
+            color: "#334155" 
+          }}>
+            {[
+              { icon: "🔐", label: "100% Confidential" },
+              { icon: "🆓", label: "Always Free" },
+              { icon: "🌐", label: "5 Languages" },
+              { icon: "⚡", label: "Instant Results" }
+            ].map((f, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "16px" }}>{f.icon}</span>
+                {f.label}
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      <footer aria-label="Footer" style={{ background: "linear-gradient(180deg, #0B2D5E 0%, #06203F 100%)", color: "white", padding: "54px 16px 18px 16px" }}>
-        <div style={{ maxWidth: "1260px", margin: "0 auto" }}>
-          <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: "28px", alignItems: "start" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-                <div style={{ width: "56px", height: "56px", borderRadius: "14px", background: "rgba(255,255,255,0.95)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={logo} alt="MANAS360" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                </div>
+        {/* Right Side Action Cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* In-App Card */}
+       <div style={{ display: "grid", gap: "14px", width: "100%" }}>
+  {/* In-App Card */}
+  <div
+    className="assess-card-inner"
+    style={{
+      background: "#F8FAFC",
+      border: "1px solid #E2E8F0",
+      borderRadius: "20px",
+      padding: "14px 18px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "12px",
+      boxShadow: "0 8px 22px rgba(15, 23, 42, 0.04)",
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+      <div
+        style={{
+          width: "46px",
+          height: "46px",
+          borderRadius: "14px",
+          background: "#EDE9FE",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "22px",
+          flexShrink: 0,
+        }}
+      >
+        📱
+      </div>
+
+      <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: "15px",
+            fontWeight: 900,
+            color: "#0F172A",
+            WebkitTextFillColor: "#0F172A",
+          }}
+        >
+          In-App Check-In
+        </div>
+
+        <div
+          style={{
+            fontSize: "11px",
+            color: "#64748B",
+            WebkitTextFillColor: "#64748B",
+            marginTop: "2px",
+            fontWeight: 600,
+            lineHeight: 1.35,
+          }}
+        >
+          Emoji mood picker • 60-second Vibe Check • Track your streak
+        </div>
+      </div>
+    </div>
+
+    <span
+      style={{
+        fontSize: "10px",
+        fontWeight: 900,
+        color: "#6D28D9",
+        WebkitTextFillColor: "#6D28D9",
+        background: "#F5F3FF",
+        padding: "6px 12px",
+        borderRadius: "999px",
+        border: "1px solid #E9D5FF",
+        whiteSpace: "nowrap",
+        display: "inline-block",
+        flexShrink: 0,
+      }}
+    >
+      OPEN APP
+    </span>
+  </div>
+
+  {/* WhatsApp Card */}
+  <div
+    className="assess-card-inner"
+    onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+    style={{
+      background: "#F8FAFC",
+      border: "1px solid #E2E8F0",
+      borderRadius: "20px",
+      padding: "14px 18px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "12px",
+      boxShadow: "0 8px 22px rgba(15, 23, 42, 0.04)",
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+      <div
+        style={{
+          width: "46px",
+          height: "46px",
+          borderRadius: "14px",
+          background: "#DCFCE7",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "22px",
+          flexShrink: 0,
+        }}
+      >
+        💬
+      </div>
+
+      <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: "15px",
+            fontWeight: 900,
+            color: "#0F172A",
+            WebkitTextFillColor: "#0F172A",
+          }}
+        >
+          WhatsApp Assessment
+        </div>
+
+        <div
+          style={{
+            fontSize: "11px",
+            color: "#64748B",
+            WebkitTextFillColor: "#64748B",
+            marginTop: "2px",
+            fontWeight: 600,
+            lineHeight: 1.35,
+          }}
+        >
+          Chat-based PHQ-9 • Reply at your pace • Get PDF report
+        </div>
+      </div>
+    </div>
+
+    <span
+      style={{
+        fontSize: "10px",
+        fontWeight: 900,
+        color: "#16A34A",
+        WebkitTextFillColor: "#16A34A",
+        background: "#DCFCE7",
+        padding: "6px 12px",
+        borderRadius: "999px",
+        border: "1px solid #BBF7D0",
+        whiteSpace: "nowrap",
+        display: "inline-block",
+        flexShrink: 0,
+      }}
+    >
+      CHAT NOW
+    </span>
+  </div>
+
+  <style>{`
+    @media (max-width: 520px) {
+      .assess-card-inner {
+        align-items: flex-start !important;
+        padding: 14px !important;
+      }
+
+      .assess-card-inner > span {
+        font-size: 9px !important;
+        padding: 5px 9px !important;
+      }
+    }
+  `}</style>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+     <section
+  aria-label="Feature cards"
+  style={{
+    padding: "30px 26px 32px 26px",
+    backgroundImage:
+      "linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), url('/public/You renot alone-Beach.jpeg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
+  <div style={{ maxWidth: "1260px", margin: "0 auto" }}>
+    <div
+      className="triple-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: "16px",
+      }}
+    >
+      {/* CARD 1 */}
+      <div className="feature-card nri-card" onClick={() => navigate("/nri-landing")}>
+        <div className="card-watermark">IN</div>
+
+        <div className="eyebrow orange">
+          <span className="dot sky" /> FOR NRIS & GLOBAL INDIANS
+        </div>
+
+        <div className="card-title orange-title">
+          Find a{" "}
+          <span style={{ fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+            Janmabhoomi
+          </span>
+          <br />
+          Connection — Heal
+        </div>
+
+        <p className="card-desc brown">
+          Therapy in your mother tongue with Indian therapists who understand your desi dilemma —
+          career pressure abroad, family guilt, identity crisis, relationship bridges across continents.
+        </p>
+
+        <div className="chip-wrap">
+          {["IST + Your Timezone", "Hindi · Tamil · Telugu · Kannada", "HIPAA + DPDPA", "USD / GBP / AED / SGD"].map(
+            (chip) => (
+              <span className="chip orange-chip" key={chip}>
+                {chip}
+              </span>
+            )
+          )}
+        </div>
+
+        <div className="price-row">
+          <span className="old-price">$45/session</span>
+          <span className="new-price">$29</span>
+          <span className="save-badge">SAVE 35%</span>
+        </div>
+
+        <button className="card-btn orange-btn" type="button">
+          IN Connect to Home — Start Free →
+        </button>
+      </div>
+
+      {/* CARD 2 */}
+      <div className="feature-card clinic-card" onClick={() => navigate("/my-digital-clinic")}>
+        <div className="card-watermark">✚</div>
+
+        <div className="eyebrow green">
+          <span className="dot violet" /> FOR PRACTICING THERAPISTS
+        </div>
+
+        <div className="card-title green-title">MyDigitalClinic</div>
+
+        <p className="card-desc green-text">
+          Already have patients? Digitize your existing practice. Your patients, your records,
+          your control. No marketplace. No patient-sharing.
+        </p>
+
+        <div className="chip-wrap">
+          {["Session Notes", "Scheduling", "Prescriptions", "PHQ-9 Tracking", "DPDPA"].map((chip) => (
+            <span className="chip green-chip" key={chip}>
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        <div className="free-row">
+          <span className="free-badge">21 DAYS FREE</span>
+          <span className="free-text">Pick only modules you need — from ₹99/mo</span>
+        </div>
+
+        <button className="card-btn green-btn" type="button">
+          Configure My Clinic →
+        </button>
+
+        <div className="bottom-link">
+          🌐 Want NEW patients from other cities? → <u>Explore Provider Network</u>
+        </div>
+      </div>
+
+      {/* CARD 3 */}
+      <div className="feature-card companion-card" onClick={() => navigate("/pet")}>
+        <div className="card-watermark">♥</div>
+
+        <div className="eyebrow purple">
+          <span className="dot dark" /> DIGITAL COMPANIONS — OXYTOCIN ENGINE
+        </div>
+
+        <div className="card-title purple-title">
+          Meet Your Healing
+          <br />
+          Companions
+        </div>
+
+        <p className="card-desc purple-text">
+          Your brain releases serotonin from connection — even digital ones. Nurture a companion
+          that grows with your wellness journey.
+        </p>
+
+        <div className="pet-box">
+          {[
+            { name: "Baby Dino", sub: "Oxytocin", icon: "🦕" },
+            { name: "Retriever", sub: "Serotonin", icon: "🐕" },
+            { name: "Elephant", sub: "Dopamine", icon: "🐘" },
+            { name: "Chintu", sub: "Endorphins", icon: "🐱" },
+          ].map((p) => (
+            <div className="pet-item" key={p.name}>
+              <div className="pet-icon">{p.icon}</div>
+              <div className="pet-name">{p.name}</div>
+              <div className="pet-sub">{p.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hormone-text">
+          🌸 Oxytocin (love) · Serotonin (happy) · Dopamine (reward) · Endorphins (energy)
+        </div>
+
+        <button className="card-btn purple-btn" type="button">
+          🐾 Name Your Pet — Adopt FREE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>{`
+    .triple-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 255px;
+      border-radius: 18px;
+      padding: 20px 22px;
+      cursor: pointer;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+      transition: all 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 22px 55px rgba(0,0,0,0.16);
+    }
+
+    .nri-card {
+      border: 2px solid #F59E0B;
+      background: linear-gradient(135deg, rgba(255,237,213,0.96), rgba(255,247,237,0.9));
+    }
+
+    .clinic-card {
+      border: 2px solid rgba(21,128,61,0.75);
+      background: linear-gradient(135deg, rgba(220,252,231,0.96), rgba(240,253,244,0.9));
+    }
+
+    .companion-card {
+      border: 2px solid rgba(124,58,237,0.85);
+      background: linear-gradient(135deg, rgba(237,233,254,0.96), rgba(245,243,255,0.9));
+    }
+
+    .card-watermark {
+      position: absolute;
+      top: 8px;
+      right: 18px;
+      font-size: 64px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.45);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .sky { background: #38BDF8; }
+    .violet { background: #A78BFA; }
+    .dark { background: #111827; }
+
+    .orange { color: #F97316; -webkit-text-fill-color: #F97316; }
+    .green { color: #15803D; -webkit-text-fill-color: #15803D; }
+    .purple { color: #7C3AED; -webkit-text-fill-color: #7C3AED; }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.15;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .orange-title { color: #9A3412; -webkit-text-fill-color: #9A3412; }
+    .green-title { color: #14532D; -webkit-text-fill-color: #14532D; }
+    .purple-title { color: #4C1D95; -webkit-text-fill-color: #4C1D95; }
+
+    .card-desc {
+      font-size: 12px;
+      line-height: 1.6;
+      font-weight: 700;
+      margin: 10px 0 0 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brown { color: #7C2D12; -webkit-text-fill-color: #7C2D12; }
+    .green-text { color: #166534; -webkit-text-fill-color: #166534; }
+    .purple-text { color: #6D28D9; -webkit-text-fill-color: #6D28D9; }
+
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .chip {
+      font-size: 10px;
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.65);
+    }
+
+    .orange-chip {
+      color: #9A3412;
+      -webkit-text-fill-color: #9A3412;
+      border: 1px solid rgba(251,191,36,0.55);
+    }
+
+    .green-chip {
+      color: #14532D;
+      -webkit-text-fill-color: #14532D;
+      border: 1px solid rgba(34,197,94,0.35);
+    }
+
+    .price-row, .free-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
+    }
+
+    .old-price {
+      font-size: 12px;
+      color: #9CA3AF;
+      -webkit-text-fill-color: #9CA3AF;
+      text-decoration: line-through;
+      font-weight: 800;
+    }
+
+    .new-price {
+      font-size: 22px;
+      font-weight: 900;
+      color: #B45309;
+      -webkit-text-fill-color: #B45309;
+    }
+
+    .save-badge {
+      font-size: 11px;
+      font-weight: 900;
+      color: #166534;
+      -webkit-text-fill-color: #166534;
+      background: rgba(187,247,208,0.7);
+      border: 1px solid #BBF7D0;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .free-badge {
+      font-size: 10px;
+      font-weight: 900;
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+      background: rgba(21,128,61,0.9);
+      padding: 5px 10px;
+      border-radius: 999px;
+    }
+
+    .free-text {
+      font-size: 12px;
+      font-weight: 900;
+      color: #166534;
+      -webkit-text-fill-color: #166534;
+    }
+
+    .card-btn {
+      margin-top: 12px;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: white;
+      -webkit-text-fill-color: white;
+      font-weight: 900;
+      font-size: 12px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+      position: relative;
+      z-index: 2;
+    }
+
+    .orange-btn { background: linear-gradient(135deg, #C2410C, #EA580C); }
+    .green-btn { background: linear-gradient(135deg, #14532D, #1F7A3D); }
+    .purple-btn { background: linear-gradient(135deg, #6D28D9, #7C3AED); }
+
+    .bottom-link {
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #15803D;
+      -webkit-text-fill-color: #15803D;
+      text-align: center;
+    }
+
+    .pet-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(99,102,241,0.25);
+      padding: 10px;
+      border-radius: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pet-item {
+      text-align: center;
+    }
+
+    .pet-icon {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 5px;
+      border-radius: 12px;
+      background: rgba(124,58,237,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .pet-name {
+      font-size: 9px;
+      font-weight: 900;
+      color: #4C1D95;
+      -webkit-text-fill-color: #4C1D95;
+    }
+
+    .pet-sub {
+      font-size: 8px;
+      font-weight: 900;
+      color: #6D28D9;
+      -webkit-text-fill-color: #6D28D9;
+    }
+
+    .hormone-text {
+      font-size: 10px;
+      font-weight: 800;
+      color: #6D28D9;
+      -webkit-text-fill-color: #6D28D9;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 1024px) {
+      .triple-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      section {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+
+      .feature-card {
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      .card-title {
+        font-size: 20px;
+      }
+
+      .pet-box {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .eyebrow {
+        font-size: 9px;
+        letter-spacing: 1.4px;
+      }
+    }
+  `}</style>
+
+
+
+ <section
+  aria-label="Live and upcoming group sessions"
+  style={{
+    padding: "10px 16px 60px 16px",
+    backgroundImage:
+      "linear-gradient(rgba(255,255,255,0.12), rgba(255,255,255,0.12)), url('/your-background-image.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
+  <div style={{ maxWidth: "1260px", margin: "0 auto" }}>
+    <div className="live-head">
+      <div className="live-title">
+        <span style={{ fontSize: "18px" }}>🔥</span>
+        <span>Live & Upcoming Group Sessions</span>
+      </div>
+
+      <span className="live-now-badge">3 LIVE NOW</span>
+    </div>
+
+    <div className="live-grid">
+      {liveCards.map((card) => (
+        <div className="live-card" key={card.title}>
+          <div className="live-card-top">
+            <div className="live-card-title-row">
+              <div className="live-icon">{card.icon}</div>
+
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 900,
+                  color: "#0F172A",
+                  WebkitTextFillColor: "#0F172A",
+                  lineHeight: 1.2,
+                }}
+              >
+                {card.title}
               </div>
-              <div style={{ fontSize: "13px", fontWeight: 800, opacity: 0.9, lineHeight: 1.6 }}>Holistic Mental Wellness<br />Anytime, Anywhere</div>
-              <div style={{ marginTop: "14px", fontSize: "11px", opacity: 0.75, fontWeight: 700, lineHeight: 1.7 }}>MANAS360 Mental Wellness Pvt. Ltd.<br />Bengaluru, Karnataka, India</div>
             </div>
 
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 900, color: "#C7D2FE", marginBottom: "10px" }}>Quick Links</div>
-              {["About Us", "How It Works", "Specialized Care", "For Providers", "MyDigitalClinic", "Careers"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => handleFooterRoute(footerQuickLinkRoutes, t)}
-                  style={{
-                    fontSize: "12px",
-                    opacity: 0.85,
-                    marginBottom: "8px",
-                    fontWeight: 700,
-                    display: "block",
-                    border: "none",
-                    background: "transparent",
-                    color: "inherit",
-                    padding: 0,
-                    cursor: "pointer",
-                    textAlign: "left"
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <span className="card-live-badge">{card.rightBadge}</span>
+          </div>
+
+          <div className="doctor-row">
+            <div className="doctor-avatar">🧑‍⚕️</div>
 
             <div>
-              <div style={{ fontSize: "13px", fontWeight: 900, color: "#C7D2FE", marginBottom: "10px" }}>Legal</div>
-              {["Privacy Policy", "Terms of Service", "Cookie Policy", "DPDPA Compliance", "Refund Policy", "Disclaimer"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => handleFooterRoute(footerLegalRoutes, t)}
-                  style={{
-                    fontSize: "12px",
-                    opacity: 0.85,
-                    marginBottom: "8px",
-                    fontWeight: 700,
-                    display: "block",
-                    border: "none",
-                    background: "transparent",
-                    color: "inherit",
-                    padding: 0,
-                    cursor: "pointer",
-                    textAlign: "left"
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 900, color: "#C7D2FE", marginBottom: "10px" }}>Get in Touch</div>
-              <a
-                href="mailto:support@manas360.com"
-                style={{ fontSize: "12px", opacity: 0.9, marginBottom: "8px", fontWeight: 800, display: "block", color: "inherit", textDecoration: "none" }}
-              >
-                &#9993; support@manas360.com
-              </a>
-              <a
-                href="tel:+918867736009"
-                style={{ fontSize: "12px", opacity: 0.9, marginBottom: "8px", fontWeight: 800, display: "block", color: "inherit", textDecoration: "none" }}
-              >
-                &#9742; +91-8867736009
-              </a>
-              <div style={{ fontSize: "12px", opacity: 0.9, marginBottom: "14px", fontWeight: 800 }}>&#128172; WhatsApp Support</div>
-              <div style={{ display: "flex", gap: "10px", opacity: 0.85 }}>{["wa", "ig", "in", "x"].map((s) => (
-                <div key={s} style={{ width: "28px", height: "28px", borderRadius: "8px", background: "rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 900 }}>{s}</div>
-              ))}</div>
+              <div className="doctor-name">{card.doctor}</div>
+              <div className="doctor-info">{card.language}</div>
             </div>
           </div>
 
-          <div style={{ marginTop: "28px", border: "1px solid rgba(248, 113, 113, 0.35)", background: "rgba(248, 113, 113, 0.08)", borderRadius: "12px", padding: "12px 14px", textAlign: "center", fontSize: "12px", fontWeight: 900 }}>
-            In Crisis? Call KIRAN: 1800-599-0019 (24/7, Free) &middot; iCall: 9152987821 &middot; Vandrevala: 1860-2662-345
+          <div className="meta-row">
+            <span>⏱ Now — {card.duration || "45 min"}</span>
+            <span>🗣 {card.lang || "Hindi + English"}</span>
+            <span>👥 {card.participants || "12"} participants</span>
           </div>
 
-          <div style={{ marginTop: "18px", textAlign: "center", fontSize: "11px", opacity: 0.75, fontWeight: 700, lineHeight: 1.6 }}>
-            &copy; 2026 MANAS360 Mental Wellness Pvt. Ltd. All rights reserved &middot; Bengaluru, Karnataka, India
-            <br />
-            MANAS360 is a technology aggregator platform.
+          <div className="seat-row">
+            <span>{card.seats}</span>
+            <span>{card.maxSeats || "15 max"}</span>
+          </div>
+
+          <div className="seat-bar">
+            <div
+              className="seat-fill"
+              style={{ width: card.progress || "88%" }}
+            />
+          </div>
+
+          <div className="price-action-row">
+            <div>
+              <span className="old-session-price">
+                {card.oldPrice || "₹299"}
+              </span>
+              <span className="new-session-price">
+                {card.price || "₹149"}
+              </span>
+              <span className="session-unit">/session</span>
+            </div>
+
+            <button
+              type="button"
+              className="join-session-btn"
+              style={{ background: card.buttonBg || "#EF4444" }}
+            >
+              {card.buttonText || "⚡ JOIN NOW"}
+            </button>
+          </div>
+
+          <div className="session-note">
+            {card.note || "🔥 47 people joined this week · Meera from Bengaluru says “Changed my life”"}
           </div>
         </div>
-      </footer>
+      ))}
+    </div>
+  </div>
+
+  <style>{`
+    .live-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .live-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+    }
+
+    .live-now-badge {
+      font-size: 11px;
+      font-weight: 900;
+      color: #EF4444;
+      -webkit-text-fill-color: #EF4444;
+      background: rgba(254, 226, 226, 0.92);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 5px 11px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .live-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(280px, 1fr));
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .live-card {
+      scroll-snap-align: start;
+      min-width: 280px;
+      border-radius: 18px;
+      border: 1.5px solid rgba(239, 68, 68, 0.7);
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 55px rgba(0,0,0,0.10);
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .live-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 65px rgba(0,0,0,0.16);
+    }
+
+    .live-card-top {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.18);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .live-card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .live-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(226, 232, 240, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .card-live-badge {
+      font-size: 10px;
+      font-weight: 900;
+      color: #EF4444;
+      -webkit-text-fill-color: #EF4444;
+      background: rgba(254, 226, 226, 0.92);
+      border: 1px solid rgba(239, 68, 68, 0.22);
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .doctor-row {
+      padding: 12px 14px 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .doctor-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: rgba(186, 230, 253, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .doctor-name {
+      font-size: 12px;
+      font-weight: 900;
+      color: #0F172A;
+      -webkit-text-fill-color: #0F172A;
+    }
+
+    .doctor-info {
+      margin-top: 2px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      line-height: 1.35;
+    }
+
+    .meta-row {
+      padding: 0 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      line-height: 1.35;
+    }
+
+    .seat-row {
+      padding: 9px 14px 3px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .seat-row span:first-child {
+      color: #EF4444;
+      -webkit-text-fill-color: #EF4444;
+    }
+
+    .seat-row span:last-child {
+      color: #94A3B8;
+      -webkit-text-fill-color: #94A3B8;
+    }
+
+    .seat-bar {
+      margin: 0 14px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(226, 232, 240, 0.9);
+      overflow: hidden;
+    }
+
+    .seat-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #EF4444, #F97316);
+    }
+
+    .price-action-row {
+      padding: 12px 14px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .old-session-price {
+      font-size: 11px;
+      color: #94A3B8;
+      -webkit-text-fill-color: #94A3B8;
+      text-decoration: line-through;
+      font-weight: 800;
+      margin-right: 6px;
+    }
+
+    .new-session-price {
+      font-size: 17px;
+      font-weight: 900;
+      color: #111827;
+      -webkit-text-fill-color: #111827;
+    }
+
+    .session-unit {
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748B;
+      -webkit-text-fill-color: #64748B;
+      margin-left: 2px;
+    }
+
+    .join-session-btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 13px;
+      padding: 10px 16px;
+      color: white;
+      -webkit-text-fill-color: white;
+      font-weight: 900;
+      font-size: 11px;
+      white-space: nowrap;
+      box-shadow: 0 14px 30px rgba(239, 68, 68, 0.25);
+    }
+
+    .session-note {
+      padding: 10px 14px;
+      background: rgba(254, 242, 242, 0.82);
+      border-top: 1px solid rgba(239, 68, 68, 0.16);
+      font-size: 10px;
+      line-height: 1.4;
+      font-weight: 800;
+      color: #EF4444;
+      -webkit-text-fill-color: #EF4444;
+    }
+
+    @media (max-width: 1100px) {
+      .live-grid {
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+        overflow-x: visible;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .live-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .live-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .live-card {
+        min-width: 0;
+      }
+
+      .meta-row {
+        grid-template-columns: 1fr;
+      }
+
+      .price-action-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .join-session-btn {
+        width: 100%;
+      }
+    }
+  `}</style>
+</section>
+
+
+
+</section>
+
+     
+
+    <footer aria-label="Footer" className="manas-footer">
+  <div className="footer-bg-glow" />
+
+  <div className="footer-inner">
+    <div className="footer-grid">
+      <div>
+        <div className="footer-logo-box">
+          <img src="/public/Manas360-Logo_Med_optimized.jpeg" alt="MANAS360" className="footer-logo" />
+        </div>
+
+        <div className="footer-tagline">
+          Holistic Mental Wellness
+          <br />
+          Anytime, Anywhere
+        </div>
+
+        <div className="footer-company">
+          MANAS360 Mental Wellness Pvt. Ltd.
+          <br />
+          Bengaluru, Karnataka, India
+        </div>
+      </div>
+
+      <div>
+        <h4 className="footer-heading">Quick Links</h4>
+        {["About Us", "How It Works", "Specialized Care", "For Providers", "MyDigitalClinic", "Careers"].map((t) => (
+          <button
+            key={t}
+            type="button"
+            className="footer-link"
+            onClick={() => handleFooterRoute(footerQuickLinkRoutes, t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <h4 className="footer-heading">Legal</h4>
+        {["Privacy Policy", "Terms of Service", "Cookie Policy", "DPDPA Compliance", "Refund Policy", "Disclaimer"].map((t) => (
+          <button
+            key={t}
+            type="button"
+            className="footer-link"
+            onClick={() => handleFooterRoute(footerLegalRoutes, t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <h4 className="footer-heading">Get in Touch</h4>
+
+        <a href="mailto:hello@manas360.com" className="footer-contact">
+          📧 hello@manas360.com
+        </a>
+
+        <a href="tel:+91XXXXXXXXXX" className="footer-contact">
+          📱 +91-XXXXXXXXXX
+        </a>
+
+        <div className="footer-contact">💬 WhatsApp Support</div>
+
+        <div className="footer-socials">
+          {["📷", "💼", "▶️", "🦄"].map((s) => (
+            <div key={s} className="footer-social">
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div className="crisis-box">
+      🆘 In Crisis? Call KIRAN: 1800-599-0019 (24/7, Free) · iCall: 9152987821 · Vandrevala:
+      1860-2662-345
+    </div>
+
+    <div className="footer-bottom">
+      © 2026 MANAS360 Mental Wellness Pvt. Ltd. All rights reserved · CIN: XXXXXXXX · Bengaluru,
+      Karnataka, India
+      <br />
+      MANAS360 is a technology aggregator platform, not a healthcare provider. All therapists are
+      independent practitioners.
+    </div>
+  </div>
+
+  <style>{`
+    .manas-footer {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(59,130,246,0.18), transparent 32%),
+        radial-gradient(circle at 80% 10%, rgba(124,58,237,0.12), transparent 34%),
+        linear-gradient(180deg, #082B63 0%, #06224D 45%, #061B3E 100%);
+      color: white;
+      padding: 42px 16px 24px;
+    }
+
+    .manas-footer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .footer-bg-glow {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      right: -120px;
+      top: -160px;
+      background: rgba(59,130,246,0.18);
+      filter: blur(70px);
+      border-radius: 999px;
+    }
+
+    .footer-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 1260px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1.1fr;
+      gap: 36px;
+      align-items: start;
+    }
+
+    .footer-logo-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.96);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 35px rgba(0,0,0,0.16);
+      margin-bottom: 18px;
+    }
+
+    .footer-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .footer-tagline {
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.96);
+      -webkit-text-fill-color: rgba(255,255,255,0.96);
+      margin-bottom: 14px;
+    }
+
+    .footer-company {
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.55;
+      color: rgba(191,219,254,0.72);
+      -webkit-text-fill-color: rgba(191,219,254,0.72);
+    }
+
+    .footer-heading {
+      margin: 0 0 12px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #B7FF3C;
+      -webkit-text-fill-color: #B7FF3C;
+    }
+
+    .footer-link {
+      display: block;
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0 0 10px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.86);
+      -webkit-text-fill-color: rgba(255,255,255,0.86);
+      transition: all 0.2s ease;
+    }
+
+    .footer-link:hover {
+      transform: translateX(4px);
+      color: #B7FF3C;
+      -webkit-text-fill-color: #B7FF3C;
+    }
+
+    .footer-contact {
+      display: block;
+      color: rgba(255,255,255,0.88);
+      -webkit-text-fill-color: rgba(255,255,255,0.88);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 11px;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .footer-social {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .crisis-box {
+      margin-top: 34px;
+      border: 1px solid rgba(239,68,68,0.55);
+      background: rgba(127,29,29,0.22);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 900;
+      color: white;
+      -webkit-text-fill-color: white;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+    }
+
+    .footer-bottom {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.55;
+      font-weight: 700;
+      color: rgba(191,219,254,0.68);
+      -webkit-text-fill-color: rgba(191,219,254,0.68);
+    }
+
+    @media (max-width: 900px) {
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .manas-footer {
+        padding: 34px 16px 22px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .crisis-box {
+        text-align: left;
+        line-height: 1.6;
+      }
+
+      .footer-bottom {
+        text-align: left;
+      }
+    }
+  `}</style>
+</footer>
 
       {showSearch && (
         <div
@@ -2057,25 +3763,9 @@ const LandingPage: React.FC = () => {
                   -ms-overflow-style: none;
                   scrollbar-width: none;
                 }
-        .quick-nav::-webkit-scrollbar {
-          display: none;
-        }
-        .quick-nav-chip {
-          color: #000000 !important;
-          opacity: 1 !important;
-          filter: none !important;
-          -webkit-text-fill-color: #000000 !important;
-          text-shadow: none !important;
-          background: #ffffff !important;
-        }
-        .quick-nav-chip-icon,
-        .quick-nav-chip-label {
-          color: #000000 !important;
-          opacity: 1 !important;
-          filter: none !important;
-          -webkit-text-fill-color: #000000 !important;
-          text-shadow: none !important;
-        }
+                .quick-nav::-webkit-scrollbar {
+                  display: none;
+                }
         @media (max-width: 980px) {
           .live-grid {
             grid-template-columns: 1fr;
@@ -2102,5 +3792,6 @@ const LandingPage: React.FC = () => {
     </div>
   );
 };
-
+  
 export default LandingPage;
+
